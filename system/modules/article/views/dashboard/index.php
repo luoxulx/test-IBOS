@@ -5,7 +5,7 @@ use application\core\utils\Module as ModuleUtil;
 ?>
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Information center']; ?></h1>
+        <h1 class="mt">应用设置＞<?php echo $lang['Information center']; ?></h1>
     </div>
     <div>
         <form action="<?php echo $this->createUrl('dashboard/edit'); ?>" class="form-horizontal" method="post">

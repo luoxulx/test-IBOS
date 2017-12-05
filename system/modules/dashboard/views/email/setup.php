@@ -5,7 +5,7 @@ use application\core\utils\StringUtil;
 ?>
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Email setting']; ?></h1>
+        <h1 class="mt">通用设置 > <?php echo $lang['Email setting']; ?></h1>
         <ul class="mn">
             <li>
                 <span><?php echo $lang['Setup']; ?></span>
@@ -19,7 +19,6 @@ use application\core\utils\StringUtil;
         <form action="<?php echo $this->createUrl('email/setup'); ?>" method='post' class="form-horizontal">
             <!-- 邮件发送设置 start -->
             <div class="ctb">
-                <h2 class="st"><?php echo $lang['Email sent setting']; ?></h2>
                 <div class="">
                     <div class="control-group">
                         <label class="control-label"><?php echo $lang['Email sent method']; ?></label>

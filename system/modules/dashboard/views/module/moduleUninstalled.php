@@ -4,7 +4,7 @@ use application\core\utils\Ibos;
 ?>
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Module']; ?></h1>
+        <h1 class="mt"><?php echo $lang['Module Setting']; ?> > <?php echo $lang['Module manager']?></h1>
         <ul class="mn">
             <li>
                 <a href="<?php echo $this->createUrl('module/manager', array('op' => 'installed')); ?>">

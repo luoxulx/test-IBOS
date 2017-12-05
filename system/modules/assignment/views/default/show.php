@@ -20,7 +20,7 @@ use application\core\utils\StringUtil;
             <?php endif; ?>
             <div class="am-details-prop clearfix">
                 <?php echo $assignment['st']; ?> <?php echo $lang['To']; ?> <?php echo $assignment['et']; ?>
-                <?php if (TIMESTAMP > $assignment['endtime'] && $assignment['status'] != 2): ?><span class="ilsep fss"><i
+                <?php if (TIMESTAMP > $assignment['endtime'] && $assignment['finishtime'] == 0): ?><span class="ilsep fss"><i
                     class="om-am-warning-w"></i> <?php echo $lang['Expired']; ?></span><?php endif; ?>
                 <?php if ($assignment['remindtime'] > 0): ?><span class="ilsep fss"><i
                     class="om-am-clock-w"></i> <?php echo $lang['Has been set to remind']; ?></span><?php endif; ?>
@@ -229,6 +229,7 @@ use application\core\utils\StringUtil;
 </script>
 <script src="<?php echo STATICURL; ?>/js/lib/SWFUpload/swfupload.packaged.js?<?php echo VERHASH; ?>"></script>
 <script src="<?php echo STATICURL; ?>/js/lib/SWFUpload/handlers.js?<?php echo VERHASH; ?>"></script>
+<script src="<?php echo STATICURL; ?>/js/app/remind/remind.js?<?php echo VERHASH; ?>"></script>
 <script src="<?php echo $assetUrl; ?>/js/lang/zh-cn.js?<?php echo VERHASH; ?>"></script>
 <script src="<?php echo $assetUrl; ?>/js/assignment.js?<?php echo VERHASH; ?>"></script>
 <script src="<?php echo $assetUrl; ?>/js/assignment_default_show.js?<?php echo VERHASH; ?>"></script>

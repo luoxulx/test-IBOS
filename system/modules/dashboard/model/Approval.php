@@ -55,7 +55,7 @@ class Approval extends Model
      */
     public function fetchAllApproval()
     {
-        return $this->with('step')->findAll(array('order' => 'addtime DESC'));
+        return $this->with('step')->findAll(array('order' => 'addtime ASC'));
     }
 
     /**

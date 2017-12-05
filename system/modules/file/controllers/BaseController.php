@@ -197,12 +197,17 @@ class BaseController extends Controller
         $pid = intval(Env::getRequest('pid'));
         $attach = new CommonAttach('Filedata', 'file');
         $return = CJSON::decode($attach->upload());
+        // 判断上传是否正确，获取错误返回
+        if(!$attach->getIsUpoad()) {
+            return $this->ajaxReturn(array('isSuccess' => false, 'msg' => Ibos::lang($attach->getUploadErrMsg(),'error')));
+        }
+
         $attachids = $return['aid'];
         $res = FileOperationApi::getInstance()->upload($this->getFileAttr($pid), $this->getCore(), $attachids);
         if ($res) {
             $this->ajaxReturn($return);
         } else {
-            $this->ajaxReturn(array('isSuccess' => false, 'msg' => Ibos::lang('Upload failed')));
+            $this->ajaxReturn(array('isSuccess' => false, 'msg' => Ibos::lang($attach->getUploadErrMsg())));
         }
     }
 

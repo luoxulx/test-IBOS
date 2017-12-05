@@ -12,6 +12,7 @@ var L = {
     MODIFY: "修改",
     EDIT: "编辑",
     SAVE: "保存",
+    PREVIEW: "预览",
     RENAME: "重命名",
     COPY: "复制",
     "IMPORT": "导入",
@@ -152,7 +153,7 @@ var L = {
         USER: "条新系统通知",
         UNREAD_MESSAGE: "条新的私信",
         DIARY: "篇新日志",
-        REPORT: "篇新总结",
+        REPORT: "篇新汇报",
         CALENDAR: "条新日程",
         WORKFLOW: "条新工作流",
         ARTICLE: "篇新闻",
@@ -230,7 +231,7 @@ var L = {
         INPUT_TIP: "请输入部门、岗位或用户的名称或拼音(全拼)",
         NO_MATCH: "没有查询结果",
         SELECTION_TO_BIG: "你最多只能选择<%=limit%>项",
-        PLACEHOLDER_ALL: "请选择部门、岗位、角色或人员",
+        PLACEHOLDER_ALL: "请选择部门、岗位或人员",
         PLACEHOLDER: "请选择",
         DEPARTMENT: "部门",
         USER: "人员",
@@ -344,5 +345,17 @@ var L = {
     // 评论
     COMMENT: {
         SUCCESS: "评论成功"
+    },
+    // 提醒设置
+    REMIND: {
+        ADD_REMIND: '添加提醒',
+        EDIT_REMIND: '编辑提醒',
+        REMIND_SETTINGS: '设置提醒',
+        ADD_REMIND_SUCCESS: '添加提醒成功',
+        EDIT_REMIND_SUCCESS: '编辑提醒成功',
+        SUER_DELETE_THIS_REMIND: '确定删除该项提醒?',
+        SUER_DELETE_SELECT_REMIND: '确定删除已选提醒?',
+        PLZ_SELECT_REMIND_TIME: '请选择提醒时间',
+        PLZ_SELECT_REMIND_USER: '请选择提醒人'
     }
 };

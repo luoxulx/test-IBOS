@@ -54,6 +54,11 @@ class Position
             if (!empty($py)) {
                 $group[strtoupper($py[0])][] = $k;
             }
+            $list[$k] = array(
+                'catid' => $v['catid'],
+                'positionid' => $v['positionid'],
+                'posname' => $v['posname']
+            );
         }
         ksort($group);
         $data = array('datas' => $list, 'group' => $group);

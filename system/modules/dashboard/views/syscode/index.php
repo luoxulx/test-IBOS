@@ -1,13 +1,12 @@
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['System code setting']; ?></h1>
+        <h1 class="mt">通用设置 > <?php echo $lang['System code setting']; ?></h1>
     </div>
     <div>
         <form id="sys_code_form" action="<?php echo $this->createUrl('syscode/index'); ?>" class="form-horizontal"
               method='post'>
             <!-- 系统代码设置 start -->
             <div class="ctb">
-                <h2 class="st"><?php echo $lang['System code setting']; ?></h2>
                 <div class="alert trick-tip">
                     <div class="trick-tip-title">
                         <i></i>

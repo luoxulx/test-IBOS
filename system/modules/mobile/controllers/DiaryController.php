@@ -23,6 +23,7 @@ use application\core\utils\Env;
 use application\core\utils\File;
 use application\core\utils\Ibos;
 use application\core\utils\Model;
+use application\core\utils\Module as ModuleUtil;
 use application\core\utils\StringUtil;
 use application\modules\calendar\model\Calendars;
 use application\modules\dashboard\model\Stamp;
@@ -38,11 +39,10 @@ use application\modules\message\model\Comment;
 use application\modules\mobile\utils\Mobile;
 use application\modules\user\model\User;
 use application\modules\user\utils\User as UserUtil;
-use application\core\utils\Module as ModuleUtil;
 
 class DiaryController extends BaseController
 {
-
+    
     /**
      * @var string 当前 controller 对应的模块
      * 备注：如果需要获取评论列表，则需要设置正确的模块名。
@@ -391,7 +391,7 @@ class DiaryController extends BaseController
                 $this->changeIsreview($diary,
                     $dashboardconfig['autoreviewstamp']);
             }
-            $params['allStamps'] = Stamp::model()->fetchAll();
+            $params['allStamps'] = $this->getStamp($dashboardconfig['stampdetails']);
         }
         //附件
         if (!empty($diary['attachmentid'])) {
@@ -454,12 +454,6 @@ class DiaryController extends BaseController
 
     public function actionAdd()
     {
-        // 以前的代码残余，jsonp与callback
-        // $dataType = 'JSON';
-        // $callback = Env::getRequest( 'callback' );
-        // if ( isset( $callback ) ) {
-        // 	$dataType = Mobile::dataType();
-        // }
         $todayDate = date('Y-m-d');
         if (array_key_exists('diaryDate', $_GET)) {
             $todayDate = $_GET['diaryDate'];
@@ -550,7 +544,12 @@ class DiaryController extends BaseController
             }
         }
         //保存最新计划
-        $shareUidArr = isset($_POST['shareuid']) ? StringUtil::getId($_POST['shareuid']) : array();
+        $shareUidArr = array();
+        if (isset($_POST['shareuid'])){
+            $shareUidArr = StringUtil::getId($_POST['shareuid']);
+            $shareUidArr = $this->handleShareuid($shareUidArr,$uid);
+        }
+
         $diary = array(
             'uid' => $uid,
             'diarytime' => strtotime($_POST['todayDate']),
@@ -586,6 +585,17 @@ class DiaryController extends BaseController
         $this->ajaxReturn($message, Mobile::dataType());
     }
 
+    /**
+     * 处理共享人员，排除自己
+     * @param $shareuidArr
+     * @param $uid
+     * @return array
+     */
+    protected function handleShareuid($shareuidArr,$uid)
+    {
+        return array_merge(array_diff($shareuidArr, array($uid)));
+    }
+
 
     /**
      * 修改工作日志
@@ -607,7 +617,11 @@ class DiaryController extends BaseController
                 $post[$data] = StringUtil::filterCleanHtml($post[$data]);
             }
         }
-        $shareUidArr = isset($post['shareuid']) ? StringUtil::getId($post['shareuid']) : array();
+        $shareUidArr = array();
+        if (isset($_POST['shareuid'])){
+            $shareUidArr = StringUtil::getId($_POST['shareuid']);
+            $shareUidArr = $this->handleShareuid($shareUidArr,$uid);
+        }
         $diaryId = (int)Env::getRequest('id');
         $diary = Diary::model()->fetchByPk($diaryId);
         // 权限判断
@@ -773,19 +787,17 @@ class DiaryController extends BaseController
         if (empty($oldDirect)) {
             $data = array(
                 'uid' => $uid,
-                'direct' => 1,
+                'direct' => DiaryDirect::DIRECTLY,
             );
             DiaryDirect::model()->add($data);
-            $direct = '1';
+            $direct = DiaryDirect::DIRECTLY;
         } else {
             $direct = $oldDirect['direct'];
         }
         // 获取全部下属
-        if ('0' == $direct) {
-            foreach ($subUidArr as $subUid) {
-                $_subUidArr = User::model()->fetchSubUidByUid($subUid);
-                $subUidArr = array_merge($subUidArr, $_subUidArr);
-            }
+        if (DiaryDirect::INDIRECTLY == $direct) {
+            $allFollowers = UserUtil::fetchAllSubUid($subUidArr);
+            $subUidArr = array_merge($subUidArr, $allFollowers);
         }
 
         if (count($subUidArr) > 0) {
@@ -925,10 +937,10 @@ class DiaryController extends BaseController
         if (empty($oldDirect)) {
             $data = array(
                 'uid' => $uid,
-                'direct' => 1,
+                'direct' => DiaryDirect::DIRECTLY,
             );
             DiaryDirect::model()->add($data);
-            $direct = '1';
+            $direct = DiaryDirect::DIRECTLY;
         } else {
             $direct = $oldDirect['direct'];
         }
@@ -990,7 +1002,7 @@ class DiaryController extends BaseController
             ), Mobile::dataType());
         }
         $direct = intval($direct);
-        if (0 !== $direct && 1 !== $direct) {
+        if (DiaryDirect::DIRECTLY !== $direct && DiaryDirect::INDIRECTLY !== $direct) {
             $msg = Ibos::lang("Error param") . ",请检查direct参数";
 
             return $this->ajaxReturn(array(
@@ -1155,15 +1167,11 @@ class DiaryController extends BaseController
                 ), Mobile::dataType());
             }
             // 在这里讲设置 $type、$rowid 的值
-            $$param = $paramValue;
+            $$param = StringUtil::filterCleanHtml($paramValue);
         }
 
         // $type 参数只支持：comment（评论）和 reply（回复）
-        if (!in_array($type, array(
-            "comment",
-            "reply"
-        ))
-        ) {
+        if (!in_array($type, array("comment", "reply"))) {
             $msg = Ibos::lang("Error param") . "请检查 \$type 参数";
 
             return $this->ajaxReturn(array(
@@ -1171,18 +1179,26 @@ class DiaryController extends BaseController
                 "msg" => $msg
             ), Mobile::dataType());
         }
+
+        $pk = Diary::model()->getTableSchema()->primaryKey;
+        $sourceInfo = Diary::model()->fetch(array('condition' => "`{$pk}` = {$rowid}"));
         // 如果评论类型为：comment
         if ("comment" === $type) {
-            $pk = Diary::model()->getTableSchema()->primaryKey;
-            $sourceInfo = Diary::model()->fetch(array('condition' => "`{$pk}` = {$rowid}"));
             $touid = (int)$sourceInfo['uid'];
-            $_POST["module"] = "diary";
-            $_POST["table"] = "diary";
+            $_POST['module'] = "diary";
+            $_POST['table'] = "diary";
             $_POST['touid'] = $touid;
         } elseif ("reply" === $type) {
-            $_POST["module"] = "message";
-            $_POST["table"] = "comment";
+            $_POST['module'] = "message";
+            $_POST['table'] = "comment";
         }
+        // 这两个参数，后端提供
+        $_POST['url'] = Ibos::app()->urlManager->createUrl('diary/default/show', array('diaryid' => $rowid));
+        $_POST['detail'] = Ibos::lang('Comment my diray','', array(
+            '{url}' => $_POST['url'],
+            '{title}' => StringUtil::cutStr(str_replace(PHP_EOL, '', strip_tags($sourceInfo['content'])), 50)
+        ));
+        $_POST['detail'] = StringUtil::parseHtml($_POST['detail']);
         $widget = Ibos::app()->getWidgetFactory()->createWidget($this,
             'application\modules\diary\widgets\DiaryComment');
 
@@ -1290,5 +1306,33 @@ class DiaryController extends BaseController
             Mobile::createDirectTable($tableName);
         }
         return true;
+    }
+    
+    /**
+     * 只返回后台设置的图章
+     * @param $stampRules
+     * @return array
+     */
+    private function getStamp($stampRules)
+    {
+        $stampRules = explode(',', trim($stampRules));
+        $stamps = $stayStamp = array();
+        $allStamps = Stamp::model()->fetchAll();
+        foreach ($stampRules as $rule) {
+            list($stampId, $score) = explode(':', $rule);
+            if ($stampId != 0) {
+                $stayStamp[] = $stampId;
+            }
+        }
+        if (empty($stayStamp)) {
+            return array();
+        }
+
+        foreach ($allStamps as $stamp) {
+            if (in_array($stamp['id'], $stayStamp)) {
+                $stamps[] = $stamp;
+            }
+        }
+        return $stamps;
     }
 }

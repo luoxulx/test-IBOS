@@ -162,7 +162,15 @@ class Office extends CWidget
         }
 
         $filepath = Env::getRequest('filepath');
+
         if (empty($filepath)) {
+            return false;
+        }
+        // 获得标准化的附件绝对路径
+        $attachdir = realpath(PATH_ROOT .'/'. Ibos::app()->setting->get('setting/attachdir'));
+        $filepath  = realpath($filepath);
+        //判断上传文件的位置是否在附件文件夹下
+        if(strpos($filepath, $attachdir) !== 0) {
             return false;
         }
         //$filename = filename($filepath);

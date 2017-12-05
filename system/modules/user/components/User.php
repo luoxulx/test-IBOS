@@ -198,7 +198,16 @@ class User extends CWebUser
         if (!util\Ibos::app()->request->getIsAjaxRequest()) {
             // 多人同时登录同一账号的机制实现
             // TODO：管理员在后台关闭多人登录同一帐号功能时，会导致用户在前台显示登录成功，但实际上并没有成功。（session 被删除）
-            parent::updateAuthStatus();
+            if(($this->authTimeout!==null || $this->absoluteAuthTimeout!==null) && !$this->getIsGuest())
+            {
+                $expires=$this->getState(self::AUTH_TIMEOUT_VAR);
+                $expiresAbsolute=$this->getState(self::AUTH_ABSOLUTE_TIMEOUT_VAR);
+
+                if ($expires!==null && $expires < time() || $expiresAbsolute!==null && $expiresAbsolute < time())
+                    $this->logout(true);
+                else
+                    $this->setState(self::AUTH_TIMEOUT_VAR,time()+$this->authTimeout);
+            }
         }
     }
 
@@ -264,5 +273,15 @@ class User extends CWebUser
     public function getParam()
     {
         return array();
+    }
+
+    /**
+     * 重写返回设置返回url，过滤保证安全
+     * @param
+     */
+    public function setReturnUrl($value)
+    {
+        $value = \CHtml::encode(urldecode($value));
+        $this->setState('__returnUrl', $value);
     }
 }

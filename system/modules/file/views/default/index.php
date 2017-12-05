@@ -63,6 +63,7 @@ use application\core\utils\Convert;
                         <?php endif; ?>
                         <i class="nd-type o-disk-receive" title="我收到的"></i>
                         <div class="nd-name">我收到的</div>
+                    </a>
                         <div class="nd-info">
                             <div class="progress mbm">
                                 <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="80"
@@ -72,10 +73,9 @@ use application\core\utils\Convert;
                                 73GB / <span class="tcm">122GB</span>
                             </div>
                         </div>
-                        </li>
-                        </ul>
                 </div>
             </div>
         </div>
     </div>
+</div>
     <script src='<?php echo $this->getAssetUrl(); ?>/js/cabinet_disk.js?<?php echo VERHASH; ?>'></script>

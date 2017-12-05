@@ -2,6 +2,7 @@
 
 /**
  * user模块默认控制器
+ *
  * @package application.modules.user.controllers
  * @version $Id$
  */
@@ -10,14 +11,15 @@ namespace application\modules\user\controllers;
 
 use application\core\controllers\Controller;
 use application\core\model\Log;
+use application\core\model\Module;
 use application\core\utils as util;
 use application\core\utils\Ibos;
-use application\core\utils\StringUtil;
+use application\modules\adldap\core\Ldap;
 use application\modules\dashboard\model\Announcement;
 use application\modules\dashboard\model\LoginTemplate;
-use application\modules\message\core\co\CoApi;
 use application\modules\main\model\Setting;
 use application\modules\main\utils\Main as MainUtil;
+use application\modules\message\core\co\CoApi;
 use application\modules\user\components\User as ICUser;
 use application\modules\user\components\UserIdentity;
 use application\modules\user\model\FailedIp;
@@ -38,6 +40,7 @@ class DefaultController extends Controller
 
     /**
      * ajax检查当前用户登录状态
+     *
      * @return void
      */
     public function actionCheckLogin()
@@ -48,14 +51,17 @@ class DefaultController extends Controller
         $expires = util\Ibos::app()->user->getState(ICUser::AUTH_TIMEOUT_VAR);
         if ($isAutologin) {
             $islogin = true;
-        } else if (!$isGuest && ($expires == null || $expires > time())) {
-            $islogin = true;
+        } else {
+            if (!$isGuest && ($expires == null || $expires > time())) {
+                $islogin = true;
+            }
         }
         $this->ajaxReturn(array('islogin' => $islogin));
     }
 
     /**
      * ajax提交登录
+     *
      * @return void
      */
     public function actionAjaxLogin()
@@ -96,7 +102,8 @@ class DefaultController extends Controller
                 'qrcode' => $qrcode,
                 'wxbinding' => !empty($corpid),
                 'cobinding' => !empty($cobinding),
-                'coUrl' => util\Api::getInstance()->buildUrl(CoApi::CO_URL . 'fastlogin', array('aeskey' => util\Ibos::app()->setting->get('setting/aeskey'))),
+                'coUrl' => util\Api::getInstance()->buildUrl(CoApi::CO_URL . 'fastlogin',
+                    array('aeskey' => util\Ibos::app()->setting->get('setting/aeskey'))),
             );
             $this->setTitle(util\Ibos::lang('Login page'));
             $this->renderPartial('login', $data);
@@ -112,8 +119,9 @@ class DefaultController extends Controller
              * 在同一个ip和同一个错误账号登录失败时，添加进表中会报错（数据完整性，主键重复）
              * 为了简单起见，直接把userName中含有单引号的都当做错误账号
              */
-            if (preg_match('/[\']+/', $userName)) {
-                $this->error(util\Ibos::lang('User not fount', '', array('{username}' => $userName)), '', array(), array('error' => 0));
+            if (preg_match('/[\']+/', $userName) || util\StringUtil::strLength($userName) > 32) {
+                $this->error(util\Ibos::lang('User not fount', '', array('{username}' => $userName)), '', array(),
+                    array('error' => 0));
             }
 
             // 密码
@@ -138,98 +146,199 @@ class DefaultController extends Controller
 
     /**
      * 登录操作
-     * @param string $userName 用户名
-     * @param string $passWord 密码
+     * @param string $username 用户名
+     * @param string $password 密码
      * @param array $account 账户安全设置
      * @param integer $autoLogin 是否自动登录
      * @param integer $cookieTime 自动登录的时间
-     * @param integer $inajax 是否ajax登录
+     * @param integer $inAjax 是否ajax登录
      */
-    protected function doLogin($userName, $passWord, $account, $autoLogin = 0, $cookieTime = 0, $inajax = 0)
+    protected function doLogin($username, $password, $account, $autoLogin = 0, $cookieTime = 0, $inAjax = 0)
     {
-        if (!$passWord || $passWord != \CHtml::encode($passWord)) {
+        if (!$password || $password != \CHtml::encode($password)) {
             $this->error(util\Ibos::lang('Passwd illegal'));
         }
+        $errorNum = $this->loginCheck($account, $username);
+        /** @var UserIdentity[] $identities */
+        //-----------------登录操作------------------------------------------
+        $identities = $this->getIdentitiesByNameOfPass($username,$password);
+        $user = $this->loginAuthenticate($identities,$account, $autoLogin, $cookieTime);
+        if ($user){
+            if (!$inAjax) {
+                $urlForward = $this->handleWebLogin($user,$username,$password);
+                $this->success(util\Ibos::lang('Login succeed', '', array('{username}' => $user->realname)),
+                    $urlForward);
+            } else {
+                return $this->ajaxReturn(array('isSuccess' => true));
+            }
+        }
+        //---------------LDAP模块登录----------------------------------
+        $ldapModule = Module::model()->isModuleEnable('adldap');
+        if ($ldapModule){
+            $ldap = Ldap::ldapLoginByNameOfPass($username,$password);
+            if ($ldap){
+                $this->success(util\Ibos::lang('Login succeed', '', array('{username}' => $ldap->realname)),'/');
+            }
+        }
+        //----------------end------------------------------------------
+        // 登录失败的处理
+        $this->handleLoginFailed($username,$password,$errorNum);
+    }
 
-        $errornum = $this->loginCheck($account, $userName);
-        // 日志
+    /**
+     * 登录失败
+     * @param $username
+     * @param $password
+     * @param $errorNum
+     */
+    protected function handleLoginFailed($username,$password,$errorNum)
+    {
         $ip = util\Ibos::app()->setting->get('clientip');
-        // 开始验证
-        // 登录类型
-        if (StringUtil::isMobile($userName)) {
-            $loginType = 4;
-        } else if (StringUtil::isEmail($userName)) {
-            $loginType = 2;
+        FailedLogin::model()->updateFailed($username);
+        list($ip1, $ip2) = explode('.', $ip);
+        $newIp = $ip1 . '.' . $ip2;
+        FailedIp::model()->insertIp($newIp);
+        Log::write(array(
+            'user' => $username,
+            'password' => util\StringUtil::passwordMask($password),
+            'ip' => $ip
+        ), 'illegal', 'module.user.login');
+        if ($errorNum) {
+            $this->error('登录失败，您还可以尝试' . ($errorNum - 1) . '次');
         } else {
-            $loginType = 1;
+            $this->error(util\Ibos::lang('User name or password is not correct'));
         }
-        $identity = new UserIdentity($userName, $passWord, $loginType);
-        $result = $identity->authenticate();
+    }
 
-        if ($result > 0) {
-            $corpcode = util\Env::getRequest('corp_code');
-            if (!empty($corpcode)) {
-                MainUtil::setCookie('corp_code', $corpcode, 0, $cookieTime);
-            }
-            $user = util\Ibos::app()->user;
-            // 设置会话过期时间
-            if (empty($autoLogin)) {
-                $user->setState($user::AUTH_TIMEOUT_VAR, TIMESTAMP + ($account['timeout']));
-                $cookieTime = 0;
-            } else {
-                MainUtil::setCookie('autologin', 1, $cookieTime);
-            }
-            $user->login($identity, $cookieTime);
-            // ajax登录不进行日志记录及跳转操作
-
-            if (!$inajax) {
-                $refer = util\Env::getRequest('refer');
-                $urlForward = empty($refer) ? util\Env::referer() : $refer;
-                $log = array(
-                    'terminal' => 'web',
-                    'password' => util\StringUtil::passwordMask($passWord),
-                    'ip' => $ip,
-                    'user' => $userName,
-                    'loginType' => $loginType,
-                    'address' => '',
-                    'gps' => ''
-                );
-                Log::write($log, 'login', sprintf('module.user.%d', $user->uid));
-                $rule = UserUtil::updateCreditByAction('daylogin', $user->uid);
-                if (!$rule['updateCredit']) {
-                    UserUtil::checkUserGroup($user->uid);
+    /**
+     * 登录身份验证
+     * @param $identities
+     * @param $account
+     * @param int $autoLogin
+     * @param int $cookieTime
+     * @return ICUser|bool
+     */
+    protected function loginAuthenticate($identities,$account, $autoLogin = 0, $cookieTime = 0)
+    {
+        foreach ($identities as $identity) {
+            $authRes = $identity->authenticate();
+            if ($authRes > 0) {
+                $corpCode = util\Env::getRequest('corp_code');
+                if (!empty($corpCode)) {
+                    MainUtil::setCookie('corp_code', $corpCode, 0, $cookieTime);
                 }
-
-                Login::getInstance()->sendWebLoginNotify($user->uid);
-                $this->success(util\Ibos::lang('Login succeed', '', array('{username}' => $user->realname)), $urlForward);
-            } else {
-                $this->ajaxReturn(array('isSuccess' => true));
-            }
-        } else {
-            if ($result === 0) {
-                $this->error(util\Ibos::lang('User not fount', '', array('{username}' => $userName)), '', array(), array('error' => $result));
-            } else if ($result === -1) {
-                $this->error(util\Ibos::lang('User lock', '', array('{username}' => $userName)), '', array(), array('error' => $result));
-            } else if ($result === -2) {
-                $this->error(util\Ibos::lang('User disabled', '', array('{username}' => $userName)), '', array(), array('error' => $result));
-            } else if ($result === -3) {
-                FailedLogin::model()->updateFailed($userName);
-                list($ip1, $ip2) = explode('.', $ip);
-                $newIp = $ip1 . '.' . $ip2;
-                FailedIp::model()->insertIp($newIp);
-                $log = array(
-                    'user' => $userName,
-                    'password' => util\StringUtil::passwordMask($passWord),
-                    'ip' => $ip
-                );
-                Log::write($log, 'illegal', 'module.user.login');
-                if ($errornum) {
-                    $this->error('登录失败，您还可以尝试' . ($errornum - 1) . '次');
-                } else {
-                    $this->error(util\Ibos::lang('User name or password is not correct'), '', array(), array('error' => $result));
-                }
+                $user = util\Ibos::app()->user;
+                // 设置会话过期时间
+                $cookieTime = $this->getLoginCookieTime($user,$autoLogin,$account,$cookieTime);
+                $user->login($identity, $cookieTime);
+                // 进行授权人数验证操作
+                $this->authNumberValidaByUserObj($user);
+                // ajax登录不进行日志记录及跳转操作
+                return $user;
             }
         }
+        return false;
+    }
+
+    /**
+     * 如果不是超级管理员账号，进行授权人数验证操作
+     * @param $user
+     */
+    protected function authNumberValidaByUserObj($user)
+    {
+    }
+
+    /**
+     * 根据参数 获取Cookie时间
+     * @param $user
+     * @param $autoLogin
+     * @param $accountg
+     * @param $cookieTime
+     * @return int
+     */
+    protected function getLoginCookieTime($user,$autoLogin,$account,$cookieTime)
+    {
+        if (empty($autoLogin)) {
+            $user->setState($user::AUTH_TIMEOUT_VAR, TIMESTAMP + ($account['timeout']));
+            $cookieTime = 0;
+        } else {
+            MainUtil::setCookie('autologin', 1, $cookieTime);
+        }
+        return $cookieTime;
+    }
+
+    /**
+     * 网页端登录
+     * @param $user
+     * @param $username
+     * @param $password
+     * @return util\处理后的重定向|mixed|string
+     */
+    protected function handleWebLogin($user,$username,$password)
+    {
+        $urlForward = $this->getUrlForward();
+        $this->writeLoginLog($user,$username,$password);
+        //登录积分
+        $rule = UserUtil::updateCreditByAction('daylogin', $user->uid);
+        //用户组检验
+        if (!$rule['updateCredit']) {
+            UserUtil::checkUserGroup($user->uid);
+        }
+        //登录提醒
+        Login::getInstance()->sendWebLoginNotify($user->uid);
+        return $urlForward;
+    }
+
+    /**
+     * 写入登录日志
+     * @param $user
+     * @param $username
+     * @param $password
+     * @param $ip
+     */
+    protected function writeLoginLog($user,$username,$password)
+    {
+        $ip = util\Ibos::app()->setting->get('clientip');
+        Log::write(array(
+            'terminal' => 'web',
+            'password' => util\StringUtil::passwordMask($password),
+            'ip' => $ip,
+            'user' => $username,
+            'address' => '',
+            'gps' => ''
+        ), 'login', sprintf('module.user.%d', $user->uid));
+    }
+
+    /**
+     *获取登录成功后跳转地址
+     */
+    protected function getUrlForward()
+    {
+        $refer = util\Env::getRequest('refer');
+        $urlForward = empty($refer) ? util\Env::referer() : $refer;
+        //获得路由的哈希值
+        $hashCookie = Ibos::app()->request->getCookies();
+        if (!empty($hashCookie['route_hash']->value)) {
+            $urlForward = $urlForward . '#' . $hashCookie['route_hash']->value;
+            unset($hashCookie['route_hash']);
+        }
+        return $urlForward;
+    }
+
+
+    /**
+     * 登录验证类型
+     * @param $username
+     * @param $password
+     * @return array
+     */
+    protected function getIdentitiesByNameOfPass($username,$password)
+    {
+        $identities = array();
+        $identities[] = new UserIdentity($username, $password, UserIdentity::LOGIN_BY_USERNAME);
+        $identities[] = new UserIdentity($username, $password, UserIdentity::LOGIN_BY_MOBILE);
+        $identities[] = new UserIdentity($username, $password, UserIdentity::LOGIN_BY_EMAIL);
+        return $identities;
     }
 
     /**
@@ -247,17 +356,24 @@ class DefaultController extends Controller
             if ($original == '') {
                 // 没有填写原来的密码
                 $this->error(util\Ibos::lang('Original password require'));
-            } else if (strcasecmp(md5(md5($original) . util\Ibos::app()->user->salt), util\Ibos::app()->user->password) !== 0) {
-                // 密码跟原来的对不上
-                $this->error(util\Ibos::lang('Password is not correct'));
-            } else if (!empty($new) && strcasecmp($new, $newConfirm) !== 0) {
-                // 两次密码不一致
-                $this->error(util\Ibos::lang('Confirm password is not correct'));
             } else {
-                $password = md5(md5($new) . util\Ibos::app()->user->salt);
-                $success = User::model()->updateByUid(util\Ibos::app()->user->uid, array('password' => $password, 'lastchangepass' => TIMESTAMP));
-                $success && util\Ibos::app()->user->logout();
-                $this->success(util\Ibos::lang('Reset success'), $this->createUrl('default/login'));
+                if (strcasecmp(md5(md5($original) . util\Ibos::app()->user->salt),
+                        util\Ibos::app()->user->password) !== 0
+                ) {
+                    // 密码跟原来的对不上
+                    $this->error(util\Ibos::lang('Password is not correct'));
+                } else {
+                    if (!empty($new) && strcasecmp($new, $newConfirm) !== 0) {
+                        // 两次密码不一致
+                        $this->error(util\Ibos::lang('Confirm password is not correct'));
+                    } else {
+                        $password = md5(md5($new) . util\Ibos::app()->user->salt);
+                        $success = User::model()->updateByUid(util\Ibos::app()->user->uid,
+                            array('password' => $password, 'lastchangepass' => TIMESTAMP));
+                        $success && util\Ibos::app()->user->logout();
+                        $this->success(util\Ibos::lang('Reset success'), $this->createUrl('default/login'));
+                    }
+                }
             }
         } else {
             $userName = util\Ibos::app()->user->realname;
@@ -288,6 +404,7 @@ class DefaultController extends Controller
 
     /**
      * 登陆检查，主要是登陆错误验证，账号检查
+     *
      * @param array $account
      * @return integer
      */
@@ -299,7 +416,8 @@ class DefaultController extends Controller
             $ip = util\Ibos::app()->setting->get('clientip');
             $errrepeat = intval($account['errorrepeat']);
             $errTime = $account['errortime'] * 60;
-            $return = (!$login || (TIMESTAMP - $login['lastupdate'] > $errTime)) ? $errrepeat : max(0, $errrepeat - $login['count']);
+            $return = (!$login || (TIMESTAMP - $login['lastupdate'] > $errTime)) ? $errrepeat : max(0,
+                $errrepeat - $login['count']);
             if (!$login) {
                 FailedLogin::model()->add(array(
                     'ip' => $ip,

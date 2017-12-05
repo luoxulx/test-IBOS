@@ -136,5 +136,6 @@ return array(
     'Month' => '月',
     'Day' => '日',
     'Post officialdoc' => '发表了一篇通知',
-    'Feed title' => '<a href="{url}" class="xwb anchor">{subject}</a>'
+    'Feed title' => '<a href="{url}" class="xwb anchor">{subject}</a>',
+    'No Permission Del' => '没有删除权限'
 );

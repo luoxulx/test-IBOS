@@ -4,12 +4,11 @@ use application\core\utils\Ibos;
 ?>
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Quicknav setting']; ?></h1>
+        <h1 class="mt">通用设置 > <?php echo $lang['Quicknav setting']; ?></h1>
     </div>
     <div>
         <form action="javascript:;" class="form-horizontal">
             <div class="ctb">
-                <h2 class="st"><?php echo $lang['Quicknav setting']; ?></h2>
                 <div>
                     <table id="quicknav_table" class="table table-bordered table-striped table-operate">
                         <thead>

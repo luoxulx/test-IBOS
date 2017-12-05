@@ -147,4 +147,5 @@ return array(
     'Page not fount' => '单页图文信息不存在',
     'Template illegal' => '模板不合法，找不到id为page_content的div',
     'Template not fount' => '模板不存在，请检查data/目录下是否存在{file}模板',
+    'File extension is not in upload set' => '文件不在可上传文件类型之内',
 );

@@ -52,6 +52,11 @@ $(function() {
             getwxcount: function(param) {
                 var url = Ibos.app.url('dashboard/wxsync/getwxcount');
                 return $.post(url, param, $.noop, 'json');
+            },
+            // 获取通讯录套件是否授权
+            getAuthStatus: function(param){
+                var url = Ibos.app.url("dashboard/wxsync/getauth");
+                return $.post(url, param, $.noop, "json");
             }
         },
         syncData: function(url, deptCount, userCount, i) {
@@ -86,6 +91,19 @@ $(function() {
                     return false;
                 }
             }, "json");
+        },
+        initContactAuthTip: function(url){
+            var content = $.template("contact_auth_tpl", {url: url});
+            var dialog = Ui.dialog({
+                id: "d_auth_tip",
+                title: false,
+                lock: true,
+                padding: 0,
+                height: "662px",
+                content: content,
+                ok: false,
+                cancel: false
+            });
         }
     };
 
@@ -97,7 +115,7 @@ $(function() {
                 that = this;
             if (!U.regex(sysUrlValue, "url")) {
                 $sysUrl.blink().focus();
-                Ui.tip("请输入正确的系统URL链接验证", 'danger');
+                Ui.tip(Ibos.l("DB.WX.INPUT_CORRECT_SYSTEM_URL"), 'danger');
                 return false;
             }
             WxSync.op.verifyUrl({
@@ -154,13 +172,26 @@ $(function() {
                 domain: $('input[name="sysurl"]').val()
             }).done(function(res) {
                 if (res.isSuccess) {
-                    Ui.tip('验证成功');
+                    Ui.tip(Ibos.l("DB.WX.WX_BIND_CHECK_SUCCESS"));
                     $('.wx-suite-install').removeClass('disabled').prop('disabled', false);
                 } else {
                     Ui.tip(res.msg, 'warning');
                     return false;
                 }
             });
+        }
+    });
+
+    // 检查通讯录套件是否已授权
+    WxSync.op.getAuthStatus().done(function(res){
+        if(res.isSuccess){
+            var isBindWx = res.data.isBindingWx,
+                isAuth = res.data.haveContactAuth,
+                url = res.data.contactAuthUrl;
+            isBindWx && !isAuth && WxSync.initContactAuthTip(url);
+        }else{
+            Ui.tip(res.msg, "warning");
+            return false;
         }
     });
 

@@ -28,12 +28,18 @@ return array(
         'db' => array(
             'enableProfiling' => YII_DEBUG,
             'emulatePrepare' => true,
-            'enableParamLogging' => false
+            'enableParamLogging' => false,
+            'schemaCachingDuration' => 3600,
         ),
         // 日志记录组件
         'log' => array(
             'class' => '\CLogRouter',
             'routes' => array(
+                array(
+                    'class' => 'application\core\components\AliyunLog',
+                    'levels' => 'warning,error',
+                    'filter' => 'application\core\components\AliyunLogFilter',
+                ),
                 array(
                     'class' => '\CFileLogRoute',
                     'levels' => 'error',
@@ -41,7 +47,7 @@ return array(
                 array(
                     'class' => 'application\core\components\Log',
                     'levels' => 'admincp,illegal,login,action,db',
-                )
+                ),
             ),
         ),
         // 全局认证组件

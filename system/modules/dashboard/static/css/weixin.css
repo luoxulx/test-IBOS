@@ -423,30 +423,6 @@
 	margin: 5px 0 0 40px;
 }
 
-.o-setting-result{
-	background: url(../image/setting_result.png) no-repeat 0 0;
-	display: inline-block;
-	vertical-align: middle;
-	width: 450px;
-	height: 685px;
-}
-.setting-result-wrap{
-	width: 450px;
-	margin-left: 120px;
-	-webkit-box-shadow: 0 1px 10px rgba(0, 0, 0, .1);
-	-moz-box-shadow: 0 1px 10px rgba(0, 0, 0, .1);
-	box-shadow: 0 1px 10px rgba(0, 0, 0, .1);
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	border-radius: 4px;
-	position: relative;
-	overflow: hidden;
-	border: 1px solid #EBEFF6;
-	border: 0 solid rgba(0, 0, 0, 0);
-	background-color: #FFF;
-}
-
-
 .o-del-tip{
 	width: 780px;
 	display: inline-block;
@@ -772,4 +748,45 @@
 .wx-auth-btn {
 	padding: 15px 55px;
 	font-size: 16px;
+}
+
+/*通讯录授权提示*/
+.o-auth-step-one,
+.o-auth-step-two,
+.o-step-one-tip,
+.o-step-two-tip{
+	display: inline-block;
+	background-image: url(../image/contact_auth_tip.png);
+	vertical-align: middle;
+}
+.o-auth-step-one,
+.o-auth-step-two{
+	width: 35px;
+	height: 35px;
+}
+.o-auth-step-one{
+	background-position: 0 0;
+}
+.o-auth-step-two{
+	background-position: -35px 0;
+}
+.o-step-one-tip{
+	width: 535px;
+	height: 230px;
+	background-position: 0 -35px;
+}
+.o-step-two-tip{
+	width: 535px;
+	height: 130px;
+	background-position: 0 -280px;
+}
+.auth-step-tip{
+	padding: 20px 40px 30px 40px;
+	background-color: #e6eaed;
+}
+.auth-step-tip .mbt{
+	margin-bottom: 30px;
+}
+.d-content{
+	max-height: 662px;
 }

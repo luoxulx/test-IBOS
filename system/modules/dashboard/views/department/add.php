@@ -3,29 +3,24 @@
 ?>
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt">部门人员管理</h1>
+        <h1 class="mt">部门管理＞新增部门</h1>
     </div>
     <div>
         <!-- 部门信息 start -->
         <div class="ctb">
-            <h2 class="st">新增部门</h2>
             <div class="">
                 <form action="<?php echo $this->createUrl('department/add', array('addsubmit' => 1)); ?>" method="post"
-                      class="department-info-form form-horizontal" id="add_dept_form">
-                    <div class="control-group">
-                        <label class="control-label">上级部门</label>
-                        <div class="controls">
-                            <input type="text" name="pid" value="c_0" id="dept_pid"/>
-                            <!-- <select name="pid">
-                                <option value="0" selected><?php //echo $lang['Top department']; ?></option>
-                                <?php //echo $tree; ?>
-                            </select> -->
-                        </div>
-                    </div>
+                      class="enterprise-info-form form-horizontal" id="add_dept_form">
                     <div class="control-group">
                         <label class="control-label">部门名称</label>
                         <div class="controls">
                             <input type="text" name="deptname" placeholder="请输入部门名称" id="dept_name"/>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">上级部门</label>
+                        <div class="controls">
+                            <input type="text" name="pid" value="c_0" id="dept_pid"/>
                         </div>
                     </div>
                     <div class="control-group">
@@ -50,7 +45,7 @@
                         <label for="" class="control-label">作为分支机构</label>
                         <div class="controls">
                             <input type="checkbox" data-toggle="switch" value="1" name="isbranch"/>
-                            <span class="mls vam">部门名称加粗</span>
+                            <!-- <span class="mls vam">部门名称加粗</span> -->
                         </div>
                     </div>
                     <div class="control-group">

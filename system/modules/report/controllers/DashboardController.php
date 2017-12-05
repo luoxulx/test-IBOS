@@ -64,6 +64,7 @@ class DashboardController extends BaseController
                 'autoreviewstamp' => 1
             );
             foreach ($_POST as $key => $value) {
+                $value = \CHtml::encode($value);
                 if (in_array($key, array_keys($fieldArr))) {
                     $fieldArr[$key] = $value;
                 }

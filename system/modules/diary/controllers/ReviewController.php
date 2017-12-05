@@ -336,22 +336,39 @@ class ReviewController extends BaseController
             $num = 0;
             foreach ($users as $user) {
                 if ($num < $item) {
-                    $htmlStr .= '<li class="mng-item">
+                    $spanStr = <<<EOF
+<span class="o-caret" data-action="toggleSubUnderlingsList" data-uid="{$user['uid']}" data-param="{&quot;uid&quot;: &quot;{$user['uid']}&quot;}">
+</span>
+EOF;
+
+                    $hasSub = UserUtil::hasSubUid($user['uid']);
+                    if (!empty($hasSub)) {
+                        $spanStr = <<<EOF
+<span class="o-caret" data-action="toggleSubUnderlingsList" data-uid="{$user['uid']}" data-param="{&quot;uid&quot;: &quot;{$user['uid']}&quot;}">
+    <i class="caret"></i>
+</span>
+EOF;
+
+                    }
+
+                    $htmlStr .= '<li><div class="mng-item mng-item-user">' . $spanStr . '
                                             <a href="' . Ibos::app()->urlManager->createUrl($theUrl, array('uid' => $user['uid'])) . '">
                                                 <img src="' . $user['avatar_middle'] . '" alt="">
                                                 ' . $user['realname'] . '
                                             </a>';
+                    if (DiaryUtil::getIsAttention($user['uid'])) {
+                        $htmlStr .= '<a href="javascript:;" class="o-gudstar pull-right" data-action="toggleAsteriskUnderling" data-id="' . $user['uid'] . '" data-param=\'{"id": "' . $user['uid'] . '"}\'></a>';
+                    } else {
+                        $htmlStr .= '<a href="javascript:;" class="o-udstar pull-right" data-action="toggleAsteriskUnderling" data-id="' . $user['uid'] . '" data-param=\'{"id": "' . $user['uid'] . '"}\'></a>';
+                    }
+                    $htmlStr .= '</div></li>';
+                    $num++;
                 }
-                if (DiaryUtil::getIsAttention($user['uid'])) {
-                    $htmlStr .= '<a href="javascript:;" class="o-gudstar pull-right" data-action="toggleAsteriskUnderling" data-id="' . $user['uid'] . '" data-param=\'{"id": "' . $user['uid'] . '"}\'></a>';
-                } else {
-                    $htmlStr .= '<a href="javascript:;" class="o-udstar pull-right" data-action="toggleAsteriskUnderling" data-id="' . $user['uid'] . '" data-param=\'{"id": "' . $user['uid'] . '"}\'></a>';
-                }
-                $htmlStr .= '</li>';
-                $num++;
+
             }
             $subNums = count($users);
             if ($subNums > $item) {
+
                 $htmlStr .= '<li class="mng-item view-all" data-uid="' . $uid . '">
                                                 <a href="javascript:;">
                                                     <i class="o-da-allsub"></i>

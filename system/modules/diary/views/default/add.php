@@ -81,7 +81,7 @@
                             <td class="sep" width="3"></td>
                             <td>
                                 <div style="min-height: 375px;">
-                                    <script name="diaryContent" type="text/plain" id="diary_add_editor"></script>
+                                    <script name="diaryContent" type="text/plain" id="diary_editor"></script>
                                 </div>
                             </td>
                         </tr>

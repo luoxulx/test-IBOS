@@ -4272,20 +4272,37 @@ $.fn.ibosSlider = function(option){
 		}
 
 		if(option.scale) {
-			option.scale = +option.scale;
 			$(this).on("slidecreate", function(){
-				var $elem = $(this),
-					option = $elem.slider("option");
+        var $elem = $(this),
+            option = $elem.slider("option"),
+            $wrap = $('<div class="ui-slider-scale"></div>');
 
-				var $wrap = $('<div class="ui-slider-scale"></div>');
-				var scaleStep = (option.max - option.min)/ option.scale;
-				
-				for(var i = 0; i < option.scale + 1; i++) {
-					$wrap.append('<span class="ui-slider-scale-step" style="left: ' + 100/option.scale * i + '%">' + (i * scaleStep + option.min) + '</span>');
-				}
+        if ($.isArray(option.scale)) {
+          var i, len = option.scale.length,
+              val, step = len - 1,
+              max = option.max;
+
+          for (i = 0; i < len; i++) {
+            val = option.scale[i];
+            if (val > max) {
+              console.error("param error");
+              return;
+            }
+
+            $wrap.append('<span class="ui-slider-scale-step" style="left: ' + (i / step * 100).toFixed(2) + '%">' + val + '</span>');
+          }
+
+        } else {
+          option.scale = +option.scale;
+          var scaleStep = (option.max - option.min)/ option.scale;
+        
+          for(var i = 0; i < option.scale + 1; i++) {
+            $wrap.append('<span class="ui-slider-scale-step" style="left: ' + 100/option.scale * i + '%">' + (i * scaleStep + option.min) + '</span>');
+          }
+        }
 
 				$elem.append($wrap).addClass("ui-slider-hasscale");
-			})
+			});
 		}
 	}
 

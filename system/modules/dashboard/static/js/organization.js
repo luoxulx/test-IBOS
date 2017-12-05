@@ -151,7 +151,7 @@ var Organization = {
 
                 var aInput = $(this).siblings("input"),
                     bChecked = true;
-                if ((aInput[0].value == 0) && (aInput[1].value == 0)) {
+                if ((aInput[0].value == 0) && (aInput[1] && aInput[1].value == 0)) {
                     bChecked = false;
                 }
                 $(this).closest("ul").find('[data-node="funcCheckbox"]:last').prop("checked", bChecked).trigger("change");

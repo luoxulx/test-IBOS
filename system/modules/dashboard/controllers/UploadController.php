@@ -31,6 +31,9 @@ class UploadController extends BaseController
         switch ($operation) {
             case 'thumbpreview':// 缩略图预览
             case 'waterpreview':// 水印预览
+                if(!File::fileExists(File::getTempPath())){
+                    File::makeDir(File::getTempPath());
+                }
                 $temp = File::getTempPath() . '/watermark_temp.jpg';
                 $quality = Env::getRequest('quality');
                 // 原图
@@ -90,26 +93,26 @@ class UploadController extends BaseController
                 $attachSize = $size;
             }
             $uploadArray = array(
-                'attachdir' => CHtml::encode($_POST['attachdir']),
-                'attachurl' => CHtml::encode($_POST['attachurl']),
+                'attachdir' => isset($_POST['attachdir']) ? CHtml::encode($_POST['attachdir']) : 'data/attachment',
+                'attachurl' => isset($_POST['attachurl']) ? CHtml::encode($_POST['attachurl']) : 'data/attachment',
                 'thumbquality' => CHtml::encode($_POST['thumbquality']),
                 'attachsize' => $attachSize,
                 'filetype' => CHtml::encode($_POST['filetype']),
             );
             $status = !empty($_POST['watermarkstatus']) ? 1 : 0;
             $waterArray = array(
-                'watermarkminwidth' => CHtml::encode($_POST['watermarkminwidth']),
-                'watermarkminheight' => CHtml::encode($_POST['watermarkminheight']),
-                'watermarktype' => CHtml::encode($_POST['watermarktype']),
-                'watermarkposition' => CHtml::encode($_POST['watermarkposition']),
-                'watermarktrans' => CHtml::encode($_POST['watermarktrans']),
-                'watermarkquality' => CHtml::encode($_POST['watermarkquality']),
-                'watermarkimg' => $_POST['watermarkimg'] ? trim(CHtml::encode($_POST['watermarkimg'])) : 'static/image/watermark_preview.jpg',
+                'watermarkminwidth' => isset($_POST['watermarkminwidth']) ? CHtml::encode($_POST['watermarkminwidth']) : '40',
+                'watermarkminheight' => isset($_POST['watermarkminheight']) ? CHtml::encode($_POST['watermarkminheight']) : '120',
+                'watermarktype' => isset($_POST['watermarktype']) ? CHtml::encode($_POST['watermarktype']) : 'text',
+                'watermarkposition' => isset($_POST['watermarkposition']) ? CHtml::encode($_POST['watermarkposition']) : '9',
+                'watermarktrans' => isset($_POST['watermarktrans']) ? CHtml::encode($_POST['watermarktrans']) : '50',
+                'watermarkquality' => isset($_POST['watermarkquality']) ? CHtml::encode($_POST['watermarkquality']) : '90',
+                'watermarkimg' => isset($_POST['watermarkimg']) ? trim(CHtml::encode($_POST['watermarkimg'])) : 'static/image/watermark_preview.jpg',
                 'watermarktext' => array(
-                    'fontpath' => self::TTF_FONT_PATH . CHtml::encode($_POST['watermarktext']['fontpath']),
-                    'text' => CHtml::encode($_POST['watermarktext']['text']),
-                    'size' => CHtml::encode($_POST['watermarktext']['size']),
-                    'color' => CHtml::encode($_POST['watermarktext']['color']),
+                    'fontpath' => isset($_POST['watermarktext']) ? self::TTF_FONT_PATH . CHtml::encode($_POST['watermarktext']['fontpath']) : '',
+                    'text' => isset($_POST['watermarktext']) ? CHtml::encode($_POST['watermarktext']['text']) : 'Welcome to use the IBOS!',
+                    'size' => isset($_POST['watermarktext']) ? CHtml::encode($_POST['watermarktext']['size']) : '12',
+                    'color' => isset($_POST['watermarktext']) ? CHtml::encode($_POST['watermarktext']['color']) : '#3497DB',
                 ),
                 //'watermarkfontpath' => CHtml::encode($_POST['watermarkfontpath']), //暂时没有地方食用，不知道干嘛的
             );
@@ -130,6 +133,7 @@ class UploadController extends BaseController
             $this->success(Ibos::lang('Save succeed', 'message'));
         } else {
             $upload = Setting::model()->fetchSettingValueByKeys('attachdir,attachurl,thumbquality,attachsize,filetype');
+            $upload['attachsize'] = str_replace('M', '', strtoupper($upload['attachsize'])); // 去除输入框中的M标识,该M标识来自配置
             $waterStatus = Setting::model()->fetchSettingValueByKey('watermarkstatus');
             $waterConfig = Setting::model()->fetchSettingValueByKey('waterconfig');
             $waterModule = Setting::model()->fetchSettingValueByKey('watermodule');

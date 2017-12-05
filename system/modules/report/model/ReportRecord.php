@@ -17,6 +17,7 @@
 namespace application\modules\report\model;
 
 use application\core\model\Model;
+use application\core\utils\Ibos;
 use application\core\utils\Module;
 use application\core\utils\StringUtil;
 use application\modules\calendar\model\Calendars;
@@ -122,4 +123,74 @@ class ReportRecord extends Model
         return $record;
     }
 
+    /**
+     * 添加汇报记录
+     * @param array $fields 表单字段数组
+     * @return bool
+     */
+    public function addRecord($fields)
+    {
+        $fieldLists = array();
+        foreach ($fields as $fieldList){
+            if (isset($fieldList['fieldvalue'])){
+                unset($fieldList['fieldvalue']);
+            }
+            $fieldLists[] = $fieldList;
+        }
+        $affectRow = Ibos::app()->db->schema->commandBuilder
+            ->createMultipleInsertCommand($this->tableName(), $fieldLists)
+            ->execute();
+        if ($affectRow > 0) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 更新表单字段内容
+     * @param array $fields 表单字段数组
+     * @return bool
+     */
+    public function updateRecord($fields)
+    {
+        $count = count($fields);
+        for ($i = 0; $i < $count; $i++){
+            if (isset($fields[$i]['fieldvalue'])){
+                unset($fields[$i]['fieldvalue']);
+            }
+            Ibos::app()->db->createCommand()->update($this->tableName(), $fields[$i], 'recordid = :recordid', array(
+               ':recordid' => $fields[$i]['recordid']
+            ));
+        }
+    }
+
+    /**
+     * 获得汇报记录
+     * @param integer $repid 汇报ID
+     * @param bool $returnField  是否返回表单的字段规则
+     */
+    public function getRecord($repid, $returnField = false)
+    {
+        if ($returnField){
+            $fieldLists = Ibos::app()->db->createCommand()->from('{{report_record}} record')
+                ->select('record.recordid,record.content,record.fieldid,record.fieldname,record.iswrite,record.fieldtype,field.fieldvalue')
+                ->join('{{template_field}} field', 'record.fieldid = field.`fid`')
+                ->where('record.repid = :repid', array(
+                    ':repid' => $repid,
+                ))
+                ->queryAll();
+            $fields = array();
+            foreach ($fieldLists as $fieldList){
+                if ($fieldList['fieldtype'] == 7){
+                    $fieldList['fieldvalue'] = explode(',', $fieldList['fieldvalue']);
+                    $fields[] = $fieldList;
+                }else{
+                    $fields[] = $fieldList;
+                }
+            }
+        }else{
+            $fields = $this->fetchAll('repid = :repid', array(':repid' => $repid));
+        }
+        return $fields;
+    }
 }

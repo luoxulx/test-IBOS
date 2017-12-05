@@ -53,7 +53,7 @@ class DefaultController extends BaseController
         );
 
         if (Env::getRequest('issetuser') != "true") {
-            $userData = UserUtil::getUserByPy(null, false);
+            $userData = UserUtil::getUserByPy(null, false, false, true);
             $return['userData'] = $userData;
         }
 

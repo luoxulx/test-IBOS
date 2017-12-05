@@ -1,6 +1,5 @@
 <?php
 
-
 if (function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc()) {
     if (isset($_GET)) {
         $_GET = istripSlashes($_GET);
@@ -198,6 +197,16 @@ function execute($version)
             break;
         case '4.2.0 pro':
             upgradeTo20170203();
+            break;
+        case '4.3.0 pro':
+            upgradeTo20170511();
+            break;
+        case '4.4.0 pro':
+            upgradeTo20170609();
+            break;
+        case '4.4.2 pro':
+            upgradeTo20171128();
+            break;
         default:
             break;
     }
@@ -458,6 +467,375 @@ function upgradeTo20170203()
     }
 }
 
+//4.3.0数据库更新语句
+function upgradeTo20170511()
+{
+    $queryBuilder = getQB();
+    //更新菜单和导航
+    $queryBuilder->table('nav')->where('module', '=', 'report')->update(array('name' => '工作汇报'));
+    $queryBuilder->table('menu')->where('m', '=', 'report')->update(array('name' => '工作汇报'));
+    $queryBuilder->table('notify_node')->where('node', '=', 'report_message')->update(array('nodeinfo' => '工作汇报消息提醒'));
+    $queryBuilder->table('credit_rule')->where('action', '=', 'addreport')->update(array('rulename' => '发表工作汇报'));
+    $queryBuilder->table('menu_common')->where('module', '=', 'report')->update(array('name' => '汇报'));
+    //更新汇报数据库表结构
+    $prefix = $queryBuilder->getPrefix();
+    $report_statistics = $prefix . 'report_statistics';
+    if ($queryBuilder->isExistTable('report_statistics')){
+        if (!($queryBuilder->table('report_statistics')->isColumnExists('tid'))){
+            if ($queryBuilder->table('report_statistics')->isColumnExists('typeid')){
+                $sql1 = "ALTER TABLE `{$report_statistics}` CHANGE COLUMN `typeid` `tid`  tinyint(3) unsigned NOT NULL  COMMENT '汇报类型id';";
+                $queryBuilder->query($sql1);
+            }
+        }
+    }
+    if ($queryBuilder->isExistTable('report')){
+        $report = $prefix . 'report';
+        if (!($queryBuilder->table('report')->isColumnExists('tid'))){
+            if ($queryBuilder->table('report')->isColumnExists('typeid')){
+                $sql2 = "ALTER TABLE `{$report}` CHANGE COLUMN `typeid` `tid`  tinyint(3) UNSIGNED NOT NULL  COMMENT '汇报模板id，用户自己的模板' AFTER `addtime`;";
+                $queryBuilder->query($sql2);
+            }
+        }
+        $queryBuilder->table('report')->addColumnsIfNotExists(array(
+            array(
+                'columnName' => 'place',
+                'columnType' => "varchar(255) DEFAULT NULL COMMENT '填写汇报的地点'",
+            ),
+            array(
+                'columnName' => 'isdel',
+                'columnType' => "tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否删除，1表示已删除，0表示未删除'",
+            ),
+        ));
+        $queryBuilder->table('report')->update(array('status' => 1));
+    }
+    if ($queryBuilder->isExistTable('report_record')){
+        $queryBuilder->table('report_record')->addColumnsIfNotExists(array(
+            array(
+                'columnName' => 'fieldid',
+                'columnType' => "int(11) NOT NULL COMMENT '字段的id'",
+            ),
+            array(
+                'columnName' => 'fieldname',
+                'columnType' => "varchar(255) NOT NULL COMMENT '字段名称'",
+            ),
+            array(
+                'columnName' => 'fieldtype',
+                'columnType' => "int(11) NOT NULL DEFAULT '0' COMMENT '是否必填，0表示不需要，1表示需要'",
+            ),
+            array(
+                'columnName' => 'iswrite',
+                'columnType' => "int(11) NOT NULL COMMENT '字段类型，1表示长文本，2表示短文本，3表示数字，4表示日期与时间，5表示时间，6表示日期，7表示下拉'",
+            ),
+            array(
+                'columnName' => 'fieldvalue',
+                'columnType' => "text COMMENT '字段值'",
+            ),
+        ));
+    }
+    if ($queryBuilder->isExistTable('report')) {
+        $reportRecord = $queryBuilder->table('report')->get();
+        if (!empty($reportRecord)){
+            foreach ($reportRecord as $value) {
+                //第一步先把report表中的content字段内容移到report_record表中
+                $summary = getTmplField($queryBuilder, $value->tid, 8, '工作总结');
+                if (!empty($summary)){
+                    $queryBuilder->table('report_record')->insert(array(
+                        'repid' => $value->repid,
+                        'content' => $value->content,
+                        'fieldid' => $summary->fid,
+                        'fieldname' => $summary->fieldname,
+                        'iswrite' => $summary->iswrite,
+                        'fieldtype' => 8,
+                        'fieldvalue' => '',
+                    ));
+                }
+                //第二步将原计划，计划外，下次计划分别进行合并成一个
+                $originPlanContent = getRecordByPlanflag($queryBuilder, $value->repid, 0);
+                if (!empty($originPlanContent)) {
+                    $originPlan = getTmplField($queryBuilder, $value->tid, 1, '原计划');
+                    if (!empty($originPlan)){
+                        $queryBuilder->table('report_record')->insert(array(
+                            'repid' => $value->repid,
+                            'content' => $originPlanContent,
+                            'fieldid' => $originPlan->fid,
+                            'fieldname' => $originPlan->fieldname,
+                            'iswrite' => $originPlan->iswrite,
+                            'fieldtype' => 1,
+                            'fieldvalue' => '',
+                        ));
+                        delRecordByPlanflag($queryBuilder, $value->repid, 0);
+                    }
+                }
+                $unPlanContent = getRecordByPlanflag($queryBuilder, $value->repid, 1);
+                if (!empty($unPlanContent)) {
+                    $unPlan = getTmplField($queryBuilder, $value->tid, 1, '计划外');
+                    if (!empty($unPlan)){
+                        $queryBuilder->table('report_record')->insert(array(
+                            'repid' => $value->repid,
+                            'content' => $unPlanContent,
+                            'fieldid' => $unPlan->fid,
+                            'fieldname' => $unPlan->fieldname,
+                            'iswrite' => $unPlan->iswrite,
+                            'fieldtype' => 1,
+                            'fieldvalue' => '',
+                        ));
+                        delRecordByPlanflag($queryBuilder, $value->repid, 1);
+                    }
+                }
+                $nextPlanContent = getRecordByPlanflag($queryBuilder, $value->repid, 2);
+                if (!empty($nextPlanContent)) {
+                    $nextPlan = getTmplField($queryBuilder, $value->tid, 1, '下次计划');
+                    if (!empty($nextPlan)){
+                        $queryBuilder->table('report_record')->insert(array(
+                            'repid' => $value->repid,
+                            'content' => $nextPlanContent,
+                            'fieldid' => $nextPlan->fid,
+                            'fieldname' => $nextPlan->fieldname,
+                            'iswrite' => $nextPlan->iswrite,
+                            'fieldtype' => 1,
+                            'fieldvalue' => '',
+                        ));
+                        delRecordByPlanflag($queryBuilder, $value->repid, 2);
+                    }
+                }
+                //第三步将readeruid字段的值移到module_reader表
+                if (!empty($value->readeruid)) {
+                    $readeruids = explode(',', $value->readeruid);
+                    foreach ($readeruids as $readeruid) {
+                        $queryBuilder->table('module_reader')->insert(array(
+                            'module' => 'report',
+                            'relateid' => $value->repid,
+                            'uid' => $readeruid,
+                            'addtime' => time(),
+                            'readername' => getUserRealname($queryBuilder, $readeruid),
+                        ));
+                    }
+                }
+            }
+        }
+    }
+}
+
+function getTmplField($queryBuilder, $tid, $fieldtype, $fieldname)
+{
+    return $queryBuilder->table('template_field')->where('tid', '=', $tid)
+        ->where('fieldtype', '=', $fieldtype)->where('fieldname', '=', $fieldname)
+        ->first();
+}
+
+function getRecordByPlanflag($queryBuilder, $repid, $planflag)
+{
+    $records = $queryBuilder->table('report_record')
+        ->where('repid', '=', $repid)->where('planflag', '=', $planflag)
+        ->where('fieldname', '!=', '工作总结')
+        ->get();
+    $return = array();
+    foreach ($records as $record) {
+        array_push($return, $record->content);
+    }
+    return implode('<br>', $return);
+}
+
+function delRecordByPlanflag($queryBuilder, $repid, $planflag)
+{
+    $queryBuilder->table('report_record')->where('repid', '=', $repid)
+        ->where('planflag', '=', $planflag)
+        ->delete();
+}
+
+function getUserRealname($queryBuilder, $uid)
+{
+    $user = $queryBuilder->table('user')->where('uid', '=', $uid)
+        ->first();
+    return $user->realname;
+}
+
+//4.4.0 pro 数据库更新语句
+function upgradeTo20170609()
+{
+    $queryBuilder = getQB();
+    $queryBuilder->table('crm_client')->addColumnsIfNotExists(array(
+        array(
+            'columnName' => 'movetime',
+            'columnType' => "int(10) unsigned NOT NULL DEFAULT '0' COMMENT '移入公海时间'",
+        ),
+    ));
+    $queryBuilder->table('crm_contact')->addColumnsIfNotExists(array(
+        array(
+            'columnName' => 'mobile',
+            'columnType' => "char(11) CHARACTER SET utf8 NOT NULL DEFAULT '' COMMENT '联系人手机号码'",
+        ),
+        array(
+            'columnName' => 'initial',
+            'columnType' => "char(2) CHARACTER SET utf8 NOT NULL DEFAULT '' COMMENT '联系人首字母'",
+        ),
+    ));
+    require_once PATH_ROOT . "/upgrade/utils/Py.php";
+    if ($queryBuilder->isExistTable('crm_contact')){
+        $contacts = $queryBuilder->table('crm_contact')->get();
+        if (!empty($contacts)){
+            foreach ($contacts as $contact){
+                if (empty($contact->name)){
+                    $inital = '';
+                }else{
+                    $char = mb_substr($contact->name, 0, 1);
+                    if (preg_match('/^[\x{4E00}-\x{9FA5}]+$/u', $char)){
+                        $inital = getPy($char);
+                    }else{
+                        $inital = $char;
+                    }
+                }
+                $queryBuilder->table('crm_contact')
+                    ->where('contactid', '=', $contact->contactid)
+                    ->update(array(
+                        'initial' => $inital,
+                    ));
+            }
+        }
+    }
+    $queryBuilder->table('crm_contract')->addColumnsIfNotExists(array(
+        array(
+            'columnName' => 'name',
+            'columnType' => "char(50) CHARACTER SET utf8 NOT NULL DEFAULT '' COMMENT '合同名称'",
+        ),
+        array(
+            'columnName' => 'expiretime',
+            'columnType' => "int(10) unsigned NOT NULL DEFAULT '0' COMMENT '合同期限'",
+        ),
+    ));
+    $queryBuilder->table('crm_event')->addColumnsIfNotExists(array(
+        array(
+            'columnName' => 'contractid',
+            'columnType' => "char(60) NOT NULL DEFAULT '' COMMENT '合同ID'",
+        ),
+        array(
+            'columnName' => 'source',
+            'columnType' => "char(20) NOT NULL DEFAULT '' COMMENT '事件来源'",
+        ),
+        array(
+            'columnName' => 'at',
+            'columnType' => "char(20) NOT NULL DEFAULT '' COMMENT 'at用户uid'",
+        ),
+    ));
+    $queryBuilder->table('crm_highseas')->addColumnsIfNotExists(array(
+        array(
+            'columnName' => 'status',
+            'columnType' => "tinyint(2) NOT NULL DEFAULT '0' COMMENT '0表示不转入，1表示没跟进转入，2表示没商机转入'",
+        ),
+        array(
+            'columnName' => 'cday',
+            'columnType' => "int(10) DEFAULT NULL COMMENT '没事件多少天转入'",
+        ),
+        array(
+            'columnName' => 'oday',
+            'columnType' => "int(10) DEFAULT NULL COMMENT '没有商机多少天转入'",
+        ),
+    ));
+    $queryBuilder->table('crm_highseas')->update(array(
+        'status' => 0,
+        'cday' => 0,
+        'oday' => 0,
+    ));
+    $queryBuilder->table('crm_lead')->addColumnsIfNotExists(array(
+        array(
+            'columnName' => 'reason',
+            'columnType' => "text CHARACTER SET utf8 NOT NULL COMMENT '关闭理由'",
+        ),
+    ));
+    if ($queryBuilder->isExistTable('crm_lead')){
+        $reason = array(
+            1 => '无法联系',
+            2 => '已取消',
+            3 => '丢失',
+            4 => '不感兴趣',
+        );
+        $status = array_keys($reason);
+        $leads = $queryBuilder->table('crm_lead')->get();
+        if (!empty($leads)){
+            foreach ($leads as $lead){
+                if (in_array($lead->status, $status)){
+                    $queryBuilder->table('crm_lead')->update(array(
+                        'status' => 4,
+                        'reason' => $reason[$lead->status],
+                    ));
+                }
+            }
+        }
+    }
+    $queryBuilder->table('crm_receipt')->addColumnsIfNotExists(array(
+        array(
+            'columnName' => 'remark',
+            'columnType' => "text COMMENT '备注'",
+        ),
+    ));
+    $queryBuilder->table('crm_target')->addColumnsIfNotExists(array(
+        array(
+            'columnName' => 'firqua',
+            'columnType' => "int(10) unsigned NOT NULL DEFAULT '0' COMMENT '第一季度'",
+        ),
+        array(
+            'columnName' => 'secqua',
+            'columnType' => "int(10) unsigned NOT NULL DEFAULT '0' COMMENT '第二季度'",
+        ),
+        array(
+            'columnName' => 'thiqua',
+            'columnType' => "int(10) unsigned NOT NULL DEFAULT '0' COMMENT '第三季度'",
+        ),
+        array(
+            'columnName' => 'forqua',
+            'columnType' => "int(10) unsigned NOT NULL DEFAULT '0' COMMENT '第四季度'",
+        ),
+        array(
+            'columnName' => 'yearnum',
+            'columnType' => "int(10) unsigned NOT NULL DEFAULT '0' COMMENT '年总数'",
+        ),
+    ));
+    if ($queryBuilder->isExistTable('notify_node')){
+        $queryBuilder->table('notify_node')->insert(array(
+            'node' => 'crm_all_notice',
+            'nodeinfo' => 'crm消息提醒',
+            'module' => 'crm',
+            'titlekey' => 'crm/default/Crm all notice',
+            'contentkey' => '',
+            'sendemail' => '1',
+            'sendmessage' => '1',
+            'sendsms' => '1',
+            'type' => '2',
+        ));
+    }
+    if ($queryBuilder->isExistTable('cron')){
+        $queryBuilder->table('cron')->insert(array(
+            'available' => '1',
+            'type' => 'system',
+            'module' => 'crm',
+            'name' => 'crm消息提醒',
+            'filename' => 'CronCrmRemind.php',
+            'lastrun' => '1393516800',
+            'nextrun' => '1393603200',
+            'weekday' => '-1',
+            'day' => '-1',
+            'hour' => '-1',
+            'minute' => '*/15',
+        ));
+    }
+    if ($queryBuilder->isExistTable('crm_tag_group')){
+        $group = $queryBuilder->table('crm_tag_group')->where('groupid', '=', 3)->first();
+        if ($group->name == '机会进度'){
+            $queryBuilder->table('crm_tag_group')->where('groupid', '=', 3)->update(array(
+                'name' => '商机进度'
+            ));
+        }
+    }
+    if ($queryBuilder->isExistTable('crm_tag')){
+        $group = $queryBuilder->table('crm_tag')->where('tagid', '=', 13)->first();
+        if ($group->name == '2-机会评估'){
+            $queryBuilder->table('crm_tag')->where('tagid', '=', 13)->update(array(
+                'name' => '2-商机评估'
+            ));
+        }
+    }
+}
+
 function getCross($fromVersion)
 {
     global $versions;
@@ -526,4 +904,227 @@ function execSQL($sqlFile)
             }
         }
     }
+}
+
+function upgradeTo20171128()
+{
+    $queryBuilder = getQB();
+
+    if ($queryBuilder->isExistTable('notify_message')) {
+        $queryBuilder->table('notify_message')->addColumnsIfNotExists(array(
+            array(
+                'columnName' => 'isalarm',
+                'columnType' => "tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否为闹钟提醒'",
+            ),
+            array(
+                'columnName' => 'senduid',
+                'columnType' => "mediumint(8) UNSIGNED NOT NULL DEFAULT 0 COMMENT '主动提醒发送用户ID'",
+            )
+        ));
+    }
+
+    if ($queryBuilder->isExistTable('notify_node')){
+        $moduleArr = getModuleArr();
+        $notifyNodeInsertData = array();
+
+        if(in_array('message', $moduleArr)) {
+            $notifyNodeInsertData[] = array(
+                'node' => 'normal_alarm_notily',
+                'nodeinfo' => '普通提醒',
+                'module' => 'message',
+                'titlekey' => 'message/default/Alarm title',
+                'contentkey' => 'message/default/Alarm content',
+                'sendemail' => '1',
+                'sendmessage' => '1',
+                'sendsms' => '1',
+                'type' => '1',
+            );
+        }
+
+        if (!empty($moduleArr)) {
+            if(in_array('meeting', $moduleArr)) {
+                $notifyNodeInsertData[] = array(
+                    'node' => 'meeting_management',
+                    'nodeinfo' => '会议管理',
+                    'module' => 'meeting',
+                    'titlekey' => 'message/default/Alarm title',
+                    'contentkey' => 'message/default/Alarm content',
+                    'sendemail' => '1',
+                    'sendmessage' => '1',
+                    'sendsms' => '1',
+                    'type' => '1',
+                );
+            }
+
+            if(in_array('assignment', $moduleArr)) {
+                $notifyNodeInsertData[] = array(
+                    'node' => 'assignment_task',
+                    'nodeinfo' => '任务指派',
+                    'module' => 'assignment',
+                    'titlekey' => 'message/default/Alarm title',
+                    'contentkey' => 'message/default/Alarm content',
+                    'sendemail' => '1',
+                    'sendmessage' => '1',
+                    'sendsms' => '1',
+                    'type' => '1',
+                );
+            }
+
+            if(in_array('vote', $moduleArr)) {
+                $notifyNodeInsertData[] = array(
+                    'node' => 'vote_survey',
+                    'nodeinfo' => '调查投票',
+                    'module' => 'vote',
+                    'titlekey' => 'message/default/Alarm title',
+                    'contentkey' => 'message/default/Alarm content',
+                    'sendemail' => '1',
+                    'sendmessage' => '1',
+                    'sendsms' => '1',
+                    'type' => '1',
+                );
+            }
+
+            if(in_array('assets', $moduleArr)) {
+                $notifyNodeInsertData[] = array(
+                    'node' => 'fixed_assets',
+                    'nodeinfo' => '固定资产',
+                    'module' => 'assets',
+                    'titlekey' => 'message/default/Alarm title',
+                    'contentkey' => 'message/default/Alarm content',
+                    'sendemail' => '1',
+                    'sendmessage' => '1',
+                    'sendsms' => '1',
+                    'type' => '1',
+                );
+            }
+
+            if(in_array('activity', $moduleArr)) {
+                $notifyNodeInsertData[] = array(
+                    'node' => 'activity_center',
+                    'nodeinfo' => '活动中心',
+                    'module' => 'activity',
+                    'titlekey' => 'message/default/Alarm title',
+                    'contentkey' => 'message/default/Alarm content',
+                    'sendemail' => '1',
+                    'sendmessage' => '1',
+                    'sendsms' => '1',
+                    'type' => '1',
+                );
+            }
+
+            if(in_array('thread', $moduleArr)) {
+                $notifyNodeInsertData[] = array(
+                    'node' => 'project_thread',
+                    'nodeinfo' => '项目主线',
+                    'module' => 'thread',
+                    'titlekey' => 'message/default/Alarm title',
+                    'contentkey' => 'message/default/Alarm content',
+                    'sendemail' => '1',
+                    'sendmessage' => '1',
+                    'sendsms' => '1',
+                    'type' => '1',
+                );
+            }
+
+            if(in_array('workflow', $moduleArr)) {
+                $notifyNodeInsertData[] = array(
+                    'node' => 'handling_work',
+                    'nodeinfo' => '办理工作',
+                    'module' => 'workflow',
+                    'titlekey' => 'message/default/Alarm title',
+                    'contentkey' => 'message/default/Alarm content',
+                    'sendemail' => '1',
+                    'sendmessage' => '1',
+                    'sendsms' => '1',
+                    'type' => '1',
+                );
+            }
+
+            if(in_array('crm', $moduleArr)) {
+                $notifyNodeInsertData[] = array(
+                    'node' => 'event',
+                    'nodeinfo' => '跟进',
+                    'module' => 'crm',
+                    'titlekey' => 'message/default/Alarm title',
+                    'contentkey' => 'message/default/Alarm content',
+                    'sendemail' => '1',
+                    'sendmessage' => '1',
+                    'sendsms' => '1',
+                    'type' => '1',
+                );
+                $notifyNodeInsertData[] = array(
+                    'node' => 'contract',
+                    'nodeinfo' => '合同',
+                    'module' => 'crm',
+                    'titlekey' => 'message/default/Alarm title',
+                    'contentkey' => 'message/default/Alarm content',
+                    'sendemail' => '1',
+                    'sendmessage' => '1',
+                    'sendsms' => '1',
+                    'type' => '1',
+                );
+                $notifyNodeInsertData[] = array(
+                    'node' => 'client',
+                    'nodeinfo' => '客户',
+                    'module' => 'crm',
+                    'titlekey' => 'message/default/Alarm title',
+                    'contentkey' => 'message/default/Alarm content',
+                    'sendemail' => '1',
+                    'sendmessage' => '1',
+                    'sendsms' => '1',
+                    'type' => '1',
+                );
+                $notifyNodeInsertData[] = array(
+                    'node' => 'opportunity',
+                    'nodeinfo' => '商机',
+                    'module' => 'crm',
+                    'titlekey' => 'message/default/Alarm title',
+                    'contentkey' => 'message/default/Alarm content',
+                    'sendemail' => '1',
+                    'sendmessage' => '1',
+                    'sendsms' => '1',
+                    'type' => '1',
+                );
+            }
+        }
+
+        if (!empty($notifyNodeInsertData)) {
+            $queryBuilder->table('notify_node')->insert($notifyNodeInsertData);
+        }
+    }
+
+    if ($queryBuilder->isExistTable('cron')){
+        $queryBuilder->table('cron')->insert(array(
+            'available' => '1',
+            'type' => 'system',
+            'module' => 'message',
+            'name' => '发送通用提醒',
+            'filename' => 'CronSentNoifyAlarm.php',
+            'lastrun' => '1511160683',
+            'nextrun' => '1511160720',
+            'weekday' => '-1',
+            'day' => '-1',
+            'hour' => '-1',
+            'minute' => '*/1',
+        ));
+    }
+
+}
+
+function getModuleArr()
+{
+    $queryBuilder = getQB();
+    $module = $queryBuilder->table('module')->get();
+
+    $moduleArr = array();
+    if(empty($module)) {
+        return $moduleArr;
+    }
+    foreach ($module as $value) {
+        if (!empty($value->module)) {
+            $moduleArr[] = $value->module;
+        }
+    }
+
+    return $moduleArr;
 }

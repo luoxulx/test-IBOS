@@ -20,19 +20,26 @@ class LoginController extends BaseController
             if (isset($_POST['bgs'])) {
                 // 更新背景
                 foreach ($_POST['bgs'] as $id => $bg) {
-                    if (File::fileExists($bg['image'])) {
-                        LoginTemplate::model()->delImg($id);
-                        $bg['image'] = Dashboard::moveTempFile($bg['image'], $bgPath);
+                    //移动默认上传到了attachment下面图片到login路径下面，并删除旧文件
+                    if(strpos($bg['image'],$bgPath) === false){
+                        //复制文件到新路径并将原文件删除
+                        $bg['image'] = File::copyToDir($bg['image'], $bgPath, true);
+                        //设置用户是否将该图片启用随机
+                        $bg['disabled'] = isset($bg['disabled']) ? 0 : 1;
+                        //查询原先文件记录并删除旧文件
+                        $oldImg = LoginTemplate::model()->findByPk($id);
+                        File::deleteFile($oldImg->image);
+                        //修改数据库记录
+                        LoginTemplate::model()->modify($id,$bg);
                     }
-                    $bg['disabled'] = isset($bg['disabled']) ? 0 : 1;
-                    LoginTemplate::model()->modify($id, $bg);
                 }
             }
             // 新建背景
             if (isset($_POST['newbgs'])) {
                 foreach ($_POST['newbgs'] as $value) {
                     if (!empty($value['image'])) {
-                        $value['image'] = Dashboard::moveTempFile($value['image'], $bgPath, true);
+                        //移动默认上传到了attachment下面图片到login路径下面，并删除旧文件
+                        $value['image'] = File::copyToDir($value['image'],$bgPath, true);
                     }
                     LoginTemplate::model()->add($value);
                 }
@@ -40,6 +47,8 @@ class LoginController extends BaseController
             // 删除
             if (!empty($_POST['removeId'])) {
                 $removeIds = explode(',', trim($_POST['removeId'], ','));
+                $oldImg = LoginTemplate::model()->findByPk($removeIds);
+                File::deleteFile($oldImg->image);
                 LoginTemplate::model()->deleteByIds($removeIds, $bgPath);
             }
             clearstatcache();

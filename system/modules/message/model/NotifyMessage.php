@@ -9,6 +9,10 @@ use application\core\utils\StringUtil;
 class NotifyMessage extends Model
 {
 
+    /**
+     * @param string $className
+     * @return NotifyMessage
+     */
     public static function model($className = __CLASS__)
     {
         return parent::model($className);
@@ -63,6 +67,39 @@ class NotifyMessage extends Model
             }
         }
         return $return;
+    }
+
+    /**
+     * 根据uid和模块筛选
+     * @param $uid
+     * @param string $order
+     * @param int $limit
+     * @param int $offset
+     * @param $module
+     */
+    public function fetchAllNotifyListByUidAndModule($uid, $order = 'ctime DESC', $limit = 10, $offset = 0, $module = '', $isread = '0', $search = '')
+    {
+        $criteria = array(
+            'condition' => 'uid = :uid AND isread = :isread',
+            'params' => array(':uid' => intval($uid), ':isread' => intval($isread)),
+            'order' => $order,
+            'limit' => $limit,
+            'offset' => $offset
+        );
+
+        if(!empty($module)){
+            $criteria['condition'] .= ' AND `module` = :module';
+            $criteria['params'][':module'] = $module;
+        }
+
+        // 拼接条件
+        if(!empty($search)) {
+            $criteria['condition'] .= ' AND `body` LIKE \'%' .$search. '%\'';
+//            $params[':search'] = $search;
+        }
+
+        $res = $this->findAll($criteria);
+        return $res;
     }
 
     /**
@@ -173,6 +210,17 @@ class NotifyMessage extends Model
     }
 
     /**
+     * 根据提交的id设置已读
+     * @param $uid
+     * @param $idx
+     */
+    public function setReadByIdx($uid, $idx)
+    {
+        $idx = is_array($idx) ? implode(',', $idx) : $idx;
+        return $this->updateAll(array('isread' => 1), "uid = :uid AND FIND_IN_SET(id, :idx)", array(':uid' => intval($uid), ':idx' => $idx));
+    }
+
+    /**
      * 发送一条消息提醒
      * @param array $data 发送消息提醒所需数组
      * @return boolean
@@ -190,6 +238,14 @@ class NotifyMessage extends Model
         $s['body'] = StringUtil::filterDangerTag($data['body']);
         $s['ctime'] = time();
         $s['url'] = $data['url'];
+        if(!empty($data['isalarm'])){
+            // 区分是否为主动提醒
+            $s['isalarm'] = $data['isalarm'];
+        }
+        if(!empty($data['senduid'])){
+            // 主动提醒发送人
+            $s['senduid'] = $data['senduid'];
+        }
         return $s;
     }
 
@@ -224,4 +280,46 @@ class NotifyMessage extends Model
         return $pageCount;
     }
 
+    /**
+     * 根据uid查找有多少个模块有消息，用于分页
+     * @param integer $uid 用户uid
+     * @return integer 符合条件的条数，注：是根据模块分组
+     */
+    public function fetchPageCountByUidAndModuleAndIsreadAndSearch($uid, $module, $isread, $search)
+    {
+        $criteria = array(
+            'select' => 'id',
+            'condition' => 'uid = :uid AND isread = :isread',
+            'params' => array(':uid' => intval($uid), ':isread' => intval($isread)),
+        );
+
+        if(!empty($module)){
+            $criteria['condition'] .= ' AND `module` = :module';
+            $criteria['params'][':module'] = $module;
+        }
+
+        // 拼接条件
+        if(!empty($search)) {
+            $criteria['condition'] .= ' AND `body` LIKE \'%' .$search. '%\'';
+//            $params[':search'] = $search;
+        }
+
+        $pageCount = $this->count($criteria);
+        return $pageCount;
+    }
+
+    /*
+     * 获取指定用户的提醒通知统计
+     * @param integer $uid 用户ID
+     * @return array 指定用户的提醒通知统计
+     */
+    public function getNotifyCountByUid($uid)
+    {
+        return Ibos::app()->db->createCommand()
+            ->select('module,count(`id`)')
+            ->from($this->tableName())
+            ->where("`uid` = :uid and `isread` = 0", array(':uid' => $uid))
+            ->group('module')
+            ->queryAll();
+    }
 }

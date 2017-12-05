@@ -18,10 +18,12 @@
 namespace application\modules\dashboard\controllers;
 
 use application\core\model\Log;
+use application\core\model\Module;
 use application\core\utils\Env;
 use application\core\utils\Ibos;
 use application\core\utils\StringUtil;
 use application\modules\dashboard\model\Menu;
+use application\modules\dashboard\utils\SyncWx;
 use application\modules\main\utils\Main as MainUtil;
 use application\modules\user\components\UserIdentity;
 use CHtml;
@@ -37,6 +39,7 @@ class DefaultController extends BaseController
     {
         $access = $this->getAccess();
         $defaultUrl = 'default/index';
+        $wxBinding = SyncWx::getInstance()->checkBindingWxAndAuthContact();
         // 已登录即跳转
         if ($access > 0) {
             $this->success(Ibos::lang('Login succeed'), $this->createUrl($defaultUrl));
@@ -48,6 +51,7 @@ class DefaultController extends BaseController
         if (!Env::submitCheck('formhash')) {
             $data = array(
                 'userName' => !empty($this->user) ? $this->user['username'] : '',
+                'isbindingwx' => $wxBinding['isBindingWx'],
                 // 'refer' => urlencode($refer)
             );
             $this->render('login', $data);
@@ -72,9 +76,6 @@ class DefaultController extends BaseController
             $result = $identity->authenticate(true);
             if ($result > 0) {
                 Ibos::app()->user->login($identity);
-                if (Ibos::app()->user->uid != 1) {
-                    MainUtil::checkLicenseLimit(true);
-                }
                 $refer = '';
                 $httpRefer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
                 $httpPath = parse_url($httpRefer);
@@ -126,7 +127,7 @@ class DefaultController extends BaseController
     {
         // 视图变量
         $data = array();
-        $data['moduleMenu'] = Menu::model()->fetchAllRootMenu();
+        $data['moduleMenu'] = Menu::model()->filterWeiboModule();
         // 控制器连接生成
         foreach ($this->getControllerMap() as $category => $routes) {
             foreach ($routes as $routeName => $routeConfig) {
@@ -143,6 +144,7 @@ class DefaultController extends BaseController
         $def = !empty($refer) ? $refer : $this->createUrl('index/index');
         $data['def'] = $def;
         $data['cateConfig'] = $this->returnCateConfig();
+//        var_dump($data['routes']['module']);die;
         $this->render('index', $data);
     }
 
@@ -227,125 +229,161 @@ EOT;
             'index' => array(
                 'index/index' => array(
                     'lang' => 'Management center home page',
-                    'isShow' => true,
-                ), 'status/index' => array(
-                    'lang' => 'System state',
                     'isShow' => false,
-                ),  'announcement/setup' => array(
-                    'lang' => 'System announcement',
-                    'isShow' => true,
                 ),
-                'upgrade/index' => array(
-                    'lang' => 'Online upgrade',
-                    'isShow' => ENGINE === 'SAAS' ? false : true,
-                ), 'update/index' => array(
-                    'lang' => 'Update cache',
-                    'isShow' => true,
-                ),
+//                'status/index' => array(
+//                    'lang' => 'System state',
+//                    'isShow' => false,
+//                ),
+//                'announcement/setup' => array(
+//                    'lang' => 'System announcement',
+//                    'isShow' => ENGINE === 'SAAS' ? false : true,
+//                ),
+//                'upgrade/index' => array(
+//                    'lang' => 'Online upgrade',
+//                    'isShow' => ENGINE === 'SAAS' ? false : true,
+//                ),
+//                'unit/index' => array(
+//                    'lang' => 'Unit management',
+//                    'isShow' => true,
+//                ),
             ),
-            'binding' => array(
-                'cobinding/index' => array(
-                    'lang' => 'Co binding',
-                    'isShow' => true,
-                ), 'wxbinding/index' => array(
-                    'lang' => 'Weixin binding',
-                    'isShow' => true,
-                ), 'im/index' => array(
-                    'lang' => 'Company QQ',
-                    'isShow' => true,
-                ),
-            ),
+//            'binding' => array(
+//                 'wxbinding/index' => array(
+//                    'lang' => 'Weixin binding',
+//                    'isShow' => true,
+//                ), 'cobinding/index' => array(
+//                    'lang' => 'Co binding',
+//                    'isShow' => true,
+//                ), 'im/index' => array(
+//                    'lang' => 'Company QQ',
+//                    'isShow' => ENGINE === 'SAAS' ? false : true,
+//                ),
+//            ),
             'global' => array(
-                'unit/index' => array(
-                    'lang' => 'Unit management',
+                'approval/index' => array(
+                    'lang' => 'Verfiy Definition',
                     'isShow' => true,
-                ), 'credit/setup' => array(
+                ),
+                'date/index' => array(
+                    'lang' => 'Time and date format',
+                    'isShow' => false,
+                ),
+                'credit/setup' => array(
                     'lang' => 'Integral set',
-                    'isShow' => true,
-                ), 'usergroup/index' => array(
+                    'isShow' => ENGINE === 'SAAS' ? false : true,
+                ),
+                'usergroup/index' => array(
                     'lang' => 'User group',
-                    'isShow' => true,
-                ), 'optimize/cache' => array(
+                    'isShow' => ENGINE === 'SAAS' ? false : true,
+                ),
+                'optimize/cache' => array(
                     'lang' => 'Performance optimization',
                     'isShow' => false,
-                ), 'date/index' => array(
-                    'lang' => 'Time and date format',
+                ),
+                'upload/index' => array(
+                    'lang' => 'Upload file limit',
                     'isShow' => true,
-                ), 'upload/index' => array(
-                    'lang' => 'Upload setting',
-                    'isShow' => true,
-                ), 'sms/manager' => array(
+                ),
+                'sms/manager' => array(
                     'lang' => 'Sms setting',
                     'isShow' => false,
-                ), 'syscode/index' => array(
+                ),
+                'syscode/index' => array(
                     'lang' => 'System code setting',
-                    'isShow' => true,
-                ), 'email/setup' => array(
+                    'isShow' => ENGINE === 'SAAS' ? false : true,
+                ),
+                'email/setup' => array(
                     'lang' => 'Email setting',
-                    'isShow' => true,
-                ), 'security/setup' => array(
+                    'isShow' => ENGINE === 'SAAS' ? false : true,
+                ),
+                'security/setup' => array(
                     'lang' => 'Security setting',
-                    'isShow' => true,
-                ), 'sysstamp/index' => array(
+                    'isShow' => false,
+                ),
+                'sysstamp/index' => array(
                     'lang' => 'System stamp',
-                    'isShow' => true,
-                ), 'approval/index' => array(
-                    'lang' => 'Approval process',
-                    'isShow' => true,
-                ), 'notify/setup' => array(
+                    'isShow' => ENGINE === 'SAAS' ? false : true,
+                ),
+                'notify/setup' => array(
                     'lang' => 'Notify setup',
-                    'isShow' => true,
+                    'isShow' => false,
                 ),
                 'database/backup' => array(
                     'lang' => 'Database',
                     'isShow' => ENGINE === 'SAAS' ? false : true,
-                ), 'split/index' => array(
+                ),
+                'split/index' => array(
                     'lang' => 'Table archive',
                     'isShow' => false,
-                ), 'cron/index' => array(
+                ),
+                'cron/index' => array(
                     'lang' => 'Scheduled task',
-                    'isShow' => true,
-                ), 'fileperms/index' => array(
+                    'isShow' => ENGINE === 'SAAS' ? false : true,
+                ),
+                'fileperms/index' => array(
                     'lang' => 'Check file permissions',
                     'isShow' => false,
                 ),
+                'nav/index' => array(
+                    'lang' => 'Navigation setting',
+                    'isShow' => false,
+                ),
+                'quicknav/index' => array(
+                    'lang' => 'Quicknav setting',
+                    'isShow' => ENGINE === 'SAAS' ? false : true,
+                ),
+                'background/index' => array(
+                    'lang' => 'Nav Blendent',
+                    'isShow' => true,
+                ),
+                'login/index' => array(
+                    'lang' => 'Login background',
+                    'isShow' => true,
+                ),
+                'unit/index' => array(
+                    'lang' => 'Modify Corp Info',
+                    'isShow' => true,
+                ),
+                'update/index' => array(
+                    'lang' => 'Update cache',
+                    'isShow' => ENGINE === 'SAAS' ? false : true,
+                ),
+                'upgrade/index' => array(
+                    'lang' => 'Online upgrade',
+                    'isShow' => ENGINE === 'SAAS' ? false : true,
+                ),
             ),
             'organization' => array(
-                'role/index' => array(
-                    'lang' => 'Role management',
+                'user/index' => array(
+                    'lang' => 'Department personnel management',
                     'isShow' => true,
                 ),
                 'position/index' => array(
                     'lang' => 'Position management',
                     'isShow' => true,
                 ),
-                'user/index' => array(
-                    'lang' => 'Department personnel management',
+                'role/index' => array(
+                    'lang' => 'Front Module Manager Auth',
                     'isShow' => true,
                 ),
                 'roleadmin/index' => array(
-                    'lang' => 'Admin managment',
+                    'lang' => 'Background Module Manager Auth',
                     'isShow' => true,
                 ),
             ),
-            'interface' => array(
-                'nav/index' => array(
-                    'lang' => 'Navigation setting',
-                    'isShow' => true,
-                ), 'quicknav/index' => array(
-                    'lang' => 'Quicknav setting',
-                    'isShow' => true,
-                ), 'login/index' => array(
-                    'lang' => 'Login page setting',
-                    'isShow' => true,
-                ), 'page/index' => array(
-                    'lang' => 'Login page setting',
-                    'isShow' => false,
-                ), 'background/index' => array(
-                    'lang' => 'System background setting',
-                    'isShow' => true,
-                ),
-            ),
+//            'interface' => array(
+//                'nav/index' => array(
+//                    'lang' => 'Navigation setting',
+//                    'isShow' => true,
+//                ), 'quicknav/index' => array(
+//                    'lang' => 'Quicknav setting',
+//                    'isShow' => ENGINE === 'SAAS' ? false : true,
+//                ), 'login/index' => array(
+//                    'lang' => 'System background setting',
+//                    'isShow' => true,
+//                ),
+//            ),
             'module' => array(
                 'module/manager' => array(
                     'lang' => 'Module manager',
@@ -353,15 +391,61 @@ EOT;
                 ),
                 'permissions/setup' => array(
                     'lang' => 'Permissions setup',
-                    'isShow' => true,
+                    'isShow' => false,
                 ),
             ),
-
+//            'manager' => array(
+//                'update/index' => array(
+//                    'lang' => 'Update cache',
+//                    'isShow' => true,
+//                ), 'announcement/setup' => array(
+//                    'lang' => 'System announcement',
+//                    'isShow' => true,
+//                ),
+//                'database/backup' => array(
+//                    'lang' => 'Database',
+//                    'isShow' => ENGINE === 'SAAS' ? false : true,
+//                ), 'split/index' => array(
+//                    'lang' => 'Table archive',
+//                    'isShow' => false,
+//                ), 'cron/index' => array(
+//                    'lang' => 'Scheduled task',
+//                    'isShow' => true,
+//                ), 'fileperms/index' => array(
+//                    'lang' => 'Check file permissions',
+//                    'isShow' => false,
+//                ), 'upgrade/index' => array(
+//                    'lang' => 'Online upgrade',
+//                    'isShow' => ENGINE === 'SAAS' ? false : true,
+//                ),
+//            ),
         );
-
+//        $map['module'] = $this->getModuleInstallConfig();
+//        if (ENGINE !== 'SAAS') {
+//            $map['service'] = array(
+//                'service/index' => array(
+//                    'lang' => 'Shop',
+//                    'isShow' => true,
+//                ),
+//            );
+//        }
         return $map;
     }
 
+//    private  function getModuleInstallConfig()
+//    {
+//        $menus = Menu::model()->fetchAllRootMenu();
+//        $returnMenu = array();
+//        if (!empty($menus)){
+//            foreach ($menus as $menu){
+//                $returnMenu[$menu['m'].'/'.$menu['c'].'/'.$menu['a']] = array(
+//                    'lang' => 'Role management',
+//                    'isShow' => true,
+//                );
+//            }
+//        }
+//        return $returnMenu;
+//    }
     /**
      * 登出操作
      * @return void
@@ -384,34 +468,70 @@ EOT;
                 'url' => $this->createUrl('index/index'),
                 'id' => 'index',
             ),
-            'global' => array(
-                'lang' => 'Global',
-                'url' => $this->createUrl('unit/index'),
-                'id' => 'global',
-            ),
-            'interface' => array(
-                'lang' => 'Interface',
-                'url' => $this->createUrl('nav/index'),
-                'id' => 'interface',
-            ),
             'module' => array(
-                'lang' => 'Module',
-                'url' => $this->createUrl('module/manager'),
+                'lang' => 'Module Setting',
+                'url' => $this->getFirstInstallModuleUrl(),
                 'id' => 'module',
             ),
-            'binding' => array(
-                'lang' => 'Connect',
-                'url' => $this->createUrl('cobinding/index'),
-                'id' => 'binding',
-            ),
             'organization' => array(
-                'lang' => 'User',
-                'url' => $this->createUrl('role/index'),
+                'lang' => 'Contact Manager',
+                'url' => $this->createUrl('user/index'),
                 'id' => 'user',
             ),
-        );
+            'global' => array(
+                'lang' => 'Common Setting',
+                'url' => $this->createUrl('approval/index'),
+                'id' => 'global',
+            ),
+//            'interface' => array(
+//                'lang' => 'Interface',
+//                'url' => $this->createUrl('nav/index'),
+//                'id' => 'interface',
+//            ),
+//            'binding' => array(
+//                'lang' => 'Connect',
+//                'url' => $this->createUrl('wxbinding/index'),
+//                'id' => 'binding',
+//            ),
 
+//            'manager' => array(
+//                'lang' => 'Manage',
+//                'url' => $this->createUrl('update/index'),
+//                'id' => 'manage',
+//            ),
+        );
+//        if (ENGINE !== 'SAAS') {
+//            $cate['service'] = array(
+//                'lang' => 'Service',
+//                'url' => $this->createUrl('service/index'),
+//                'id' => 'services',
+//            );
+//        }
         return $cate;
     }
 
+    /**
+     * 得到第一个安装应用的后台url
+     * @return string
+     */
+    protected function getFirstInstallModuleUrl()
+    {
+        $url = Ibos::app()->db->createCommand()
+            ->select('*')
+            ->from(Module::model()->tableName(). ' module')
+            ->leftJoin(Menu::model()->tableName(). ' menu', 'module.module = menu.m')
+            ->where('module.`iscore` = :iscore', array(':iscore' => 0))
+            ->order('module.installdate ASC')
+            ->queryRow();
+        if (!empty($url)){
+            //对crm的数据进行容错处理
+            if ($url['m'] == 'crm'){
+                return Ibos::app()->urlManager->createUrl('crm/dashboard/preferences');
+            }else{
+                return  Ibos::app()->urlManager->createUrl($url['m']. '/'. $url['c']. '/'. $url['a']);
+            }
+        }else{
+            return $this->createUrl('wxsync/app');
+        }
+    }
 }

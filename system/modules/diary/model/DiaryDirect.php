@@ -14,6 +14,12 @@ use application\core\model\Model;
 
 class DiaryDirect extends Model
 {
+    /**
+     * 设置是否只看直属下属
+     */
+    const DIRECTLY = 1;
+    const INDIRECTLY = 0;
+
     public static function model($className = __CLASS__)
     {
         return parent::model($className);

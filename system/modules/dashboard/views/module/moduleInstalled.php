@@ -6,7 +6,7 @@ use application\core\utils\Module;
 
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Module']; ?></h1>
+        <h1 class="mt"><?php echo $lang['Module Setting']; ?> > <?php echo $lang['Module manager']?></h1>
         <ul class="mn">
             <li>
                 <span><?php echo $lang['Installed']; ?></span>

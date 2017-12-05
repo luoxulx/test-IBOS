@@ -40,39 +40,28 @@
 
 	// window.onload = window.onresize = adjustLayout;
 
-	function showNav(){
-		var el = $(this),
+	function toggleNav(){
+		var $el = $(this)
 			//当前活动元素为a标签时，active加在其父节点li上
-			item = el.is("a") ? el.parent() : el,
-			list = $(el.data("href"));
-		// if(item.hasClass("active")){
-		// 	return false;
-		// }
-		item.addClass("active").siblings().removeClass("active");
-		if(list.length){
-			list.show().siblings().hide();
-			$("a", list).eq(0).trigger("click");
+		var $item = $el.is("a") ? $el.parent() : $el
+		var $subNav = $($el.data("href"));
+		if ($item.hasClass("active")){
+			$subNav.toggle()
+			$subNav.find('.sub-link').eq(0).trigger('click')
+		} else {
+			$item
+				.siblings()
+				.children('.sub-nav')
+				.hide()
+			$subNav.show().find('.sub-link').eq(0).trigger('click')
 		}
 	}
 
-	$("#main_nav").find("a").on("click", showNav);
-	$("#sub_nav").find("a").on("click", showNav);
+	function toggleActive () {
+		$(this).parent().addClass('active').siblings().removeClass('active')
+	}
 
-	//展开网站地图
-	$("#logo").on("click", function(evt){
-		var that = $(this);
-		if($(this).hasClass("active")){
-			$("#db_map").slideUp(200, function(){
-				that.removeClass("active");
-			});
-		}else{
-			$("#db_map").slideDown(200);
-			$(this).addClass("active")
-		}
-		evt.stopPropagation();
-	})
-	$(document).on("click", function(){
-		$("#db_map").hide(0);
-		$("#logo").removeClass("active");
-	})
+	$('.main-link').on('click', toggleNav);
+	$('.main-link').on('click', toggleActive)
+	$('.sub-link').on('click', toggleActive)
 })()

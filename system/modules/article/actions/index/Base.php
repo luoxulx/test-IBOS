@@ -20,6 +20,7 @@ use application\modules\message\model\Notify;
 use application\modules\user\model\User;
 use application\modules\user\utils\User as UserUtil;
 use application\modules\vote\components\Vote as VoteComponent;
+use application\modules\vote\model\Vote;
 use application\modules\weibo\utils\Common as WbCommonUtil;
 use application\modules\weibo\utils\Feed as WbfeedUtil;
 
@@ -186,14 +187,15 @@ class Base extends \CAction
         //取得发布权限
         $publishscope = StringUtil::handleSelectBoxData($data['publishscope']);
         $attributes['deptid'] = $publishscope['deptid'];
-        $attributes['deptid'] = $publishscope['deptid'];
         $attributes['positionid'] = $publishscope['positionid'];
         $attributes['roleid'] = $publishscope['roleid'];
         $attributes['uid'] = $publishscope['uid'];
-        if (strtotime($data['topendtime']) < TIMESTAMP) {
+        $attributes['highlightendtime'] = strtotime($data['highlightendtime']) + 24 * 60 * 60 - 1;
+        $attributes['topendtime'] = strtotime($data['topendtime']) + 24 * 60 * 60 - 1;
+        if ($attributes['topendtime'] < TIMESTAMP) {
             $attributes['istop'] = 0;
         }
-        if (strtotime($data['highlightendtime']) < TIMESTAMP) {
+        if ($attributes['highlightendtime'] < TIMESTAMP) {
             $attributes['ishighlight'] = 0;
         }
         $attributes['votestatus'] = isset($data['votestatus']) ? $data['votestatus'] : 0;
@@ -409,8 +411,14 @@ class Base extends \CAction
                 //添加投票
                 VoteComponent::add($voteData, $moduleName, $articleId);
             } elseif ($op == 'update') {
-                // 更新投票
-                VoteComponent::update($voteData, $moduleName, $articleId);
+                $isvote = Vote::model()->fetchVoteByModule($moduleName, $articleId);
+                if (empty($isvote)){
+                    //添加投票
+                    VoteComponent::add($voteData, $moduleName, $articleId);
+                }else{
+                    // 更新投票
+                    VoteComponent::update($voteData, $moduleName, $articleId);
+                }
             }
         }
     }

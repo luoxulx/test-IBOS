@@ -10,14 +10,16 @@
 return array(
     //----------------Controller------------------------------------
     'Personal Office' => '个人办公',
-    'Work report' => '工作总结与计划',
-    'Work summary' => '工作总结',
-    'Summary and plan' => '总结与计划',
-    'My report' => '我的工作计划',
-    'My report list' => '我的总结与计划列表',
+    'Work report' => '工作汇报',
+    'Work summary' => '工作汇报',
+    'Summary and plan' => '工作汇报',
+    'My report' => '我的汇报',
+    'My report list' => '我的汇报列表',
     'Add report' => '填写总结与计划',
     'Edit report' => '编辑总结与计划',
     'Show report' => '查看总结与计划',
+    'Manager template' => '管理模板',
+    'My template list' => '我的模板列表',
     'Has not reader' => '暂无阅读人员',
     'Has not comment' => '暂无点评',
     'Review subordinate report' => '评阅下属工作总结与计划',
@@ -30,9 +32,9 @@ return array(
     'Add succeed' => '添加成功',
     'Add failed' => '添加失败',
     'Day' => '天',
-    'New message title' => '@{sender} 给您发了一篇总结计划汇报 {subject}',
-    'New message content' => '@{sender} 给您发了一篇总结计划汇报， {subject}<br /><br />',
-    'Post report' => '发表了一篇工作总结',
+    'New message title' => '@{sender} 给您发了一篇汇报 {subject}',
+    'New message content' => '@{sender} 给您发了一篇汇报， {subject}<br /><br />',
+    'Post report' => '发表了一篇工作汇报',
     'Feed title' => '<a href="{url}" class="xwb anchor">{subject}</a>',
     'Ten point scale' => '10分制',
     'Five point scale' => '5分制',
@@ -47,8 +49,27 @@ return array(
     'You do not have permission to delete the report' => '抱歉,您没有权限删除该总结',
     'Have not permission' => '抱歉,您没有权限访问该用户的总结',
     'No data found' => '抱歉,该总结不存在或已删除',
+    'Add template success' => '添加模板成功',
+    'Update sort template' => '模板排序成功',
+    'Set template success' => '模板设置成功',
+    'Empty or error type' => '字段值为空或者格式不正确',
+    'Send report success' => '发送成功',
+    'Save report success' => '保存成功',
+    'Send report fail' => '发送失败',
+    'Least toid or defalutuid' => '请设置发送人或者设置模板默认发送人',
+    'Delete report success' => '删除成功',
+    'Comment success' => '评论成功',
+    'Reply success' => '回复成功',
+    'Edit template success' => '编辑模板成功',
+    'Not empty template name' => '模板名称不能为空',
+    'Delete template success' => '删除模板成功',
+    'Add stamp success' => '设置图章成功',
+    'Read all report success' => '全部已读成功',
+    'Has been added shoptemplate' => '已经添加过该模板',
+    'Field is no empty' => '模板字段不能为空',
+    "Do not have permission to show this report" => '无权限查看该汇报',
     //----------------Views------------------------------------
-    'Work report setting' => '工作总结与计划设置',
+    'Work report setting' => '工作汇报设置',
     'Stamp function' => '图章功能',
     'Auto comment' => '自动评阅',
     'Auto to review' => '开启后当查看下属总结时自动给予点评“已阅”',
@@ -108,5 +129,16 @@ return array(
     'Last month' => '上月',
     'Statistics' => '统计',
     'Set remind' => '设置提醒',
-    'Comment my report' => '评论{realname}的总结<a href=\"{url}\">&nbsp;“{title}”</a>',
+    'Comment my report' => '评论{realname}的汇报<a href=\"{url}\">&nbsp;“{title}”</a>',
+    'Auto num detail' => '<h5>表达式中可以使用以下特殊标记：</h5>
+                                     <div>
+                                        {Y}：表示年<br />
+                                        {M}：表示月<br />
+                                        {D}：表示日<br />
+                                        {F}：表示模板名称<br/>                           
+                                        {V}：关联字段<br/>
+                                        例如，表达式为：{F}模板({Y}年{M}月{D}日){U}<br/> 
+                                        自动生成文号如：公文模板(2006年01月01日)张三<br/>
+                                        可以不填写自动文号表达式，则系统默认只显示模板名称<br />                       
+                                     </div>',
 );

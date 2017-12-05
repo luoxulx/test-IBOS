@@ -97,6 +97,7 @@ class ResumeController extends BaseController
             $params['dashboardConfigToJson'] = CJSON::encode($params['dashboardConfig']);
             $regulars = Regular::model()->fetchAll();
             $params['regulars'] = CJSON::encode($regulars);
+            $params['op'] = $op;
             $this->setPageTitle(Ibos::lang('Add resume'));
             $this->setPageState('breadCrumbs', array(
                 array('name' => Ibos::lang('Recruitment management'), 'url' => $this->createUrl('resume/index')),
@@ -421,6 +422,7 @@ class ResumeController extends BaseController
             'regulars' => CJSON::encode($regulars)
         );
         $params['dashboardConfigToJson'] = CJSON::encode($params['dashboardConfig']);
+        $params['op'] = 'analysis';
         $this->setPageTitle(Ibos::lang('Add resume'));
         $this->setPageState('breadCrumbs', array(
             array('name' => Ibos::lang('Recruitment management'), 'url' => $this->createUrl('resume/index')),

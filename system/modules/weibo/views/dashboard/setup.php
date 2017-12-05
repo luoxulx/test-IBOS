@@ -45,7 +45,7 @@
                     </div>
                     <div class="control-group">
                         <label class="control-label"><?php echo $lang['Allowed post type']; ?></label>
-                        <div class="controls">
+                        <div class="controls" style="display:none;">
                             <label class="checkbox checkbox-inline">
                                 <input type="checkbox" value="1"
                                        <?php if ($config['wbposttype']['image'] == 1): ?>checked<?php endif; ?>

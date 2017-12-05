@@ -31,7 +31,7 @@
                         <div class="controls">
                             <div class="datepicker" id="date_start">
                                 <a href="javascript:;" class="datepicker-btn"></a>
-                                <input type="text" class="datepicker-input" name="starttime"
+                                <input type="text" id="start_time" class="datepicker-input" name="starttime"
                                        value="<?php echo date('Y-m-d H:i', $record['starttime']); ?>">
                             </div>
                         </div>
@@ -41,7 +41,7 @@
                         <div class="controls">
                             <div class="datepicker" id="date_end">
                                 <a href="javascript:;" class="datepicker-btn"></a>
-                                <input type="text" class="datepicker-input" name="endtime"
+                                <input type="text" id="end_time" class="datepicker-input" name="endtime"
                                        value="<?php echo date('Y-m-d H:i', $record['endtime']); ?>">
                             </div>
                         </div>
@@ -81,4 +81,5 @@
         </form>
     </div>
 </div>
+<script src='<?php echo STATICURL; ?>/js/lib/formValidator/formValidator.packaged.js?<?php echo VERHASH; ?>'></script>
 <script src="<?php echo $this->getAssetUrl(); ?>/js/db_announcement.js"></script>

@@ -24,9 +24,11 @@ use application\core\utils\Ibos;
 use application\core\utils\Org;
 use application\core\utils\Page;
 use application\core\utils\StringUtil;
+use application\modules\dashboard\utils\SyncWx;
 use application\modules\department\model\Department;
 use application\modules\department\model\DepartmentRelated;
 use application\modules\department\utils\Department as DepartmentUtil;
+use application\modules\message\core\wx\WxApi;
 use application\modules\user\model\User;
 use application\modules\user\utils\User as UserUtil;
 use CHtml;
@@ -50,15 +52,22 @@ class DepartmentController extends OrganizationbaseController
             $this->dealWithBranch();
             $this->dealWithSpecialParams();
             $data = Department::model()->create();
+            $repeatName = $this->checkDeptNameIsSameLeveNameRepeat($_POST['pid'],$_POST['deptname']);
+            if ($repeatName){
+                $this->error(Ibos::lang('Department Name repeat'));
+            }
             $data['isbranch'] = isset($_POST['isbranch']) ? 1 : 0;
             $newId = Department::model()->add($data, true);
             Department::model()->modify($newId, array('sort' => $newId));
+            SyncWx::getInstance()->addWxDept($newId);
             $newId && Org::update();
             Cache::update('setting');
             $this->success(Ibos::lang('Save succeed', 'message'), $this->createUrl('user/index'));
         } else {
             $dept = DepartmentUtil::loadDepartment();
             $param = array();
+            $param['lang'] = Ibos::getLangSources();
+            $param['assetUrl'] = $this->getAssetUrl();
             $this->render('add', $param);
         }
     }
@@ -82,25 +91,36 @@ class DepartmentController extends OrganizationbaseController
             $pid = empty($pid) ? '0' : StringUtil::getId($pid);
             $status = $this->setStructure($index, $deptid['0'], $pid['0']);
             Org::update();
-            return $this->ajaxReturn(array('isSuccess' => $status), 'json');
+            SyncWx::getInstance()->updateWxDept($deptid);
+            $this->ajaxReturn(array('isSuccess' => $status), 'json');
         }
         $deptId = Env::getRequest('deptid');
         // 总部
         if ($deptId == '0') {
             //不再组织架构这里单独处理总公司，只保留全局设置的
         } else {
-            if ($deptId == $pid) {
-                $this->error(Ibos::lang('update failed, up dept cannot be itself'));
-            }
             $this->dealWithBranch();
             $this->dealWithSpecialParams();
             $data = Department::model()->create();
             $data['isbranch'] = isset($_POST['isbranch']) ? 1 : 0;
+            $Legitimate = $this->checkPidIsLegitimate($data['deptid'],$data['pid']);
+            $fetchData = Department::model()->fetchByPk($data['deptid']);
+            if (!empty($data['deptname']) && ($fetchData['deptname'] != $data['deptname'])){
+                $pid = isset($data['pid'])?$data['pid']:0;
+                $repeatName = $this->checkDeptNameIsSameLeveNameRepeat($pid,$_POST['deptname']);
+                if ($repeatName){
+                    $this->error(Ibos::lang('Department Name repeat'));
+                }
+            }
+            if (!$Legitimate){
+                $this->error(Ibos::lang('update failed, up dept cannot be itself and child'));
+            }
             $editStatus = Department::model()->modify($data['deptid'], $data);
+            SyncWx::getInstance()->updateWxDept($data['deptid']);
             $editStatus && Org::update();
             Cache::update('setting');
         }
-        return $this->success(Ibos::lang('Update succeed', 'message'), $this->createUrl('user/index'));
+        $this->success(Ibos::lang('Update succeed', 'message'), $this->createUrl('user/index'));
     }
 
     /**
@@ -115,7 +135,7 @@ class DepartmentController extends OrganizationbaseController
                 $delStatus = false;
                 $msg = Ibos::lang('Remove the child department first');
             } else {
-                $delStatus = Department::model()->remove($delId);
+                $delStatus = Department::model()->deleteAll('deptid = :deptid', array(':deptid' => $delId));
                 // 删除辅助部门关联
                 DepartmentRelated::model()->deleteAll('deptid = :deptid', array(':deptid' => $delId));
                 $relatedIds = User::model()->fetchAllUidByDeptid($delId);
@@ -123,6 +143,7 @@ class DepartmentController extends OrganizationbaseController
                 if (!empty($relatedIds)) {
                     User::model()->updateByUids($relatedIds, array('deptid' => 0));
                 }
+                SyncWx::getInstance()->delWxDept($delId);
                 $delStatus && Org::update();
                 $msg = Ibos::lang('Operation succeed', 'message');
             }
@@ -190,7 +211,9 @@ class DepartmentController extends OrganizationbaseController
     {
         $id = Env::getRequest('id');
         if ($id == 0) { // 总公司
-            $this->render('editHeadDept');
+            $data['lang'] = Ibos::getLangSources();
+            $data['assetUrl'] = $this->getAssetUrl();
+            $this->render('editHeadDept', $data);
         } else {
             $result = Department::model()->fetchByPk($id);
             $result['manager'] = StringUtil::wrapId(array($result['manager']));
@@ -206,6 +229,8 @@ class DepartmentController extends OrganizationbaseController
                 'department' => $result,
                 'deptid' => $deptid,
             );
+            $param['lang'] = Ibos::getLangSources();
+            $param['assetUrl'] = $this->getAssetUrl();
             $this->render('edit', $param);
         }
     }
@@ -289,6 +314,39 @@ class DepartmentController extends OrganizationbaseController
                 'isSuccess' => false,
                 'msg' => Ibos::lang('Save failed', 'message'),
             ));
+        }
+    }
+
+    /**
+     *检测修改部门时候的pid是不是自己 ，还是自己下级的deptid
+     * @param $deptid
+     * @param $pid
+     * @return bool
+     */
+    protected function checkPidIsLegitimate($deptid,$pid)
+    {
+        if ($deptid != $pid){
+            $childIds = Department::model()->fetchDeptAllChildOfChildByDeptID($deptid);
+            if (empty($childIds) || (!empty($childIds) && !in_array($pid,$childIds))){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 检测同层级别部门名称，相同返回true
+     * @param $pid
+     * @param $name
+     * @return bool
+     */
+    protected function checkDeptNameIsSameLeveNameRepeat($pid,$name)
+    {
+        $deptid = Department::model()->getDeptIdByPidAndName($pid,$name);
+        if (!empty($deptid)){
+            return true;
+        }else{
+            return false;
         }
     }
 

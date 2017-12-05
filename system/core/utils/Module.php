@@ -261,7 +261,7 @@ class Module
     }
 
     /**
-     * 获取模块安装文件夹路径
+     * 获取模块卸载文件夹路径
      * @param string $module 模块名
      * @return string
      */

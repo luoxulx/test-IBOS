@@ -77,7 +77,7 @@ class Setting extends CBehavior
             $index = 1;
             foreach ($record as $credit) {
                 $this->_setting['extcredits'][$index] = $credit;
-                $this->_setting['creditremind'] && $this->_setting['creditnames'][] = str_replace("'", "\'", StringUtil::ihtmlSpecialChars($credit['cid'] . '|' . $credit['name']));
+                $this->_setting['creditremind'] && $this->_setting['creditnames'] = str_replace("'", "\'", StringUtil::ihtmlSpecialChars($credit['cid'] . '|' . $credit['name']));
                 $index++;
             }
         }

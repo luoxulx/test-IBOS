@@ -41,7 +41,7 @@ class Session extends Model
         $result = Ibos::app()->db->createCommand()
             ->select()
             ->from($this->tableName())
-            ->where(" `sid` = '{$sid}' ")
+            ->where(" `sid` = ':sid' ", array(':sid' => $sid))
             ->queryRow();
         $session = is_null($result) ? array() : $result;
         if (!empty($session)) {

@@ -1,6 +1,6 @@
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Update cache']; ?></h1>
+        <h1 class="mt">通用设置 > <?php echo $lang['Update cache']; ?></h1>
     </div>
     <div>
         <div class="ctb">
@@ -13,7 +13,7 @@
                 </div>
             </section>
             <section class="update-item">
-                <h2 class="st"><?php echo $lang['Update cache']; ?></h2>
+                <!-- <h2 class="st"><?php echo $lang['Update cache']; ?></h2> -->
                 <div class="alert trick-tip">
                     <div class="trick-tip-title">
                         <i></i>

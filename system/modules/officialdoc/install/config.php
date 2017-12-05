@@ -4,7 +4,7 @@ defined('IN_MODULE_ACTION') or die('Access Denied');
 return array(
     'param' => array(
         'name' => '通知公告',
-        'category' => '信息中心',
+        'category' => '通知公告',
         'description' => '提供企业通知信息发布，以及版本记录',
         'author' => 'banyanCheung @ IBOS Team Inc',
         'version' => '1.0',

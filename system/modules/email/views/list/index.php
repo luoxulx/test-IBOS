@@ -173,7 +173,7 @@ use application\core\utils\Ibos;
                     <tbody>
                     <?php $importantDriver = array(0 => '', 1 => 'xcgn', 2 => 'xcr'); ?>
                     <?php foreach ($list as $data): ?>
-                        <?php $importantClass = $importantDriver[$data['important']]; ?>
+                        <?php $importantClass = isset($data['important']) ?  (isset($importantDriver[$data['important']]) ? $importantDriver[$data['important']] : '') : ''; ?>
                         <?php
                         if ($op == 'draft') {
                             $id = $data['bodyid'];

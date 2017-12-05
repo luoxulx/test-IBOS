@@ -30,9 +30,9 @@ use application\modules\user\utils\User as UserUtil;
 class User extends Model
 {
 
-    const USER_STATUS_NORMAL = 0;
-    const USER_STATUS_LOCKED = 1;
-    const USER_STATUS_ABANDONED = 2;
+    const USER_STATUS_NORMAL = 0; //正常状态
+    const USER_STATUS_LOCKED = 1;   //锁定
+    const USER_STATUS_ABANDONED = 2;    //禁止
 
     /**
      * @param string $className
@@ -250,6 +250,52 @@ class User extends Model
     }
 
     /**
+     * 获取所有用户
+     * @param boolean $returnDisabled 是否禁用用户一起返回
+     * @param string $keyword 真实名关键字
+     * @parma string $uids 用户id 如1,2,3
+     * @return array
+     */
+    public function fetchAllUser($returnDisabled = false, $keyword = '', $uids = '')
+    {
+        $condition = $returnDisabled ? 1 : $this->status_not_disabled();
+        if (empty($keyword)) {
+            if (empty($uids)) {
+                $user = Ibos::app()->db->createCommand()->from("{{user}} user")
+                    ->select('user.uid,user.realname,up.avatar_small')
+                    ->join('{{user_profile}} up', 'user.uid = up.uid')
+                    ->where($condition)
+                    ->queryAll();
+            }else{
+                $user = Ibos::app()->db->createCommand()->from("{{user}} user")
+                    ->select('user.uid,user.realname,up.avatar_small')
+                    ->join('{{user_profile}} up', 'user.uid = up.uid')
+                    ->where($condition)
+                    ->andWhere("user.uid IN ({$uids})")
+                    ->queryAll();
+            }
+        } else {
+            if (empty($uids)) {
+                $user = Ibos::app()->db->createCommand()->from("{{user}} user")
+                    ->select('user.uid,user.realname,up.avatar_small')
+                    ->join('{{user_profile}} up', 'user.uid = up.uid')
+                    ->where($condition)
+                    ->andWhere("user.realname LIKE %{$keyword}%")
+                    ->queryAll();
+            }else{
+                $user = Ibos::app()->db->createCommand()->from("{{user}} user")
+                    ->select('user.uid,user.realname,up.avatar_small')
+                    ->join('{{user_profile}} up', 'user.uid = up.uid')
+                    ->where($condition)
+                    ->andWhere("user.realname LIKE '%{$keyword}%'")
+                    ->andWhere("user.uid IN ({$uids})")
+                    ->queryAll();
+            }
+        }
+        return $user;
+    }
+
+    /**
      * 根据批量uid获取批量真实姓名和电话，uid为数组的键
      * @param mixed $uidX
      * @return array
@@ -319,8 +365,8 @@ class User extends Model
             ->from(DepartmentRelated::model()->tableName())
             ->where($this->uid_eq($uid))
             ->queryColumn();
-
-        return array_unique(array_merge($related, array($main)));
+        $userDepData = empty($main)?$related:array_merge($related,array($main));
+        return array_unique($userDepData);
     }
 
     /**
@@ -344,8 +390,8 @@ class User extends Model
             ->from(PositionRelated::model()->tableName())
             ->where($this->uid_eq($uid))
             ->queryColumn();
-
-        return array_unique(array_merge($related, array($main)));
+        $userPositionData = empty($main)?$related:array_merge($related,array($main));
+        return array_unique($userPositionData);
     }
 
     /**
@@ -369,8 +415,8 @@ class User extends Model
             ->from(RoleRelated::model()->tableName())
             ->where($this->uid_eq($uid))
             ->queryColumn();
-
-        return array_unique(array_merge($related, array($main)));
+        $userRoleData = empty($main)?$related:array_merge($related,array($main));
+        return array_unique($userRoleData);
     }
 
     /**
@@ -492,6 +538,26 @@ class User extends Model
             ))
             ->queryColumn();
         return $uidArray;
+    }
+
+    /**
+     * 获得对应用户的所有下属用户
+     * @param $uid
+     * @return array
+     */
+    public function getAllSubByUid($uid)
+    {
+        static $subUsers = array();
+        $users = User::model()->fetchSubByPk($uid);
+        if (!empty($users)) {
+            foreach ($users as $subUser){
+                $subUsers[] = $subUser;
+                if ($subUser['uid'] != $subUser['upuid']){
+                    $this->getAllSubByUid($subUser['uid']);
+                }
+            }
+        }
+        return $subUsers;
     }
 
     /**

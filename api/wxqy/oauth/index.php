@@ -7,6 +7,34 @@ use application\modules\main\model\Setting;
 use application\modules\user\model\User;
 use application\modules\user\model\UserBinding;
 
+// CORS 设置
+$str = strtolower($_SERVER['SERVER_SOFTWARE']);
+list($server) = explode('/', $str);
+
+if ($server == "apache" || $server == "nginx" || $server == "lighttpd") {
+    if (isset($_SERVER['HTTP_ORIGIN'])) {
+        header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
+    }
+    header('Access-Control-Allow-Headers: Origin, Accept, Content-Type, Authorization, ISCORS');
+    header('Access-Control-Allow-Credentials: true');
+    header('Access-Control-Allow-Methods: POST, GET, PUT, OPTIONS, DELETE');
+
+    if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+        exit();
+    }
+} else if ($server == "iis") {
+    if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+        // CORS 设置，有待讨论
+        if (isset($_SERVER['HTTP_ORIGIN'])) {
+            header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
+        }
+        header('Access-Control-Allow-Headers: Origin, Accept, Content-Type, Authorization, ISCORS');
+        header('Access-Control-Allow-Credentials: true');
+        header('Access-Control-Allow-Methods: POST, GET, PUT, OPTIONS, DELETE');
+        exit();
+    }
+}
+
 // 程序根目录路径
 define('PATH_ROOT', dirname(__FILE__) . '/../../../');
 define('YII_DEBUG', true);
@@ -70,6 +98,7 @@ if (!empty($userId)) {
     $uid = UserBinding::model()->fetchUidByValue($userId, 'wxqy');
     if ($uid) {
         $resArr = doLogin($uid, 'wxqy');
+        file_put_contents('resArr.log', var_export($resArr, true), 8);
         if (!Ibos::app()->user->isGuest && $resArr['code'] > '0') {
             $redirect = Env::getRequest('redirect');
             $url = base64_decode($redirect);

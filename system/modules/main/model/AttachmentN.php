@@ -72,6 +72,12 @@ class AttachmentN
         return !empty($aid) ? Ibos::app()->db->createCommand()->setText($sqlText)->queryRow() : array();
     }
 
+    public function fetchForWorkflowUploadFile($tableId, $aid)
+    {
+        $sqlText = sprintf('SELECT * FROM %s WHERE aid = %d AND isimage = 2', $this->getTable($tableId), $aid);
+        return !empty($aid) ? Ibos::app()->db->createCommand()->setText($sqlText)->queryRow() : array();
+    }
+
     /**
      * 增加一条附件分表记录
      * @param integer $tableId

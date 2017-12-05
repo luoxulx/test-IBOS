@@ -457,6 +457,8 @@ $(function() {
                     if (res.isSuccess === true) {
                         Ui.tip(res.info);
                         tableConfig.draw(false);
+                    } else if(res.isSuccess === false) {
+                        Ui.tip(res.info,'danger');
                     }
                 });
             });
@@ -470,6 +472,8 @@ $(function() {
                     if (res.isSuccess === true) {
                         Ui.tip(res.info);
                         tableConfig.draw(false);
+                    } else if(res.isSuccess === false) {
+                        Ui.tip(res.info,'danger');
                     }
                 });
             });

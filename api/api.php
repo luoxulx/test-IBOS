@@ -8,6 +8,10 @@ use application\core\utils\Module as ModuleUtil;
 use application\modules\main\model\Setting;
 use application\modules\user\model\UserBinding;
 use application\modules\role\utils\Role;
+use application\modules\user\model\User;
+use application\modules\user\model\UserProfile;
+use application\modules\position\model\Position;
+use application\modules\dashboard\utils\SyncWx;
 
 // 程序根目录路径
 define('PATH_ROOT', dirname(__FILE__) . '/../');
@@ -36,6 +40,20 @@ if (!empty($result)) {
             break;
         case 'version':
             $return = strtolower(implode(',', array(ENGINE, VERSION, VERSION_TYPE)));
+            break;
+        case 'syncWxuser':
+            if (isset($msg['corpid']) && isset($msg['suiteid'])){
+                //获得套件允许的授权范围部门
+                SyncWx::getInstance()->getAllowDepartment($msg['corpid'], $msg['suiteid']);
+                //获得套件允许的授权范围人员
+                SyncWx::getInstance()->getAllowUser($msg['corpid'], $msg['suiteid']);
+            }
+            $return = CJSON::encode(
+                array(
+                    'isSuccess' => true,
+                    'msg' => ''
+                )
+            );
             break;
         case 'module':
             $returnArray = Ibos::app()->db->createCommand()
@@ -88,9 +106,44 @@ if (!empty($result)) {
             );
             $checkbinding = UserBinding::model()->find(sprintf(" `uid` = '%s' AND `app` = '%s'", $uid, $app));
             if (empty($checkbinding)) {
-                $res = UserBinding::model()->add($data);
+                $binding = UserBinding::model()->find(sprintf(" `bindvalue` = '%s' AND `app` = '%s'", $bindValue, $app));
+                if (empty($binding)){
+                    $res = UserBinding::model()->add($data);
+                }else{
+                    $res = UserBinding::model()->modify($binding['id'], $data);
+                    User::model()->deleteAll('uid = :uid', array(':uid' => $binding['uid']));
+                }
             } else {
                 $res = UserBinding::model()->modify($checkbinding['id'], $data);
+            }
+            if (isset($msg['user']) && !empty($msg['user'])){
+                $user = $msg['user'];
+                if (!empty($user['position'])){
+                    $position = Position::model()->add(array(
+                        'catid' => 1,
+                        'posname' => $user['position'],
+                    ), true);
+                }
+                $updateUser = array(
+                    'email' => $user['email'],
+                    'realname' => $user['name'],
+                    'gender' =>$user['gender'] == 1 ? 1 : 0,
+                    'positionid' => isset($position) ? $position : 0,
+                );
+                if (!empty($user['department'])){
+                    $user['deptid'] = isset($department[0]) ? (($department['0'] == 1) ? 0 : $department[0]) : 0;
+                }else{
+                    $updateUser['deptid'] = 0;
+                }
+                $profile = array('avatar_middle' => $user['avatar']);
+                User::model()->updateAll($updateUser, 'uid=:uid', array(':uid' => $uid));
+                $userProfile = UserProfile::model()->fetchByPk($uid);
+                if (empty($userProfile)){
+                    $profile['uid'] = $uid;
+                    UserProfile::model()->add($profile);
+                }else{
+                    UserProfile::model()->modify($uid, $userProfile);
+                }
             }
             $return = CJSON::encode(
                 array(
@@ -102,6 +155,15 @@ if (!empty($result)) {
         case 'updateAuthority':
             ModuleUtil::updateConfig();
             Role::updateAuthItemByRoleid();
+            $return = CJSON::encode(
+                array(
+                    'isSuccess' => true,
+                    'msg' => ''
+                )
+            );
+            break;
+        case 'changeContact':
+            SyncWx::getInstance()->changeContactByMsgData($msg);
             $return = CJSON::encode(
                 array(
                     'isSuccess' => true,

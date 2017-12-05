@@ -2,17 +2,12 @@
 <link rel="stylesheet" href="<?php echo $assetUrl; ?>/css/organization_role.css?<?php echo VERHASH; ?>">
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt">角色权限管理</h1>
+        <h1 class="mt">通讯录管理 > 岗位管理</h1>
     </div>
     <div>
         <!-- 部门信息 start -->
         <div class="ctb">
-            <h2 class="st">角色管理</h2>
             <div>
-                <div class="btn-group mb">
-                    <a href="javascript:;" class="btn active">岗位设置</a>
-                    <!--<a href="<?php // echo $this->createUrl( 'position/member' ); ?>" class="btn">岗位成员管理</a>-->
-                </div>
                 <div class="">
                     <form action="<?php echo $this->createUrl('position/add'); ?>" method="post" id="position_add_form"
                           class="form-horizontal user-info-form">
@@ -58,5 +53,3 @@
 </div>
 <script src='<?php echo STATICURL; ?>/js/lib/formValidator/formValidator.packaged.js?<?php echo VERHASH; ?>'></script>
 <script src="<?php echo $assetUrl; ?>/js/db_position.js"></script>
-
-

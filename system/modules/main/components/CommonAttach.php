@@ -22,8 +22,14 @@ class CommonAttach extends AttachCore
     {
         $uidTemp = intval(util\Env::getRequest('uid'));
         $uid = empty($uidTemp) ? Ibos::app()->user->uid : $uidTemp;
-        $this->upload->save();
+        // 判断文件类型
         $attach = $this->upload->getAttach();
+        if(!$this->checkExt($attach['ext'])){
+            $this->isUpload = false;
+            $this->errmsg = 'The file type is not in white list';
+            return CJSON::encode(array('aid' => 0, 'url' => 0, 'name' => 0));
+        }
+        $this->upload->save();
         $attachment = $attach['type'] . '/' . $attach['attachment'];
         $data = array(
             'dateline' => TIMESTAMP,
@@ -47,6 +53,7 @@ class CommonAttach extends AttachCore
             return CJSON::encode($file);
         } else {
             $this->isUpload = false;
+            $this->errmsg = 'Upload failed';
             return CJSON::encode(array('aid' => 0, 'url' => 0, 'name' => 0));
         }
     }
@@ -77,9 +84,54 @@ class CommonAttach extends AttachCore
      * @param mixed $attachids
      * @param string $related
      */
-    public function updateAttach($attachids, $related = 0)
+    public function updateAttach($attachids, $related = 0, $isFromUploadFile=false)
     {
-        return util\Attach::updateAttach($attachids, $related);
+        return util\Attach::updateAttach($attachids, $related, $isFromUploadFile);
     }
 
+    /**
+     * 上传文件检查后缀名是否为不可上传的类型
+     */
+    private function checkExt($ext){
+        $ext = strtoupper($ext);
+
+        // 黑名单
+        $blackList = array(
+            'PHP', // 防止脚本攻击
+        );
+
+        if(in_array($ext, $blackList)) {
+            return false; // 黑名单即使定义能上传也不予许上传
+        }
+
+        // 必须上传的白名单,定义时请大写
+        $whiteList = array(
+            'XML',  // 同步IM
+            'XLS',  // 导入
+            'XLSX', // 导入
+            'HTM',  // 工作流导入模板
+            'MTML', // 工作流导入模板
+            'CSV',  // 导入
+        );
+
+        if(in_array($ext, $whiteList)) {
+            return true; // 系统重要文件格式允许上传
+        }
+
+        $setting = preg_replace("/(\s|　|\xc2\xa0)/","", Ibos::app()->setting->get('setting/filetype')); //去除所有空格
+        $disallowExt = explode(',', strtoupper($setting));
+        if(!in_array($ext, $disallowExt)) {
+            return false;
+        }
+        return true;
+    }
+
+    /*
+     * 获取上传失败信息
+     */
+    public function getUploadErrMsg() {
+        // 这里不给出具体返回语言只固定标识，方便文案自定义
+        // 如果需要修改文案，请在模块的语言包内定义相同键名的文案
+        return $this->errmsg;
+    }
 }

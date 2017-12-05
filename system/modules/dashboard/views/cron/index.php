@@ -1,12 +1,11 @@
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Scheduled task']; ?></h1>
+        <h1 class="mt">通用设置 > <?php echo $lang['Scheduled task']; ?></h1>
     </div>
     <div>
         <form method="post" action="<?php echo $this->createUrl('cron/index'); ?>" id="cron_form">
             <!-- 计划任务 start -->
             <div class="ctb">
-                <h2 class="st"><?php echo $lang['Scheduled task']; ?></h2>
                 <div class="alert trick-tip">
                     <div class="trick-tip-title">
                         <i></i>

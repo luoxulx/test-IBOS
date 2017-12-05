@@ -18,7 +18,10 @@ use application\core\utils\StringUtil;
                     <td width="80">
                         <div>
                             <a title="<?php echo $report['subject']; ?>"
-                               href="<?php echo Ibos::app()->urlManager->createUrl('report/default/show', array('repid' => $report['repid'])); ?>"
+                               href="<?php
+                               $url = Ibos::app()->urlManager->createUrl('report/default/index');
+                               echo $url . "#send/detail/{$report['repid']}";
+                               ?>"
                             ><?php echo StringUtil::cutStr($report['subject'], 40); ?></a>
                         </div>
                     </td>
@@ -40,7 +43,7 @@ use application\core\utils\StringUtil;
         </div>
     <?php else: ?>
         <div class="in-rp-personal-empty">
-            <a href="<?php echo Ibos::app()->createUrl('report/default/add') ?>" class="in-rp-add" target="_blank"></a>
+            <a href="<?php $url = Ibos::app()->urlManager->createUrl('report/default/index'); echo $url . '#index'; ?>" class="in-rp-add" target="_blank"></a>
         </div>
     <?php endif; ?>
     <!--评阅-->
@@ -63,7 +66,10 @@ use application\core\utils\StringUtil;
                     <td align="left">
                         <div>
                             <a title="<?php echo $subReport['subject']; ?>"
-                               href="<?php echo Ibos::app()->urlManager->createUrl('report/review/show', array('repid' => $subReport['repid'])); ?>"
+                               href="<?php
+                               $url = Ibos::app()->urlManager->createUrl('report/default/index');
+                               echo $url . "#receive/detail/{$subReport['repid']}";
+                               ?>"
                             ><?php echo $subReport['userInfo']['realname'] . ' &nbsp; ' . StringUtil::cutStr($subReport['subject'], 40); ?></a>
                         </div>
                     </td>

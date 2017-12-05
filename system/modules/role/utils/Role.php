@@ -11,6 +11,7 @@ namespace application\modules\role\utils;
 
 use application\core\utils\Cache;
 use application\core\utils\Ibos;
+use application\core\utils\Module;
 use application\core\utils\Org;
 use application\core\utils\StringUtil;
 use application\modules\role\model\NodeRelated;
@@ -156,9 +157,17 @@ class Role
         // 创建对应的控制器
         $ca = Ibos::app()->createController($routes);
 
-        // 找不到对应的控制器。有可能是路由有误
-        if (empty($ca) || count($ca) != 2) {
-            throw new \CHttpException(404, 'Oops. Not found.');
+        // 找不到对应的控制器
+        if (empty($ca)) {
+            $routeParts = explode('/', $routes);
+            $module = isset($routeParts[0]) ? $routeParts[0] : '';
+            if (in_array($module, Module::getNotInstallModule())) {
+                // 可能原因1：模块被卸载了
+                return false;
+            } else {
+                // 可能原因2：路由有误0
+                return false;
+            }
         }
 
         list($controller, $actionId) = $ca;
@@ -197,6 +206,9 @@ class Role
         return true;
     }
 
+    /**
+     * 更新权限节点缓存
+     */
     public static function updateAuthItemByRoleid()
     {
         $roles = RoleModel::model()->findAll();
@@ -207,7 +219,7 @@ class Role
             if (!empty($authItem[$roleid]) && !empty($dataVal[$roleid])){
                 $authItemRoleid = $authItem[$roleid];
                 $dataValRoleid = $dataVal[$roleid];
-                Auth::updateAuthItemByRole($roleid, $authItemRoleid, $dataValRoleid);
+                Auth::updateCacheRoleAuthority($roleid, $authItemRoleid, $dataValRoleid);
             }
         }
         Cache::update('role');

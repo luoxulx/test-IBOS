@@ -62,7 +62,6 @@ use application\core\utils\StringUtil;
             </div>
         <?php endif; ?>
         <!-- 新增评论 -->
-        <?php if (isset($allowComment) && $allowComment): ?>
             <div class="cmt-item" id="newCommentBox" data-node-type="commentBox">
                 <div class="avatar-box">
                     <a href="<?php echo Ibos::app()->user->space_url; ?>" class="avatar-circle">
@@ -88,7 +87,6 @@ use application\core\utils\StringUtil;
                     </div>
                 </div>
             </div>
-        <?php endif; ?>
     </div>
     <script>
         $(function () {
@@ -97,7 +95,7 @@ use application\core\utils\StringUtil;
 
             Ibos.statics.load({type: "css", url: staticUrl + "/js/lib/atwho/jquery.atwho.css"});
             Ibos.statics.load({type: "css", url: staticUrl + "/css/emotion.css"});
-
+            Ibos.app.s("stamps", <?php echo json_encode($stamps);?>)
             $.when(
                 Ibos.statics.load(staticUrl + "/js/lib/atwho/jquery.atwho.js"),
                 Ibos.statics.load(staticUrl + "/js/src/emotion.js")

@@ -225,7 +225,7 @@ class Role extends Model
     }
 
     /**
-     * 过滤授权认证项
+     * 过滤授权认证项，由于crm的权限已经迁移到管理后台，所以这里不应该对crm权限节点进行过滤
      * @param array $authItem 节点
      * @return array $nodes 数据类型节点的值,包括子节点
      */
@@ -233,9 +233,9 @@ class Role extends Model
     {
         $auth = $nodes = array();
         foreach ($authItem as $key => $node) {
-            if ($node['module'] == 'crm' && $node['type'] == 'data') {
-                unset($authItem[$key]);
-            }
+//            if ($node['module'] == 'crm' && $node['type'] == 'data') {
+//                unset($authItem[$key]);
+//            }
             if ($node['module'] == 'dashboard') {
                 unset($authItem[$key]);
             }

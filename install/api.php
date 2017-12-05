@@ -9,6 +9,7 @@ use application\core\utils\StringUtil;
 use application\modules\message\core\co\CoApi;
 use application\modules\role\model\Role;
 use application\modules\user\model\User;
+use application\core\model\Log;
 
 error_reporting(E_ALL | E_STRICT);
 date_default_timezone_set('PRC');
@@ -33,7 +34,7 @@ if (get('p') == 'phpinfo') {
 $option = get('op', '');
 if (!in_array($option, array('envCheck', 'configCheck', 'dbCheck', 'moduleCheck',
         'handleInstall', 'handleInstallAll', 'handleAfterInstallAll', 'handleUpdateCoinfo',
-        'handleCheckSaas', 'handleUpdateData'))
+        'handleCheckSaas', 'handleUpdateData', 'regainSaasInstall', 'handleAfterInstallAllV2', 'handleInstallAllV2'))
 ) {
     $option = '';
 }
@@ -129,7 +130,16 @@ switch (1) {
         Yii::createApplication('application\core\components\Application', $commonConfig);
         handleUpdateDataOp();
         break;
-
+    //如果saas安装不成功，可以调用此方法进行重新安装
+    case $option == 'regainSaasInstall':
+        regainSaasInstall();
+        break;
+    case $option == 'handleAfterInstallAllV2':
+        handleAfterInstallAllV2();
+        break;
+    case $option == 'handleInstallAllV2':
+        handleInstallAllV2();
+        break;
     //安装检查
     default:
         InstallCheck();
@@ -413,7 +423,7 @@ function moduleCheckOp()
     global $sysModules;
     $allModules = Module::getModuleDirs();
     $coreModulesParams = Module::initModuleParameters($sysModules);
-    $customModules = array_diff($allModules, array_merge($sysModules, array('app')));
+    $customModules = array_diff($allModules, array_merge($sysModules, array('app', 'weibo')));
     $customModulesParams = Module::initModuleParameters($customModules);
     $ajaxReturn = array(
         'isSuccess' => true,
@@ -518,10 +528,14 @@ function getSaasDb($corpCode)
  */
 function createDb($dbConfig, $dbName)
 {
-    $conn = new PDO("mysql:host={$dbConfig['dbHost']};port={$dbConfig['dbPort']}", $dbConfig['dbAccount'], $dbConfig['dbPassword']);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $sql = "CREATE DATABASE IF NOT EXISTS {$dbName}";
-    $conn->exec($sql);
+    try{
+        $conn = new PDO("mysql:host={$dbConfig['dbHost']};port={$dbConfig['dbPort']}", $dbConfig['dbAccount'], $dbConfig['dbPassword']);
+        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $sql = "CREATE DATABASE IF NOT EXISTS {$dbName}";
+        $conn->exec($sql);
+    }catch (PDOException $e){
+        Log::write($e->getMessage());
+    }
 }
 
 /**
@@ -648,8 +662,20 @@ function handleInstallAllOp()
     $configString = addslashes(json_encode($config));
     $adminString = addslashes(json_encode($admin));
     $installtime = microtime(true);
-    // saas有效时间默认为2周
-    $expireTime = $installtime + 1209600;
+    $discount = getDiscount();
+    //获得后台的优惠信息
+    if (!empty($discount)){
+        $expireTime = $installtime + $discount['trialsday'] * 86400;
+        $allspace = $discount['trialsspace'];
+        $alluser = $discount['trialsnumbers'];
+        $version = 0;
+    }else{
+        // saas有效时间默认为2周
+        $expireTime = $installtime + 14 * 86400;
+        $allspace = 1;
+        $alluser = 2000;
+        $version = 0;
+    }
     // 如果是来自阿里云主机的开通的话，时长为一年
     if ($channel == 'aliyun' && !empty($sourceId)) {
         $query = $pdo->prepare(" SELECT * FROM `host` WHERE `sourceid` = :sourceid ");
@@ -670,6 +696,9 @@ function handleInstallAllOp()
         . "`mobile`,"
         . "`expiretime`,"
         . "`channel`,"
+        . "`allspace`,"
+        . "`alluser`,"
+        . "`version`,"
         . "`platform` ) VALUES ("
         . "'{$corpCode}', "
         . "'{$configString}', "
@@ -679,6 +708,9 @@ function handleInstallAllOp()
         . "'{$adminAccount}', "
         . "'{$expireTime}', "
         . "'{$channel}', "
+        . "'{$allspace}', "
+        . "'{$alluser}', "
+        . "'{$version}', "
         . "'{$platform}' )");
     $pdo = null;
     $dbConfig = array(
@@ -699,6 +731,50 @@ function handleInstallAllOp()
         Module::install($module); // 执行安装模块
     }
     return ajaxReturn(array('isSuccess' => true, 'msg' => '注册安装数据完成'));
+}
+
+//重现安装saas，这里只能是数据库没有正常安装情况下
+function regainSaasInstall()
+{
+    $corpcode = post('qycode');
+    $corpRow = getCorpByCode($corpcode);
+    if (!empty($corpRow)){
+        $config = json_decode($corpRow['config'], true);
+        $dbConfig = array(
+            'basePath' => PATH_ROOT . '/system',
+            'components' => array(
+                'db' => array(
+                    'connectionString' => "mysql:host={$config['db']['host']};port={$config['db']['port']};dbname={$config['db']['dbname']}",
+                    'emulatePrepare' => true,
+                    'username' => $config['db']['username'],
+                    'password' => $config['db']['password'],
+                    'charset' => $config['db']['charset'],
+                    'tablePrefix' => $config['db']['tableprefix'],
+                )
+            ),
+        );
+        Yii::createWebApplication($dbConfig);
+        $moduleArray = explode(',', $corpRow['module']);
+        try{
+            foreach ($moduleArray as $k => $module) {
+                Module::install($module); // 执行安装模块
+            }
+            return ajaxReturn(array('isSuccess' => true, 'msg' => '注册安装数据完成'));
+        }catch (Exception $exception){
+            return ajaxReturn(array('isSuccess' => false, 'msg' => $exception->getMessage()));
+        }
+    }else{
+        return ajaxReturn(array('isSuccess' => false, 'msg' => 'config表没有企业配置信息'));
+    }
+}
+
+function getDiscount()
+{
+    $discountUrl = 'http://api.ibos.cn/v3/corp/getdiscount';
+    $api = new Api();
+    $result = $api->fetchResult($discountUrl);
+    $result = json_decode($result, true);
+    return $result['data'];
 }
 
 function handleCheckSaasOp()
@@ -778,6 +854,8 @@ function handleAfterInstallAllOp()
     global $saasConfig;
     $corpCode = strtolower(post('qycode'));
     $smsContent = post('sms');
+    $source = post('source');
+    $logo = post('logo');
     $pdo = null;
     $corpRow = getCorpByCode($corpCode, $pdo);
     // 检查数据库连接正确性
@@ -847,7 +925,7 @@ function handleAfterInstallAllOp()
         $unit['shortname'] = $admin['shortname'];
         $unit['corpcode'] = $admin['corpcode'];
         $unit['systemurl'] = $systemurl;
-        $unit['logourl'] = 'static/image/logo.png';
+        $unit['logourl'] = empty($logo) ? 'static/image/logo.png' : $logo;
         foreach ($unitConfig as $value) {
             if (!isset($unit[$value])) {
                 $unit[$value] = '';
@@ -898,9 +976,15 @@ function handleAfterInstallAllOp()
 
 
         $pdo = null;
+        //记录开通来源
+        Yii::app()->db->createCommand()
+            ->insert('{{setting}}', array('skey' => 'source', 'svalue' => $source));
         //发送短信
-
-        $sms = "{$admin['realname']}, 你已成功开通[{$admin['fullname']}]酷办公OA，你的网址为：{$systemurl}，管理员账号密码与酷办公账号密码一致。【酷办公】";
+        if ($source == 'wxqy'){
+            $sms = "{$admin['realname']}, 你已成功开通[{$admin['fullname']}]酷办公OA，你的网址为：{$systemurl}。【酷办公】";
+        }else{
+            $sms = "{$admin['realname']}, 你已成功开通[{$admin['fullname']}]酷办公OA，你的网址为：{$systemurl}，管理员账号密码为酷办公账号密码或者账号密码都为你的手机号码。【酷办公】";
+        }
         $message = !empty($smsContent) ? $smsContent : $sms;
         $url = $saasConfig['url'];
         $get = array(
@@ -1219,3 +1303,346 @@ function pdo($host, $port, $dbname, $user, $password, $charset = 'utf8')
     }
     return $db;
 }
+
+function handleAfterInstallAllV2()
+{
+    global $saasConfig;
+    $corpCode = strtolower(post('qycode'));
+    $smsContent = post('sms');
+    $source = post('source');
+    $logo = post('logo');
+    $bindvalue = post('userid');
+    $suiteid = post('suiteid', 'tj482a534e720a8d59');
+    $pdo = null;
+    $corpRow = getCorpByCode($corpCode, $pdo);
+    // 检查数据库连接正确性
+
+    if (!empty($corpRow)) {
+        $admin = json_decode($corpRow['super'], true);
+        $ibosApplication = PATH_ROOT . '/system/core/components/Application.php';
+        require_once($ibosApplication);
+        $commonConfig = require CONFIG_PATH . 'common.php';
+        Yii::createApplication('application\core\components\Application', $commonConfig);
+        //防止接口重复被调用导致n多个管理员的问题，嗯……这个情况吓我一跳
+        $user1 = Yii::app()->db->createCommand()
+            ->select()
+            ->from('{{user}}')
+            ->where(" `uid` = 1 ")
+            ->queryRow();
+        if (empty($user1)) {
+            Yii::app()->db->createCommand()
+                ->insert('{{user}}', array(
+                    'username' => $admin['username'],
+                    'isadministrator' => 1,
+                    'password' => $admin['password'],
+                    'createtime' => TIMESTAMP,
+                    'salt' => $admin['salt'],
+                    'realname' => $admin['realname'],
+                    'mobile' => $admin['mobile'],
+                    'email' => '',
+                ));
+            $newId = Yii::app()->db->createCommand()
+                ->select("last_insert_id()")
+                ->from("{{user}}")
+                ->queryScalar();
+            $uid = intval($newId);
+            Yii::app()->db->createCommand()
+                ->insert('{{user_count}}', array('uid' => $uid));
+            $ip = Yii::app()->request->userHostAddress;
+            Yii::app()->db->createCommand()
+                ->insert('{{user_status}}', array('uid' => $uid, 'regip' => $ip, 'lastip' => $ip));
+            Yii::app()->db->createCommand()
+                ->insert('{{user_profile}}', array('uid' => $uid, 'remindsetting' => '', 'bio' => ''));
+        }
+        Yii::app()->db->createCommand()
+            ->insert('{{user_binding}}', array('uid' => 1, 'bindvalue' => $bindvalue, 'app' => 'wxqy'));
+        //aeskey存入表里
+        Yii::app()->db->createCommand()
+            ->update('{{setting}}'
+                , array('svalue' => $admin['aeskey'])
+                , " `skey`= 'aeskey'");
+        //更新Setting的unit
+        if ($corpRow['channel'] == 'woqi') {
+            $systemurl = 'http://' . $corpCode . '.kbg.unimip.cn';
+        } else {
+            $systemurl = 'http://' . $corpCode . '.saas.ibos.cn';
+        }
+        $unit = StringUtil::utf8Unserialize(
+            Yii::app()->db->createCommand()
+                ->select('svalue')
+                ->from('{{setting}}')
+                ->where("`skey` = 'unit'")
+                ->queryRow()
+        );
+        $unitConfig = array(
+            'logourl', 'phone', 'fullname',
+            'shortname', 'fax', 'zipcode',
+            'address', 'adminemail', 'systemurl', 'corpcode'
+        );
+        $unit['fullname'] = $admin['fullname'];
+        $unit['shortname'] = $admin['shortname'];
+        $unit['corpcode'] = $admin['corpcode'];
+        $unit['systemurl'] = $systemurl;
+        $unit['logourl'] = empty($logo) ? 'static/image/logo.png' : $logo;
+        foreach ($unitConfig as $value) {
+            if (!isset($unit[$value])) {
+                $unit[$value] = '';
+            }
+        }
+        Yii::app()->db->createCommand()
+            ->update('{{setting}}'
+                , array('svalue' => serialize($unit))
+                , " `skey`= 'unit'");
+
+        defined('IN_MODULE_ACTION') || define('IN_MODULE_ACTION', true);
+        try{
+            if ($suiteid == 'tj482a534e720a8d59'){//crm套件
+                $authSqlFile = PATH_ROOT . '/install/config/crmauth.sql';
+            }elseif ($suiteid == 'tj5d8edbf6def23b00'){
+                $authSqlFile = PATH_ROOT . '/install/config/officeauth.sql';
+            }elseif ($suiteid == 'tjf4611df93bdf9ad3'){
+                $authSqlFile = PATH_ROOT . '/install/config/corpauth.sql';
+            }
+            $sql = file_get_contents($authSqlFile);
+            Module::executeSql($sql);
+        }catch (Exception $e){
+            return ajaxReturn(array(
+                'isSuccess' => false,
+                'msg' => $e->getMessage()
+            ));
+        }
+
+        //重新打开config服务器
+        //写入安装成功标识
+        $installcost = microtime(true) - $corpRow['installtime'];
+
+
+        $query = $pdo->prepare("UPDATE `config` SET "
+            . "`installcost`= :installcost, "
+            . "`installed`='1' WHERE ("
+            . "`corpcode`= :corpCode )");
+        $query->bindParam(":installcost", $installcost);
+        $query->bindParam(":corpCode", $corpCode);
+        $query->execute();
+
+
+        $pdo = null;
+        //记录开通来源
+        Yii::app()->db->createCommand()
+            ->insert('{{setting}}', array('skey' => 'source', 'svalue' => $source));
+
+        return ajaxReturn(
+            array('isSuccess' => true, 'msg' => '安装成功', 'data' => array(
+                'sms' => '',
+                'aeskey' => $admin['aeskey']
+            )));
+    } else {
+        $pdo = null;
+        return ajaxReturn(array('isSuccess' => false, 'msg' => '请确认执行了handleInstallAllV2请求'));
+    }
+}
+
+//微信授权安装saas
+function handleInstallAllV2()
+{
+    global $sysModules;
+
+    $corpCode = strtolower(post('qycode'));
+    $saasdb = getSaasDb($corpCode);
+
+
+    //不带端口的域名
+    $dbHost = post('dbHost', $saasdb['dbHost']);
+    $dbPort = post('dbPort', $saasdb['dbPort']);
+    $dbAccount = post('dbAccount', $saasdb['dbAccount']);
+    $dbPassword = post('dbPassword', $saasdb['dbPassword']);
+    $dbName = post('dbName', $saasdb['dbName']);
+
+    $adminName = post('adminName');
+    $realNameTemp = post('realName');
+    $realName = empty($realNameTemp) ? $adminName : $realNameTemp;
+    $adminAccount = post('adminAccount');
+    $adminPassword = post('adminPassword');
+    $saltTemp = post('passwordsalt');
+    $salt = empty($saltTemp) ? StringUtil::random(6) : $saltTemp;
+    $passwordTemp = post('password');
+    $password = empty($passwordTemp) ? md5(md5($adminPassword) . $salt) : $passwordTemp;
+
+    $corpFullname = post('fullname');
+    $corpShortname = post('shortname');
+    $platformTemp = post('platform');
+    $platform = !empty($platformTemp) ? $platformTemp : 'saas';
+    $channel = post('channel', '');
+    $sourceId = post('sourceId', '');
+    $suiteid = post('suiteid', 'tj482a534e720a8d59');
+
+    //企业代码为表前缀
+    $dbPre = $corpCode . '_';
+    $pdo = null;
+    $corpRow = getCorpByCode($corpCode, $pdo);
+    if (!empty($corpRow)) {
+        if (!empty($corpRow['installed'])) {
+            $admin = json_decode($corpRow['super'], true);
+            $pdo = null;
+            return ajaxReturn(array('isSuccess' => false, 'msg' => '已经安装了，无法使用该企业代码安装', 'data' => array(
+                'installed' => 1,
+                'aeskey' => $admin['aeskey']
+            )
+            ));
+        } else {
+            if (!empty($corpRow) && empty($corpRow['installed'])) {
+                $query = $pdo->prepare(" DELETE FROM `config` WHERE (`corpcode` = :corpcode ) ");
+                $query->bindParam(":corpcode", $corpCode, PDO::PARAM_STR);
+                $query->execute();
+            }
+        }
+    }
+
+    $_SERVER['HTTP_USER_AGENT'] = isset($_SERVER['HTTP_USER_AGENT']) ?: '';
+
+    $aeskey = substr(md5( $dbHost . $dbName . $dbAccount . $dbPassword . $dbPre . time()), 14, 10) . StringUtil::random(33);
+    $authkey = substr(md5( $dbHost . $dbName . $dbAccount . $dbPassword . $dbPre . time()), 8, 6) . StringUtil::random(10);
+    $cookiepre = StringUtil::random(4);
+    $config = array(
+        // ----------------------------  CONFIG ENV  -----------------------------//
+        'env' => array(
+            'language' => 'zh_cn',
+            'theme' => 'default'
+        ),
+        // ----------------------------  CONFIG DB  ----------------------------- //
+        'db' => array(
+            'host' => $dbHost,
+            'port' => $dbPort,
+            'dbname' => $dbName,
+            'username' => $dbAccount,
+            'password' => $dbPassword,
+            'tableprefix' => $dbPre,
+            'charset' => DBCHARSET
+        ),
+// -------------------------  CONFIG SECURITY  -------------------------- //
+        'security' => array(
+            'authkey' => $authkey,
+        ),
+// --------------------------  CONFIG COOKIE  --------------------------- //
+        'cookie' => array(
+            'cookiepre' => $cookiepre . '_',
+            'cookiedomain' => '',
+            'cookiepath' => '/',
+        ),
+        'cache' => array(
+            'options' => array(
+                'prefix' => $dbPre,
+            )
+        ),
+    );
+    // 创建管理员账号信息文件,安装完成后删除此文件
+
+    $admin = array(// 管理员账号替换信息
+        'username' => $adminName,
+        'isadministrator' => 1,
+        'password' => $password,
+        'createtime' => TIMESTAMP,
+        'salt' => $salt,
+        'realname' => $realName,
+        'mobile' => $adminAccount,
+        'email' => '',
+        'corpcode' => $corpCode,
+        'fullname' => $corpFullname,
+        'shortname' => $corpShortname,
+        'aeskey' => $aeskey,
+    );
+
+    $installModules = post('modules'); // 要安装的模块
+    $modules = explode(',', $installModules);
+    $customModules = array_diff($modules, $sysModules);
+    $moduleArray = !empty($customModules) ?
+        array_filter(array_merge($sysModules, $customModules)) :
+        $sysModules;
+    $moduleString = implode(',', $moduleArray);
+    $configString = addslashes(json_encode($config));
+    $adminString = addslashes(json_encode($admin));
+    $installtime = microtime(true);
+    $discount = getDiscount();
+    //获得后台的优惠信息
+    if (!empty($discount)){
+        $expireTime = $installtime + $discount['trialsday'] * 86400;
+        $allspace = $discount['trialsspace'];
+        $alluser = $discount['trialsnumbers'];
+        $version = 0;
+    }else{
+        // saas有效时间默认为2周
+        $expireTime = $installtime + 14 * 86400;
+        $allspace = 1;
+        $alluser = 2000;
+        $version = 0;
+    }
+    // 如果是来自阿里云主机的开通的话，时长为一年
+    if ($channel == 'aliyun' && !empty($sourceId)) {
+        $query = $pdo->prepare(" SELECT * FROM `host` WHERE `sourceid` = :sourceid ");
+        $query->bindParam(":sourceid", $sourceId, PDO::PARAM_STR);
+        $query->execute();
+        $hostRow = $query->fetch(PDO::FETCH_ASSOC);
+        // 当前sourceId未开通过才能延长时间
+        if (!empty($hostRow) && $hostRow['step'] !== 'complete') {
+            $expireTime = $installtime + 31536000;
+        }
+    }
+    $query = $pdo->exec("INSERT INTO `config` ("
+        . "`corpcode`, "
+        . "`config`, "
+        . "`super`, "
+        . "`installtime`,"
+        . "`module`,"
+        . "`mobile`,"
+        . "`expiretime`,"
+        . "`channel`,"
+        . "`allspace`,"
+        . "`alluser`,"
+        . "`version`,"
+        . "`platform` ) VALUES ("
+        . "'{$corpCode}', "
+        . "'{$configString}', "
+        . "'{$adminString}', "
+        . "'{$installtime}', "
+        . "'{$moduleString}', "
+        . "'{$adminAccount}', "
+        . "'{$expireTime}', "
+        . "'{$channel}', "
+        . "'{$allspace}', "
+        . "'{$alluser}', "
+        . "'{$version}', "
+        . "'{$platform}' )");
+    $pdo = null;
+    $dbConfig = array(
+        'basePath' => PATH_ROOT . '/system',
+        'components' => array(
+            'db' => array(
+                'connectionString' => "mysql:host={$config['db']['host']};port={$config['db']['port']};dbname={$config['db']['dbname']}",
+                'emulatePrepare' => true,
+                'username' => $config['db']['username'],
+                'password' => $config['db']['password'],
+                'charset' => $config['db']['charset'],
+                'tablePrefix' => $config['db']['tableprefix'],
+            )
+        ),
+    );
+    Yii::createWebApplication($dbConfig);
+    defined('IN_MODULE_ACTION') or define('IN_MODULE_ACTION', true);
+    try{
+        $authSqlFile1 = PATH_ROOT . '/install/config/base.sql';//基础表安装
+        $sql1 = file_get_contents($authSqlFile1);
+        Module::executeSql($sql1);
+        if ($suiteid == 'tj482a534e720a8d59'){//crm套件
+            $authSqlFile2 = PATH_ROOT . '/install/config/crm.sql';
+        }elseif ($suiteid == 'tj5d8edbf6def23b00'){//移动办公套件
+            $authSqlFile2 = PATH_ROOT . '/install/config/quickoffice.sql';
+        }elseif ($suiteid == 'tjf4611df93bdf9ad3'){//企业文化
+            $authSqlFile2 = PATH_ROOT . '/install/config/corpculture.sql';
+        }
+        $sql2 = file_get_contents($authSqlFile2);
+        Module::executeSql($sql2);
+    }catch (Exception $e){
+        file_put_contents('errorsql.log', var_export($e->getMessage()));
+    }
+}
+

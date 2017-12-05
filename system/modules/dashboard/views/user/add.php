@@ -1,33 +1,14 @@
 <?php ?>
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt">部门人员管理</h1>
+        <h1 class="mt">部门与用户管理＞新增用户</h1>
     </div>
     <div>
         <!-- 部门信息 start -->
         <div class="ctb">
-            <h2 class="st">新增用户</h2>
             <div class="">
                 <form action="<?php echo $this->createUrl('user/add', array('userSubmit' => 1)); ?>" method="post"
-                      class="user-info-form form-horizontal" id="user_form">
-                    <div class="control-group">
-                        <label class="control-label">
-                            <span><?php echo $lang['Mobile']; ?></span>
-                            <span class="xcr">*</span>
-                        </label>
-                        <div class="controls">
-                            <input type="text" name="mobile" id="mobile" placeholder="请输入手机号码" id="mobile"/>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">
-                            <span><?php echo $lang['Password']; ?></span>
-                            <span class="xcr">*</span>
-                        </label>
-                        <div class="controls">
-                            <input type="text" name="password" placeholder="请输入密码" id="password"/>
-                        </div>
-                    </div>
+                      class="user-info-form form-horizontal enterprise-info-form" enctype="multipart/form-data" id="user_form">
                     <div class="control-group">
                         <label class="control-label">
                             <span><?php echo $lang['Real name']; ?></span>
@@ -53,23 +34,38 @@
                         </div>
                     </div>
                     <div class="control-group">
-                        <label for="" class="control-label">
-                            <span><?php echo $lang['Email']; ?></span>
+                        <label class="control-label">
+                            <span><?php echo $lang['Mobile']; ?></span>
+                            <span class="xcr">*</span>
                         </label>
                         <div class="controls">
-                            <input type="text" name="email" placeholder="请输入邮箱号码" id="email"/>
+                            <input type="text" name="mobile" id="mobile" placeholder="请输入手机号码" id="mobile"/>
                         </div>
                     </div>
                     <div class="control-group">
-                        <label for="" class="control-label"><?php echo $lang['Weixin']; ?></label>
+                        <label class="control-label">
+                            <span><?php echo $lang['Password']; ?></span>
+                            <span class="xcr">*</span>
+                        </label>
                         <div class="controls">
-                            <input type="text" name="weixin" placeholder="请输入微信号码" id="weixin">
+                            <input type="text" name="password" placeholder="请输入密码" id="password"/>
                         </div>
                     </div>
                     <div class="control-group">
-                        <label for="" class="control-label"><?php echo $lang['Jobnumber']; ?></label>
+                        <label for="" class="control-label"><?php echo $lang['Account status']; ?></label>
                         <div class="controls">
-                            <input type="text" name="jobnumber" placeholder="请输入工号" id="jobnumber">
+                            <label class="radio radio-inline">
+                                <input type="radio" value="0" checked name="status">
+                                <?php echo $lang['Enable']; ?>
+                            </label>
+                            <!-- <label class="radio radio-inline">
+                                <input type="radio" value="1" name="status">
+                                <?php echo $lang['Lock']; ?>
+                            </label> -->
+                            <label class="radio radio-inline">
+                                <input type="radio" value="2" name="status">
+                                <?php echo $lang['Disabled']; ?>
+                            </label>
                         </div>
                     </div>
                     <div class="control-group">
@@ -78,25 +74,6 @@
                         </label>
                         <div class="controls">
                             <input type="text" name="username" placeholder="请输入用户名" id="username"/>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label for="" class="control-label"><?php echo $lang['Direct leader']; ?></label>
-                        <div class="controls">
-                            <div class="clearfix">
-                                <div class="pull-left info-list-wrap">
-                                    <input type="text" name="upuid" placeholder="选择一个直属领导" id="user_supervisor">
-                                </div>
-                                <div class="pull-left mls">
-                                    <a href="javascript:;" class="btn toggle-btn" data-target="#sub_subordinate_wrap">直属下属</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="control-group" style="display:none;" id="sub_subordinate_wrap">
-                        <label for="" class="control-label">直属下属</label>
-                        <div class="controls">
-                            <input type="text" name="subordinate" placeholder="可以选择多个下属人员" id="sub_subordinate">
                         </div>
                     </div>
                     <div class="control-group">
@@ -161,27 +138,59 @@
                         </div>
                     </div>
                     <div class="control-group">
-                        <label for="" class="control-label"><?php echo $lang['Account status']; ?></label>
+                        <label for="" class="control-label"><?php echo $lang['Direct leader']; ?></label>
                         <div class="controls">
-                            <label class="radio radio-inline">
-                                <input type="radio" value="0" checked name="status">
-                                <?php echo $lang['Enable']; ?>
-                            </label>
-                            <label class="radio radio-inline">
-                                <input type="radio" value="1" name="status">
-                                <?php echo $lang['Lock']; ?>
-                            </label>
-                            <label class="radio radio-inline">
-                                <input type="radio" value="2" name="status">
-                                <?php echo $lang['Disabled']; ?>
-                            </label>
+                            <div class="clearfix">
+                                <div class="pull-left info-list-wrap">
+                                    <input type="text" name="upuid" placeholder="选择一个直属领导" id="user_supervisor">
+                                </div>
+                                <div class="pull-left mls">
+                                    <a href="javascript:;" class="btn toggle-btn" data-target="#sub_subordinate_wrap">直属下属</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group" style="display:none;" id="sub_subordinate_wrap">
+                        <label for="" class="control-label">直属下属</label>
+                        <div class="controls">
+                            <input type="text" name="subordinate" placeholder="可以选择多个下属人员" id="sub_subordinate">
+                        </div>
+                    </div>
+                     <div class="control-group">
+                        <label for="" class="control-label">
+                            <span><?php echo $lang['Email']; ?></span>
+                        </label>
+                        <div class="controls">
+                            <input type="text" name="email" placeholder="请输入邮箱号码" id="email"/>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="" class="control-label"><?php echo $lang['Weixin']; ?></label>
+                        <div class="controls">
+                            <input type="text" name="weixin" placeholder="请输入微信号码" id="weixin">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="" class="control-label"><?php echo $lang['Jobnumber']; ?></label>
+                        <div class="controls">
+                            <input type="text" name="jobnumber" placeholder="请输入工号" id="jobnumber">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">
+                            <span><?php echo $lang['Upload avatar']; ?></span>
+                        </label>
+                        <div class="controls">
+                            <input type="file" name="avatar" >
+                        </div>
+                        <div style="color: #B2C0D1;margin-left: 140px;">
+                            <?php echo $lang['Avatar tip']; ?>
                         </div>
                     </div>
                     <div class="control-group">
                         <label class="control-label"></label>
                         <div class="controls">
-                            <button type="submit"
-                                    class="btn btn-primary btn-large btn-submit"><?php echo $lang['Submit']; ?></button>
+                            <button type="submit" class="btn btn-primary btn-large btn-submit"><?php echo $lang['Submit']; ?></button>
                         </div>
                     </div>
                 </form>

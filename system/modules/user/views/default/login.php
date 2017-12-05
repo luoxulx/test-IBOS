@@ -203,16 +203,6 @@ use application\core\utils\Ibos;
 
                     ?></a>
                 <span class="ilsep">|</span>
-                <?php if ($notSaas): ?>
-                    <a href="javascript:;"
-                       data-action="showCert"><?php
-
-                        echo Ibos::lang('Certificate of authorization',
-                            'default');
-
-                        ?></a>
-                    <span class="ilsep">|</span>
-                <?php endif; ?>
                 <a target="_blank"
                    href="http://www.ibos.com.cn/file/99"><?php
 

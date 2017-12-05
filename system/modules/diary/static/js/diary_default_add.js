@@ -35,7 +35,7 @@ var DiaryAdd = {
 		}, 100);
 
 		// 编辑器初始化
-		var ue = UE.getEditor('diary_add_editor', {
+		var ue = UE.getEditor('diary_editor', {
 		    initialFrameWidth: 700,
 		    autoHeightEnabled:true,
 		    toolbars: UEDITOR_CONFIG.mode.simple
@@ -47,7 +47,7 @@ var DiaryAdd = {
 			// 焦点设置
 	        $('[data-node-type="oldPlanInput"]').eq(0).focus();
 		
-	        (new Ibos.EditorCache(ue, null, "diary_add_editor")).restore();
+	        (new Ibos.EditorCache(ue, null, "diary_editor")).restore();
 		});
 
 		// 新手引导

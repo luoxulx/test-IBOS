@@ -137,55 +137,128 @@
                         '<div class="pc-info-content posr">'+
                             '<a href="javascript:;" class="cl-window-ctrl" data-evt="close"></a>'+
                             '<div class="pc-info-list">'+
-                                '<div class="mb">'+
-                                    '<span>'+
-                                        '<i class="o-pc-phone"></i>'+
-                                    '</span>'+
-                                    '<span class="pc-info-title">手机 </span>'+
-                                    '<span class="ml xcm" id="care_mobile"><%= data.phone == "" ? Ibos.l("CONTACT.NOT_AVAILABLE") : data.phone %></span>'+
-                                '</div>'+
-                                '<div class="mb">'+
-                                    '<span>'+
-                                        '<i class="o-pc-qq"></i>'+
-                                    '</span>'+
-                                    '<span class="pc-info-title">QQ</span>'+
-                                    '<span class="ml xcm" id="card_qq"> <%= data.qq == "" ? Ibos.l("CONTACT.NOT_AVAILABLE") : data.qq %> </span>'+
-                                '</div>'+
+                                '<% if( data.jobnumber != "" ){ %>'+
+                                    '<div class="mb">'+
+                                        '<span>'+
+                                            '<i class="o-pc-jobnumber"></i>'+
+                                        '</span>'+
+                                        '<span class="pc-info-title">工号</span>'+
+                                        '<span class="ml xcm card-fax" id="card_fax"> <%= data.jobnumber %> </span>'+
+                                    '</div>'+
+                                '<% } %>'+
+                                '<% if( data.deptname != "" ){ %>'+
+                                    '<div class="mb">'+
+                                        '<span>'+
+                                            '<i class="o-pc-auxiliarydept"></i>'+
+                                        '</span>'+
+                                        '<span class="pc-info-title">主部门</span>'+
+                                        '<span class="ml xcm card-birthday"> <%= data.deptname %>  </span>'+
+                                    '</div>'+
+                                '<% } %>'+
+                                '<% if( data.positionname != "" ){ %>'+
+                                    '<div class="mb">'+
+                                        '<span>'+
+                                            '<i class="o-pc-auxiliaryposition"></i>'+
+                                        '</span>'+
+                                        '<span class="pc-info-title">主岗位</span>'+
+                                        '<span class="ml xcm card-birthday"> <%= data.positionname %>  </span>'+
+                                    '</div>'+
+                                '<% } %>'+
+                                '<% if( data.auxiliarydepts != "" ){ %>'+
+                                    '<div class="mb">'+
+                                        '<span>'+
+                                            '<i class="o-pc-auxiliarydept"></i>'+
+                                        '</span>'+
+                                        '<span class="pc-info-title">辅助部门</span>'+
+                                        '<span class="ml xcm card-birthday"> <%= data.auxiliarydepts %>  </span>'+
+                                    '</div>'+
+                                '<% } %>'+
+                                '<% if( data.auxiliarypositions != "" ){ %>'+
+                                    '<div class="mb">'+
+                                        '<span>'+
+                                            '<i class="o-pc-auxiliaryposition"></i>'+
+                                        '</span>'+
+                                        '<span class="pc-info-title">辅助岗位</span>'+
+                                        '<span class="ml xcm card-birthday"> <%= data.auxiliarypositions %>  </span>'+
+                                    '</div>'+
+                                '<% } %>'+
+                                '<% if( data.phone != "" ){ %>'+
+                                    '<div class="mb">'+
+                                        '<span>'+
+                                            '<i class="o-pc-phone"></i>'+
+                                        '</span>'+
+                                        '<span class="pc-info-title">手机 </span>'+
+                                        '<span class="ml xcm" id="care_mobile"><%= data.phone %></span>'+
+                                    '</div>'+
+                                '<% } %>'+
+                                '<% if( data.qq != "" ){ %>'+
+                                    '<div class="mb">'+
+                                        '<span>'+
+                                            '<i class="o-pc-qq"></i>'+
+                                        '</span>'+
+                                        '<span class="pc-info-title">QQ</span>'+
+                                        '<span class="ml xcm" id="card_qq"> <%=data.qq %> </span>'+
+                                    '</div>'+
+                                '<% } %>'+
+                                '<% if( data.weixin != ""){ %>'+
+                                    '<div class="mb">'+
+                                        '<span>'+
+                                            '<i class="o-pc-weixin"></i>'+
+                                        '</span>'+
+                                        '<span class="pc-info-title">微信</span>'+
+                                        '<span class="ml xcm" id="card_weixin"> <%=data.weixin %> </span>'+
+                                    '</div>'+
+                                '<% } %>'+
+                                '<% if( data.email != "" ){ %>'+
                                 '<div class="mb">'+
                                     '<span>'+
                                         '<i class="o-pc-email"></i>'+
                                     '</span>'+
                                     '<span class="pc-info-title">邮箱</span>'+
-                                    '<span class="ml xcm" id="card_email"> <%= data.email == "" ? Ibos.l("CONTACT.NOT_AVAILABLE") : data.email %></span>'+
+                                    '<span class="ml xcm" id="card_email"> <%= data.email %></span>'+
                                 '</div>'+
-                                '<div class="mb">'+
-                                    '<span>'+
-                                        '<i class="o-pc-birthday"></i>'+
-                                    '</span>'+
-                                    '<span class="pc-info-title">生日</span>'+
-                                    '<span class="ml xcm card-birthday"> <%= data.birthday == "0" ? Ibos.l("CONTACT.NOT_AVAILABLE") : data.birthday %>  </span>'+
-                                '</div>'+
-                                '<div class="mb">'+
-                                    '<span>'+
-                                        '<i class="o-pc-auxiliarydept"></i>'+
-                                    '</span>'+
-                                    '<span class="pc-info-title">辅助部门</span>'+
-                                    '<span class="ml xcm card-birthday"> <%= data.auxiliarydepts ? data.auxiliarydepts : Ibos.l("CONTACT.NOT_AVAILABLE") %>  </span>'+
-                                '</div>'+
-                                '<div class="mb">'+
-                                    '<span>'+
-                                        '<i class="o-pc-auxiliaryposition"></i>'+
-                                    '</span>'+
-                                    '<span class="pc-info-title">辅助岗位</span>'+
-                                    '<span class="ml xcm card-birthday"> <%= data.auxiliarypositions ? data.auxiliarypositions : Ibos.l("CONTACT.NOT_AVAILABLE") %>  </span>'+
-                                '</div>'+
-                                '<div class="mb">'+
-                                    '<span>'+
-                                        '<i class="o-pc-jobnumber"></i>'+
-                                    '</span>'+
-                                    '<span class="pc-info-title">工号</span>'+
-                                    '<span class="ml xcm card-fax" id="card_fax"> <%= data.jobnumber == "" ? Ibos.l("CONTACT.NOT_AVAILABLE") : data.jobnumber %> </span>'+
-                                '</div>'+
+                                '<% } %>'+
+                                '<% if( data.birthday != "" && data.birthday != 0 ){ %>'+
+                                    '<div class="mb">'+
+                                        '<span>'+
+                                            '<i class="o-pc-birthday"></i>'+
+                                        '</span>'+
+                                        '<span class="pc-info-title">生日</span>'+
+                                        '<span class="ml xcm card-birthday"> <%= data.birthday != "" ? Ibos.date.format(+data.birthday, "yyyy-mm-dd") : data.birthday %> </span>'+
+                                    '</div>'+
+                                '<% } %>'+
+                                '<% if( data.upuser.length != 0 ){ %>'+
+                                    '<div class="mb">'+
+                                        '<span>'+
+                                            '<i class="o-pc-directsupervisor"></i>'+
+                                        '</span>'+
+                                        '<span class="pc-info-title">直属领导</span>'+
+                                        '</div>'+
+                                        '<div data-id="<%= data.upuser.uid %>" data-type="user" class="user-details-userlist">'+
+                                            '<div>'+
+                                                '<span class="avatar-circle"><img src="<%= data.upuser.avatar_small %>"></span>'+
+                                                '<span class="xcm ellipsis username-ellipsis"> <%= data.upuser.realname %> </span>'+
+                                            '</div>'+
+                                        '</div>'+
+                                '<% } %>'+
+                                '<% if( data.underlist.length != 0 ){ %>'+
+                                    '<div class="mb">'+
+                                        '<span>'+
+                                            '<i class="o-pc-directreports"></i>'+
+                                        '</span>'+
+                                        '<span class="pc-info-title">直属下属</span>'+
+                                    '</div>'+
+                                    '<div>' + 
+                                        '<% for(var f=0, underuser; underuser = data.underlist[f]; f++){ %>'+
+                                            '<div data-id="<%= underuser.uid %>" data-type="user" class="user-details-userlist">'+
+                                                '<div>'+
+                                                    '<span class="avatar-circle"><img src="<%= underuser.avatar_small %>"></span>'+
+                                                    '<span class="xcm ellipsis username-ellipsis"> <%= underuser.realname %> </span>'+
+                                                '</div>'+
+                                            '</div>'+
+                                        '<% } %>'+
+                                    '</div>' +  
+                                '<% } %>'+
                             '</div>'+
                         '</div>'+
                     '</div>',

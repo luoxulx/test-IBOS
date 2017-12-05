@@ -1,6 +1,6 @@
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Email setting']; ?></h1>
+        <h1 class="mt">通用设置 > <?php echo $lang['Email setting']; ?></h1>
         <ul class="mn">
             <li>
                 <a href="<?php echo $this->createUrl('email/setup'); ?>"><?php echo $lang['Setup']; ?></a>
@@ -15,7 +15,6 @@
               id="email_test_send">
             <!-- 检测邮件发送设置 start -->
             <div class="ctb">
-                <h2 class="st"><?php echo $lang['Check email setup']; ?></h2>
                 <div class="ctbw">
                     <div class="control-group">
                         <label for="" class="control-label">

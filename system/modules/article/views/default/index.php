@@ -119,6 +119,8 @@ use application\modules\main\utils\Main;
         'table': 'index', //默认显示列表
         'type': Ibos.local.get('art_type') || 'all'
     });
+    //每次刷新页面的时候先清除art_catid以免获取数据有误
+    Ibos.local.remove('art_catid');
 </script>
 <script src="<?php echo STATICURL; ?>/js/lib/dataTable/js/jquery.dataTables.js?<?php echo VERHASH; ?>"></script>
 <script src='<?php echo STATICURL; ?>/js/app/ibos.treeCategory.js?<?php echo VERHASH; ?>'></script>

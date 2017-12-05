@@ -90,4 +90,5 @@ use application\core\utils\StringUtil;
         </form>
     </div>
 </div>
+<script src='<?php echo STATICURL; ?>/js/lib/formValidator/formValidator.packaged.js?<?php echo VERHASH; ?>'></script>
 <script src="<?php echo $this->getAssetUrl(); ?>/js/db_announcement.js"></script>

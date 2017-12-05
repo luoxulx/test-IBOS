@@ -1,6 +1,6 @@
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Database']; ?></h1>
+        <h1 class="mt">通用设置 > <?php echo $lang['Database']; ?></h1>
         <ul class="mn">
             <li>
                 <span><?php echo $lang['Backup']; ?></span>
@@ -17,7 +17,7 @@
         <form action="<?php echo $this->createUrl('database/backup'); ?>" method="post" class="form-horizontal">
             <!-- 数据库备份 start -->
             <div class="ctb">
-                <h2 class="st"><?php echo $lang['Database backup']; ?></h2>
+                <!-- <h2 class="st"><?php echo $lang['Database backup']; ?></h2> -->
                 <div class="alert trick-tip">
                     <div class="trick-tip-title">
                         <i></i>

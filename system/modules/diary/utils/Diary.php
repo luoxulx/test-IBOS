@@ -195,7 +195,10 @@ class Diary
      */
     public static function getIsAttention($attentionUid)
     {
-        $aUids = DiaryAttention::model()->fetchAuidByUid(Ibos::app()->user->uid);
+        static $aUids = null;
+        if($aUids === null){
+            $aUids = DiaryAttention::model()->fetchAuidByUid(Ibos::app()->user->uid);
+        }
         return in_array($attentionUid, $aUids);
     }
 

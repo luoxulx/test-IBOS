@@ -28,6 +28,7 @@ use application\core\utils\Org;
 use application\core\utils\StringUtil;
 use application\extensions\ThinkImage\ThinkImage;
 use application\modules\main\model\Attachment;
+use application\modules\main\model\Setting;
 use application\modules\user\model\BgTemplate;
 use application\modules\user\utils\User as UserUtil;
 
@@ -322,6 +323,9 @@ class LocalFile implements FileOperationInterface
         $imgObj = new ThinkImage(THINKIMAGE_GD);
         //裁剪原图
         $imgObj->open($srcPath)->crop($params['w'], $params['h'], $params['x'], $params['y'])->save($srcPath);
+        //图片质量
+        $qualitySize = Setting::model()->fetchSettingValueByKey('thumbquality');
+        $imgObj->open($srcPath)->quality($srcPath, null, $qualitySize);
         //生成缩略图
         $imgObj->open($srcPath)->thumb(180, 180, 1)->save($avatarPath . $avatarBig);
         $imgObj->open($srcPath)->thumb(60, 60, 1)->save($avatarPath . $avatarMiddle);
@@ -332,6 +336,7 @@ class LocalFile implements FileOperationInterface
             'avatar_small' => $avatarPath . $avatarSmall,
         );
     }
+
 
     public function createBg($srcPath, $params)
     {
@@ -351,6 +356,9 @@ class LocalFile implements FileOperationInterface
         if (!isset($params['noCrop'])) {
             $imgObj->open($srcPath)->crop($params['w'], $params['h'], $params['x'], $params['y'], 1000, 300)->save($srcPath);
         }
+        //图片质量
+        $qualitySize = Setting::model()->fetchSettingValueByKey('thumbquality');
+        $imgObj->open($srcPath)->quality($srcPath, null, $qualitySize);
         //生成缩略图
         $imgObj->open($srcPath)->thumb(1000, 300, 1)->save($bgPath . $bgBig);
         //$imgObj->open( $srcPath )->thumb( 520, 156, 1 )->save( $bgPath . $bgMiddle );

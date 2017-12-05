@@ -19,15 +19,15 @@ class PermissionsController extends BaseController
     public function actionSetup()
     {
         $module = util\Env::getRequest('module');
-        if (empty($module)) {
-            $module = 'app';
-        }
         $modules = util\Ibos::app()->db->createCommand()
             ->select("*")
             ->from("{{node}} as n")
             ->leftJoin("{{module}} as m", "n.module = m.module")
             ->where("n.module = m.module GROUP BY n.module")
             ->queryAll();
+        if (empty($module)) {
+            $module = $modules[0]['module'];
+        }
         $data = array(
             'modulesList' => $modules,
             'contentList' => $this->indexInfo($module)

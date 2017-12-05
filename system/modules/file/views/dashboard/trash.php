@@ -7,7 +7,7 @@ use application\modules\main\utils\Main as MainUtil;
 ?>
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Folder']; ?></h1>
+        <h1 class="mt">应用设置＞<?php echo $lang['Folder']; ?></h1>
         <ul class="mn">
             <li>
                 <a href="<?php echo $this->createUrl('dashboard/index'); ?>"><?php echo $lang['Folder setting']; ?></a>

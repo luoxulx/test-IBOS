@@ -2,20 +2,26 @@
 <link rel="stylesheet" href="<?php echo $assetUrl; ?>/css/organization_role.css?<?php echo VERHASH; ?>">
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt">管理员管理</h1>
-        <ul class="mn">
-            <li>
-                <span>普通管理员</span>
-            </li>
-            <li>
-                <a href="/?r=dashboard/rolesuper/index">超级管理员</a>
-            </li>
-        </ul>
+        <h1 class="mt">通讯录管理 ＞ 后台管理权限</h1>
     </div>
     <div>
         <!-- 部门信息 start -->
         <div class="ctb">
-            <h2 class="st">普通管理员</h2>
+            <div class="btn-group mb">
+                <a href="javascript:;" class="btn active">普通管理员</a>
+                <a href="/?r=dashboard/rolesuper/index" class="btn">超级管理员</a>
+            </div>
+            <div class="alert trick-tip">
+                <div class="trick-tip-title">
+                    <i></i>
+                    <strong><?php echo $lang['Function Introduction'] ?></strong>
+                </div>
+                <div class="trick-tip-content">
+                    <ul>
+                        <li>设置选定角色对管理后台功能的使用权限</li>
+                    </ul>
+                </div>
+            </div>
             <div class="com-list-wrap clearfix">
                 <ul class="db-com-list">
                     <?php foreach ($data as $role): ?>
@@ -85,7 +91,7 @@
                         <a href="<?php echo $this->createUrl('roleadmin/add'); ?>">
                             <div class="add-item-wrap">
                                 <i class="o-add-role mbs"></i>
-                                <p class="fsl add-opt-tip">新建管理员</p>
+                                <p class="add-opt-tip">新建管理员</p>
                             </div>
                         </a>
                     </li>

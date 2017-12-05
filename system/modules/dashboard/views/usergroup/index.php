@@ -1,12 +1,11 @@
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['User group setup']; ?></h1>
+        <h1 class="mt">通用设置 > <?php echo $lang['User group setup']; ?></h1>
     </div>
     <div>
-        <form action="<?php echo $this->createUrl('usergroup/index'); ?>" method="post" class="form-horizontal">
+        <form action="#" method="post" class="form-horizontal" id="usergroup_form">
             <!-- 用户组 start -->
             <div class="ctb">
-                <h2 class="st"><?php echo $lang['User group']; ?></h2>
                 <table class="table table-bordered table-striped table-operate" id="user_group_table">
                     <thead>
                     <tr>
@@ -67,7 +66,7 @@
             </div>
             <div>
                 <input type="hidden" name="removeId" id="removeId"/>
-                <button type="submit" name="userGroupSubmit"
+                <button type="button" name="userGroupSubmit"
                         class="btn btn-primary btn-large btn-submit"><?php echo $lang['Submit']; ?></button>
             </div>
         </form>
@@ -97,6 +96,20 @@
 <script>
     (function () {
         var insertNode = $('#user_group_body');
+
+        var userGroupAjax = function(formData) {
+            var url = Ibos.app.url('dashboard/usergroup/edit');
+
+            return $.ajax({
+                url: url,
+                type: 'POST',
+                cache: false,
+                data: formData,
+                processData: false,
+                contentType: false
+            });
+        };
+
         // 用户组表格设置js
         $("#user_group_table").on("click", "a", function () {
             var self = $(this),
@@ -122,6 +135,22 @@
                     $('#group_' + delId).remove();
                     break;
             }
+        });
+
+        $('[name="userGroupSubmit"]').on('click', function() {
+            var node = $('form').get(0),
+                oData = new FormData(node);
+
+            userGroupAjax(oData).done(function(res) {
+                if (res.isSuccess) {
+                    Ui.tip(res.msg);
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    Ui.tip(res.msg, 'warning');
+                }
+            });
         });
     })();
 </script>

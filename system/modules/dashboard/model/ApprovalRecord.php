@@ -123,7 +123,7 @@ class ApprovalRecord extends Model
                 'author' => $username,
                 'status' => $msg,
                 'reason' => $flowLog[$i]['reason'],
-                'time' => date('Y-m-d h:i:s',$flowLog[$i]['time']),
+                'time' => date('Y-m-d H:i:s',$flowLog[$i]['time']),
             );
         }
         return $record;

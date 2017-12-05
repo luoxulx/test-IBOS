@@ -109,7 +109,7 @@
             '<tr>',
             '<td class="d-header" colspan="2">',
             '<div class="d-titleBar">',
-            '<div class="d-title"></div>',
+            '<div class="d-title unselectable"></div>',
             '<a class="d-close" href="javascript:;">x</a>',
             '</div>',
             '</td>',
@@ -287,6 +287,7 @@
             this.createDom();
             this.bindEvt();
             this.initUpload();
+            this.moveInit();
         },
         createDom: function() {
             // 创建容器
@@ -368,8 +369,8 @@
                 e.$box.css('zIndex', that.zIndex++).hide();
             });
 
-            var left = this.left || ($(document).width() / 2 - 296) + 'px',
-                top = this.top || ($(document).height() / 2 - 246) + 'px';
+            var left = this.left || ($(window).width() / 2 - 296) + 'px',
+                top = this.top || ($(window).height() / 2 - 226) + 'px';
 
             this.$box.find('.aui_import').css({ // this -> Dialog
                 'top': top,
@@ -398,7 +399,7 @@
                     break;
                 case 'done':
                     this.stateIndex = 0;
-                    this.closed();
+                    this.closed(that.closefn);
                     break;
                 default:
                     this.exportErr();
@@ -663,8 +664,64 @@
             });
 
             return that;
+        },
+        moveInit: function () {
+            /**
+             * 移动弹窗
+             */
+            $(".d-outer.aui_import").each(function(index){
+                move(index, $(this));
+            });
+
+            function move(index, $this) {
+                $bar = $($(".d-outer.aui_import")[index]);
+                isDraging = false;
+                mx = 0;
+                my = 0;
+                dx = 0;
+                dy = 0;
+
+                $bar.mousedown(function (e) {
+                    e = e || window.event;
+                    mx = e.pageX;     //点击时鼠标X坐标
+                    my = e.pageY;     //点击时鼠标Y坐标
+                    dx = $this.offset().left;
+                    dy = $this.offset().top;
+                    isDraging = true;      //标记对话框可拖动
+                    // console.log(index,"按住")
+                })
+
+                //鼠标移动更新窗口位置
+                $bar.mousemove(function(e){
+                    e = e || window.event;
+                    x = e.pageX;      //移动时鼠标X坐标
+                    y = e.pageY;      //移动时鼠标Y坐标
+                    if(isDraging){        //判断对话框能否拖动
+                        moveX = dx + x - mx;      //移动后对话框新的left值
+                        moveY = dy + y - my;      //移动后对话框新的top值
+                        //设置拖动范围
+                        pageW = $(window).width();
+                        pageH = $(window).height();
+                        dialogW = $this.width();
+                        dialogH = $this.height();
+                        maxX = pageW - dialogW;       //X轴可拖动最大值
+                        maxY = pageH - dialogH;       //Y轴可拖动最大值
+                        moveX = Math.min(Math.max(0,moveX),maxX);     //X轴可拖动范围
+                        moveY = Math.min(Math.max(0,moveY),maxY);     //Y轴可拖动范围
+                        // console.log({"pageW":pageW,"pageH":pageH,"dialogW":dialogW,"dialogH":dialogH},{"left":moveX + 'px',"top":moveY + 'px'})
+                        //重新设置对话框的left、top
+                        $this.css({"left":moveX + 'px',"top":moveY + 'px'});
+                    };
+                });
+
+                //鼠标离开
+                $bar.mouseup(function(){
+                    isDraging = false;
+                    // console.log(index,"放开")
+                });
+            }
         }
     }
 
     return importDialog;
-}, jQuery, undefined)
+}, jQuery, undefined);

@@ -1,7 +1,7 @@
 <form action="<?php echo $this->createUrl('dashboard/index'); ?>" class="form-horizontal" method="post">
     <div class="ct">
         <div class="clearfix">
-            <h1 class="mt"><?php echo $lang['Folder']; ?></h1>
+            <h1 class="mt">应用设置＞<?php echo $lang['Folder']; ?></h1>
             <ul class="mn">
                 <li>
                     <span><?php echo $lang['Folder setting']; ?></span>

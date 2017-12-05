@@ -45,4 +45,28 @@ class DepartmentBinding extends Model
         return $return;
     }
 
+    public function getBindingValueForDeptidAndApp($deptid, $app='wxqy')
+    {
+        $bindvalue = Ibos::app()->db->createCommand()
+            ->select('bindvalue')
+            ->from($this->tableName())
+            ->where('deptid = :deptid AND app = :app', array(':deptid' => $deptid, ':app' => $app))
+            ->queryScalar();
+        return $bindvalue;
+    }
+
+    /**
+     * @param $bindvalue
+     * @param string $app
+     * @return bool|\CDbDataReader|mixed|string
+     */
+    public function getDeptidByBindingValueAndApp($bindvalue, $app = 'wxqy')
+    {
+        $bindvalue = Ibos::app()->db->createCommand()
+            ->select('deptid')
+            ->from($this->tableName())
+            ->where('bindvalue = :bindvalue AND `app` = :app', array(':bindvalue' => $bindvalue, ':app' => $app))
+            ->queryScalar();
+        return $bindvalue;
+    }
 }

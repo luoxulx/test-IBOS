@@ -18,6 +18,7 @@
 namespace application\modules\dashboard\controllers;
 
 use application\core\utils\Ibos;
+use application\core\utils\StringUtil;
 use application\modules\dashboard\utils\CoSync;
 use application\modules\main\model\Setting;
 use application\modules\message\core\co\CoApi;
@@ -37,6 +38,11 @@ class CoController extends BaseController
      */
     protected $aeskey;
     /**
+     * 系统url
+     * @var
+     */
+    protected $systemurl;
+    /**
      * 所绑定的企业信息
      * @var
      */
@@ -50,24 +56,22 @@ class CoController extends BaseController
      * 当前登录的酷办公用户信息
      */
     private $_coUser = null;
-    /**
-     * 系统url
-     */
-    protected $systemurl;
 
     public function init()
     {
         parent::init();
         $this->_coUser = Ibos::app()->user->getState('coUser');
         $this->aeskey = Setting::model()->fetchSettingValueByKey('aeskey');
-        $this->systemurl = Ibos::app()->request->getHostInfo();
+        $unit = StringUtil::utf8Unserialize(Setting::model()->fetchSettingValueByKey('unit'));
+        $this->systemurl = trim($unit['systemurl'], '/');
         // 没有酷办公用户登陆，但有绑定，就显示绑定状态下的登陆页面
         $bind = $this->judgeFromApi();
         if (!empty($bind)) {
             $this->coinfo = $bind;
             $this->isBinding = true;
+            Setting::model()->updateSettingValueByKey('cobinding', 1);
         }
-        // 如果没有绑定，但登陆了
+        // 如果没有绑定，但登陆了，用当前登录用户的accesstoken去请求判断是否绑定
         if (!empty($this->_coUser)) {
             $this->chkBinding($this->_coUser['accesstoken']);
         }
@@ -80,14 +84,15 @@ class CoController extends BaseController
      */
     protected function chkBinding($accesstoken)
     {
-        // todo:去线上拿绑定关系
         $this->corpListRes = $this->getCorpList($accesstoken);
         $whether = $this->whetherBinding($this->corpListRes, $accesstoken);
         if (false === $whether) {
             $this->isBinding = false;
+            Setting::model()->updateSettingValueByKey('cobinding', 0);
         } else {
             $this->coinfo = $whether;
             $this->isBinding = true;
+            Setting::model()->updateSettingValueByKey('cobinding', 1);
         }
     }
 
@@ -125,10 +130,9 @@ class CoController extends BaseController
      */
     private function whetherBinding($corpListRes, $accesstoken)
     {
-        $systemurl = $this->systemurl;
         // 先判断当前登录用户的企业里有没有当前ibos
         foreach ($corpListRes['corpList'] as $k => $v) {
-            if ($systemurl == $v['systemUrl'] && $this->aeskey == $v['aeskey']) {
+            if ($this->systemurl == $v['systemUrl'] && $this->aeskey == $v['aeskey']) {
                 return $v;
             } else {
                 continue;
@@ -137,7 +141,7 @@ class CoController extends BaseController
         // 如果没有，则请求接口查看当前ibos绑定的企业，没有就返回false了
         $post = array(
             'aeskey' => $this->aeskey,
-            'systemurl' => $systemurl,
+            'systemurl' => $this->systemurl,
         );
         $hasBind = CoApi::getInstance()->whetherBind($accesstoken, $post);
         // 获取绑定关系失败
@@ -165,16 +169,14 @@ class CoController extends BaseController
     }
 
     /**
-     * 从api那边判断是否绑定
+     * 从api那边判断是否绑定,如果没有，则请求接口查看当前ibos绑定的企业，没有就返回false了
      * @return bool
      */
     protected function judgeFromApi()
     {
-        $systemurl = $this->systemurl;
-        // 如果没有，则请求接口查看当前ibos绑定的企业，没有就返回false了
         $post = array(
             'aeskey' => $this->aeskey,
-            'systemurl' => $systemurl,
+            'systemurl' => $this->systemurl,
         );
         $hasBind = CoApi::getInstance()->judgeBind($post);
         // 获取绑定关系失败

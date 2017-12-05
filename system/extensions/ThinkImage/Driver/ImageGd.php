@@ -580,6 +580,44 @@ class ImageGd
     }
 
     /**
+     * @param $imgname 图片源文件
+     * @param null $type 图片类型，可选，默认为null
+     * @param int $quality 图片质量
+     * @param bool $interlace 激活或禁止隔行扫描 可选，默认为true
+     * @return $this 返回修改质量后的图片
+     */
+    public function quality($imgname, $type = null, $quality = 80, $interlace = true)
+    {
+        //自动获取图像类型
+        if (is_null($type)) {
+            $type = $this->info['type'];
+        } else {
+            $type = strtolower($type);
+        }
+        //保存图像
+        if ('jpeg' == $type || 'jpg' == $type) {
+            //JPEG图像设置隔行扫描
+            imageinterlace($this->img, $interlace);
+            imagejpeg($this->img, $imgname, $quality);
+        } elseif ('gif' == $type && !empty($this->gif)) {
+            $this->gif->save($imgname);
+        } elseif ('png' == $type) {
+            //设定保存完整的 alpha 通道信息
+            imagesavealpha($this->img, true);
+            //ImagePNG生成图像的质量范围从0到9的
+            imagepng($this->img, $imgname, min((int) ($quality / 10), 9));
+        } else {
+            $func = 'image' . $type;
+            if(function_exists($func)){
+                $func($this->img, $imgname);
+            }else{
+                return false;
+            }
+        }
+        return $this;
+    }
+
+    /**
      * 锐化图片
      * @param  integer $radius 锐化角度
      * @param  integer $sigma 锐化偏差

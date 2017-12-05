@@ -13,7 +13,10 @@ use application\core\model\Model;
 
 class NodeRelated extends Model
 {
-
+    /**
+     * @param string $className
+     * @return NodeRelated
+     */
     public static function model($className = __CLASS__)
     {
         return parent::model($className);
@@ -81,7 +84,7 @@ class NodeRelated extends Model
      */
     public function deleteAllByRoleId($id)
     {
-        return $this->deleteAll(sprintf("roleid = %d AND ( module NOT IN ('crm') OR module = 'crm' AND val = 0 )", $id));
+        return $this->deleteAll(sprintf("roleid = %d AND ( module NOT IN ('crm') OR module = 'crm' AND val = 0 AND node != 'export')", $id));
     }
 
     /**

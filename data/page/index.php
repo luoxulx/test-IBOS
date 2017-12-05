@@ -237,13 +237,6 @@ use application\modules\user\utils\User as UserUtil;
 
                             ?></a>
                         <span class="ilsep">|</span>
-                        <a href="javascript:;" data-action="showCert"><?php
-
-                            echo Ibos::lang('Certificate of authorization',
-                                'default');
-
-                            ?></a>
-                        <span class="ilsep">|</span>
                         <a target="_blank" href="http://www.ibos.com.cn/file/99"><?php
 
                             echo Ibos::lang('Chrome frame', 'default');

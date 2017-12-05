@@ -20,6 +20,9 @@
                     </div>
                 <?php endif; ?>
                 <fieldset>
+                    <?php if(!empty($remind)): ?>
+                        <script>Ui.tip('<?php echo $remindLang ?>','warning');</script>
+                    <?php endif;?>
                     <legend><?php echo $lang['Add web mail']; ?></legend>
                     <div class="control-group">
                         <label class="control-label"><?php echo $lang['Email address']; ?>：</label>
@@ -109,7 +112,7 @@
                                        else: echo 25; endif; ?>"/>
                             </div>
                         </div>
-                        
+
                         <?php if ($enableOpenSsl === true) : ?>
                         <div class="control-group">
                             <div class="controls">

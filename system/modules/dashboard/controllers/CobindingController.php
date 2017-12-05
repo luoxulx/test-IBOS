@@ -75,7 +75,7 @@ class CobindingController extends CoController
         } // 登录成功
         else {
             $param['data'] = $loginRes['data'];
-            // 如果本地已经绑定了酷办公
+            // 如果本地已经绑定了酷办公,下面的重定向是防止用户在app端注销了企业，页面出不来的情况。一旦注销，回到首页。
             if ($this->isBinding) {
                 if (!array_key_exists($this->coinfo['corpid'], $this->corpListRes['corpList'])) {
                     $this->redirect(array('cobinding/index'));

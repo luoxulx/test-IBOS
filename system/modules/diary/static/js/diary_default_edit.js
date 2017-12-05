@@ -5,7 +5,7 @@ var DiaryEdit = {
      */
     initDiaryEditPage: function() {
         // 编辑器初始化
-        var ue = UE.getEditor('editor', {
+        var ue = UE.getEditor('diary_editor', {
             initialFrameWidth: 700,
             autoHeightEnabled: true,
             toolbars: UEDITOR_CONFIG.mode.simple

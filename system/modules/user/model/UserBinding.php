@@ -23,7 +23,11 @@ use application\core\utils\Ibos;
 
 class UserBinding extends Model
 {
-
+    
+    /**
+     * @param string $className
+     * @return UserBinding
+     */
     public static function model($className = __CLASS__)
     {
         return parent::model($className);
@@ -113,7 +117,7 @@ class UserBinding extends Model
      * @param string $app 绑定的类型
      * @return integer
      */
-    public function fetchUidByValue($value, $app)
+    public function fetchUidByValue($value, $app='wxqy')
     {
         $rs = $this->fetch(array('select' => 'uid', 'condition' => sprintf("bindvalue = '%s' AND app ='%s'", $value, $app)));
         return !empty($rs['uid']) ? intval($rs['uid']) : 0;
@@ -156,11 +160,67 @@ class UserBinding extends Model
      * @param string $app 平台标识
      * @return boolean
      */
-    public function deleteBinding($uid, $app)
+    public function deleteBinding($uid, $app = 'wxqy')
     {
         $res = Ibos::app()->db->createCommand()
             ->delete($this->tableName(), " `uid` = '{$uid}' AND `app` = '{$app}' ");
         return !!$res;
     }
 
+    /**
+     * 根据绑定值检查是否有绑定
+     * @param $bindingValue
+     * @param string $app
+     */
+    public function isBindingForBindingValue($bindingValue, $app='wxqy')
+    {
+        $binding = $this->fetchAll('bindvalue=:bindvalue AND app=:app', array(':bindvalue' => $bindingValue, ':app' => $app));
+        return empty($binding) ? false : true;
+    }
+
+    /**
+     * 根据app获得所有绑定值
+     * @param string $app
+     * @return array
+     */
+    public function getAllBindValueByApp($app = 'wxqy')
+    {
+        $value = Ibos::app()->db->createCommand()
+            ->select('bindvalue')
+            ->from($this->tableName())
+            ->where('app = :app', array(':app' => $app))
+            ->queryColumn();
+        return $value;
+    }
+
+    /**
+     * 通过app获得所有uid
+     * @param string $app
+     * @return array
+     */
+    public function getAllUidByApp($app = 'wxqy')
+    {
+        $value = Ibos::app()->db->createCommand()
+            ->select('uid')
+            ->from($this->tableName())
+            ->where('app = :app', array(':app' => $app))
+            ->queryColumn();
+        return $value;
+    }
+
+    /**
+     * 获得绑定值
+     * @param $uid
+     * @param string $app
+     * @return bool|\CDbDataReader|mixed|string
+     */
+    public function fetchBindValueByUidAndApp($uid, $app =  'wxqy')
+    {
+        $bindvalue = Ibos::app()->db->createCommand()
+            ->select('bindvalue')
+            ->from($this->tableName())
+            ->where("uid = :uid AND app = :app", array(':uid' => $uid, ':app' => $app))
+            ->queryScalar();
+        return $bindvalue;
+    }
 }

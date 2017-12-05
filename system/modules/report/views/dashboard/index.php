@@ -9,7 +9,7 @@ use application\modules\dashboard\model\Stamp;
       href="<?php echo Ibos::app()->assetManager->getAssetsUrl('report'); ?>/css/dbreport.css?<?php echo VERHASH; ?>">
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Work report']; ?></h1>
+        <h1 class="mt">应用设置＞<?php echo $lang['Work report']; ?></h1>
     </div>
     <div>
         <form action="<?php echo $this->createUrl('dashboard/update'); ?>" class="form-horizontal" method="post">

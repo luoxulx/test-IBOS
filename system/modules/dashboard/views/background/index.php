@@ -1,20 +1,8 @@
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['System background setting'] ?></h1>
+        <h1 class="mt"><?php echo $lang['Common Setting'];?> > <?php echo $lang['Nav Blendent'];?></h1>
     </div>
-    <div class="ctb ctbp">
-        <h2 class="st">系统背景设置</h2>
-        <div class="alert trick-tip">
-            <div class="trick-tip-title">
-                <i></i>
-                <strong><?php echo $lang['System background setting'] ?></strong>
-            </div>
-            <div class="trick-tip-content">
-                <ul>
-                    <li>您可以对系统的背景、导航条进行定制，使其更突显企业LOGO。</li>
-                </ul>
-            </div>
-        </div>
+    <div class="ctb">
         <div>
             <ul class="grid-list pic-list clearfix" id="bgstyle_select_list">
                 <li>
@@ -44,6 +32,9 @@
                 </li>
             </ul>
         </div>
+        <div class="form__submit-btn">
+            <button type="button" class="btn btn-primary btn-large btn-submit" id="background_save">提交</button>
+        </div>
     </div>
 </div>
-<script src="<?php echo $assetUrl; ?>/js/db_index.js"></script>
+<script src="<?php echo $assetUrl; ?>/js/db_background.js?<?php echo VERHASH; ?>"></script>

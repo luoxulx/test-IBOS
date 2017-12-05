@@ -158,4 +158,22 @@ class Setting extends Model
         return $count;
     }
 
+    /**
+     * 添加setting值
+     * @param string $key key值
+     * @param string $value 键值
+     */
+    public function addSettingValue($key, $value)
+    {
+        $svalue = $this->fetchSettingValueByKey($key);
+        if (empty($svalue)){
+            $this->add(array(
+                'skey' => $key,
+                'svalue' => $value,
+            ));
+        }else{
+            $this->modify($key, array('svalue' => $value));
+        }
+    }
+
 }

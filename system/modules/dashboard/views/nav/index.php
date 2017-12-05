@@ -27,7 +27,7 @@ use application\core\utils\Ibos;
                             <span class="">名称</span>
                         </div>
                         <div class="nav-w14">类型</div>
-                        <div class="nav-w35">链接</div>
+                        <div class="nav-w35">链接地址</div>
                         <div class="nav-w6">是否启用</div>
                         <div class="nav-w6">新窗打开</div>
                     </div>

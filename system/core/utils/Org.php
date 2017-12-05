@@ -89,7 +89,7 @@ class Org
                 foreach ($departments as $department) {
                     $departmentArray['d_' . $department['deptid']] = array(
                         'id' => 'd_' . $department['deptid'],
-                        'text' => $department['deptname'],
+                        'text' => ($department['isbranch'] == 1) ? $department['deptname']. '(分支机构)' : $department['deptname'],
                         'pid' => $department['pid'] != 0 ? 'd_' . $department['pid'] : 'c_0',
                     );
                 }

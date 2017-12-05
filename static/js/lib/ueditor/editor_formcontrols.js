@@ -115,9 +115,12 @@
                                 "当前用户id",
                                 "当前用户姓名",
                                 "当前用户部门(长名称)",
+                                "当前用户所在分支机构",
                                 "当前用户部门(短名称)",
                                 "当前用户岗位",
                                 "当前用户辅助岗位",
+                                "当前用户手机号",
+                                "当前用户工号",
                                 "当前用户姓名+日期",
                                 "当前用户姓名+日期+时间",
                                 "表单名称",
@@ -179,6 +182,11 @@
                         "lang_control_style": "控件样式",
                         "lang_control_width": "宽",
                         "lang_control_height": "高"
+                    }
+                },
+                "icfileupload": {
+                    "static": {
+                        "lang_control_title": "控件名称",
                     }
                 },
                 "icprogressbar": {
@@ -253,6 +261,7 @@
             'iccalc': { title: "计算控件" },
             'iclistview': { title: "列表控件" },
             'icimgupload': { title: "图片上传控件" },
+            'icfileupload': { title: '文件上传控件' },
             'icprogressbar': { title: "进度条控件" },
             'icsign': { title: "签章控件" },
             'icqrcode': { title: "二维码控件" },
@@ -373,7 +382,7 @@
                         if(evt.preventDefault){
                             evt.preventDefault();
                         } else {
-                            evt.returnValue = false
+                            evt.returnValue = false;
                         };
                     }
                 }

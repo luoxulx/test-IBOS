@@ -33,7 +33,7 @@
 
 				var loadCode = function() {
 					var url = Ibos.app.url('workflow/api/getText', {formid: editor.formid, field: 'css'});
-					cm.setValue(localStorage.getItem("csscode") || "");
+					cm.setValue(localStorage.getItem("csscode" + editor.formid) || "");
 					cm.focus();
 					ajax.request(url, {
 						timeout: 60000,
@@ -73,7 +73,7 @@
 						}
 					});
 					// @Debug:
-					localStorage.setItem("csscode", cm.getValue());
+					localStorage.setItem("csscode" + editor.formid, cm.getValue());
 				};
 				dialog.onok = function() {
 					submitCode();

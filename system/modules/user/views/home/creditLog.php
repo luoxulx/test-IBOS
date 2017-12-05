@@ -70,6 +70,7 @@ use application\core\utils\Ibos;
                                         <td>
                                             <p class="xcm mbm"><?php echo isset($creditRule[$rule['rid']]) ? $creditRule[$rule['rid']]['rulename'] : ""; ?></p>
                                             <p class="mbs reward-info">
+                                                <?php if (!empty($credits)): ?>
                                                 <?php foreach ($credits as $index => $credit): ?>
                                                     <?php if (!empty($credit)): ?>
                                                         <?php
@@ -80,6 +81,7 @@ use application\core\utils\Ibos;
                                                         <span class="mls"><?php echo $credit['name']; ?><em class="xco">+<?php echo $rule['extcredits' . $index] ?></em></span>
                                                     <?php endif; ?>
                                                 <?php endforeach; ?>
+                                                <?endif;?>
                                             </p>
                                         </td>
                                         <td>

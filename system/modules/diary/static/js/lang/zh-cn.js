@@ -7,6 +7,9 @@ L.DA = {
 	YOU_DO_NOT_SCHEDULE_TODAY:       "抱歉，您今天没有日程计划",
 	SURE_TO_DEL:                     "删除后不能恢复，是否确认要删除？",
 	SELECT_AT_LEAST_ONE_WORK_RECORD: "请至少选择一条工作记录",
+	INPUT_LEAST_ONE_WORK_RECORD:     "请至少填写一条工作记录",
+	INPUT_LEAST_ONE_WORK_PLAN:       "请至少填写一条工作计划",
+	INOUT_WORK_SUMMARY:              "请填写总结内容",
 
 	INTRO: {
 		// 增加日志

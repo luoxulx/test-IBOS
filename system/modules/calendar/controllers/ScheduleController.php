@@ -397,8 +397,8 @@ Class ScheduleController extends BaseController
     protected function getList()
     {
         //显示日期
-        $st = Env::getRequest('startDate');
-        $et = Env::getRequest('endDate');
+        $st = $this->getRequestDate('startDate');
+        $et = $this->getRequestDate('endDate');
         $ret = Calendars::model()->listCalendar(strtotime($st), strtotime($et), $this->uid);
         $this->ajaxReturn($ret);
     }
@@ -409,8 +409,8 @@ Class ScheduleController extends BaseController
      */
     protected function getShareList()
     {
-        $startTime = Env::getRequest('startDate');
-        $endTime = Env::getRequest('endDate');
+        $startTime = $this->getRequestDate('startDate');
+        $endTime = $this->getRequestDate('endDate');
         $result = Calendars::model()->getCommonCalendarList(strtotime($startTime), strtotime($endTime), $this->uid);
         if ($result === false) {
             $this->error(Ibos::lang('No permission to view shareschedule'), $this->createUrl('schedule/index'));
@@ -545,6 +545,46 @@ Class ScheduleController extends BaseController
             $htmlStr .= '</ul>';
             echo $htmlStr;
         }
+    }
+
+    /**
+     * 获取日程日期
+     * @param $key string 开始日期 或 结束日期
+     * @return string
+     */
+    protected function getRequestDate($key)
+    {
+        $date = Env::getRequest($key);
+        if (!empty($date)){
+            $status = $this->checkDateIsValid($date);
+        }
+        if ($key == 'startDate' && (empty($date) || !$status)){
+            //获取现在日期的周一
+            $date = date('Y-m-d',(time()-((date('w')==0?7:date('w'))-1)*24*3600));
+        }elseif ($key == 'endDate' && (empty($date) || !$status)){
+            //获取现在日期的下周一
+            $date = date('Y-m-d',(time()+(8-(date('w')==0?7:date('w')))*24*3600));
+        }
+        return $date;
+    }
+
+    /**
+     * 校验日期格式是否正确
+     * @param string $date 日期
+     * @param string $formats 需要检验的格式数组
+     * @return boolean
+     */
+    protected function checkDateIsValid($date, $format = "Y-m-d") {
+        $unixTime = strtotime($date);
+        if (!$unixTime) { //strtotime转换不对，日期格式显然不对。
+            return false;
+        }
+        list($y,$m,$d)=explode('-',$date);
+        //校验日期的有效性，只要满足其中一个格式就OK
+        if (checkdate($m,$d,$y)) {
+            return true;
+        }
+        return false;
     }
 
 }

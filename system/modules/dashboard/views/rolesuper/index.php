@@ -7,18 +7,13 @@ use application\modules\department\utils\Department as DepartmentUtil;
 <link rel="stylesheet" href="<?php echo $assetUrl; ?>/css/organization_role.css?<?php echo VERHASH; ?>">
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt">管理员管理</h1>
-        <ul class="mn">
-            <li>
-                <a href="/?r=dashboard/roleadmin/index">普通管理员</a>
-            </li>
-            <li>
-                <span>超级管理员</span>
-            </li>
-        </ul>
+        <h1 class="mt">通讯录管理 ＞ 管理员管理</h1>
     </div>
     <div class="ctb">
-        <h2 class="st">超级管理员</h2>
+        <div class="btn-group mb">
+            <a href="/?r=dashboard/roleadmin/index" class="btn">普通管理员</a>
+            <a href="javascript:;" class="btn active">超级管理员</a>
+        </div>
         <div class="alert trick-tip">
             <div class="trick-tip-title">
                 <i></i>
@@ -60,7 +55,7 @@ use application\modules\department\utils\Department as DepartmentUtil;
                     <?php endforeach; ?>
                     <li class="admin-item-add" <?php if ($count >= 3): ?>style="display:none;"<?php endif; ?>>
                         <a href="javascript:;" class="rolesuper-add" id="org_super_add">
-                            <i class="upload-add-icon"></i>
+                            <i class="rolesuper-add-icon"></i>
                         </a>
                     </li>
                 </ul>

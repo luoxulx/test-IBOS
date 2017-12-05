@@ -266,7 +266,6 @@ var Wb = (function() {
 			Ui.ajaxDialog(Ibos.app.url('weibo/share/index', param), {
 				id: "d_feed_forward",
 				title: Ibos.l("WB.FORWARD"),
-				width: 500,
 				init: function() {
 					var $content = this.DOM.content,
 						$fwText = $content.find("textarea"),

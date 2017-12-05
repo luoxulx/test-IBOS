@@ -206,7 +206,9 @@ class Auth
                     NodeRelated::model()->addRelated('', $roleId, $node);
                     // 处理普通类型节点操作认证项
                     $routes = explode(',', $node['routes']);
-                    Auth::addRoleChildItem($role, $node, $routes);
+                    if (!empty($node) && !empty( $node['routes'])) {
+                        Auth::addRoleChildItem($role, $node, $routes);
+                    }
                 }
             }
         }
@@ -266,5 +268,57 @@ class Auth
             }
         }
         return $dataVal;
+    }
+
+
+    /**
+     * 更新授权认证项(新增or编辑)，主要针对更新权限缓存
+     * @param integer $roleId 角色ID
+     * @param array $authItem 节点
+     * @param array $dataVal 数据类型节点的值
+     * @return void
+     */
+    public static function updateCacheRoleAuthority($roleId, $authItem = array(), $dataVal = array())
+    {
+        // 所有节点数据
+        $nodes = Node::model()->fetchAllSortByPk('id');
+        // 更新关联节点数据
+        NodeRelated::model()->deleteAllByRoleId($roleId);
+        // 创建认证对象
+        $auth = Ibos::app()->authManager;
+        $role = $auth->getAuthItem($roleId);
+        if ($role === null) {
+            // 为该角色创建认证项目
+            $role = $auth->createRole($roleId, '', '', '');
+        }
+        if (!empty($authItem)) {
+            foreach ($authItem as $key => $nodeId) {
+                $node = $nodes[$key];
+                // id相同为普通节点，反之为数据节点
+                if (strcasecmp($key, $nodeId) !== 0 && $nodeId === 'data') {
+                    $vals = $dataVal[$key];
+                    foreach ($vals as $valsKey => $valsValue) {
+                        if (empty($valsValue)) {
+                            unset($vals[$valsKey]);
+                        }
+                    }
+                    if (is_array($vals)) {
+                        NodeRelated::model()->addRelated('', $roleId, $node);
+                        foreach ($vals as $id => $val) {
+                            $childNode = Node::model()->fetchByPk($id);
+                            NodeRelated::model()->addRelated($val, $roleId, $childNode);
+                            Auth::addRoleChildItem($role, $childNode, explode(',', $childNode['routes']));
+                        }
+                    }
+                } else {
+                    NodeRelated::model()->addRelated('', $roleId, $node);
+                    // 处理普通类型节点操作认证项
+                    $routes = explode(',', $node['routes']);
+                    if (!empty($node) && !empty( $node['routes'])) {
+                        Auth::addRoleChildItem($role, $node, $routes);
+                    }
+                }
+            }
+        }
     }
 }

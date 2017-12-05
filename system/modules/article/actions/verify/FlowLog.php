@@ -30,20 +30,7 @@ class FlowLog extends Base
             ),
         );
         if ($aitVerify != 0) {
-            $category = ArticleCategory::model()->fetchByPk($article['catid']);
             $flowLog = ApprovalRecord::model()->getFlowLog($data['articleid']);
-            //$verify = ApprovalRecord::model()->getNotAllow($data['articleid'], $category['aid']);
-            // if (!empty($verify)) {//是否还有待审核
-            //     foreach ($verify as $vaule) {
-            //         $username = User::model()->fetchRealnameByUid($vaule);
-            //         $flowLog[] = array(
-            //             'author' => $username,
-            //             'status' => Ibos::lang('Wait to verify'),
-            //             'reason' => '',
-            //             'time' => ''
-            //         );
-            //     }
-            // }
         }
         if (isset($flowLog)) {
             $publish = array_merge($publish, $flowLog);

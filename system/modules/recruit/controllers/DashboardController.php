@@ -114,6 +114,7 @@ class DashboardController extends BaseController
 
         $data = array();
         foreach ($_POST as $key => $value) {
+            $value = \Chtml::encode($value);
             if (in_array($key, $fieldArr)) {
                 $data[$key] = $value;
                 unset($fieldArr[$key]);

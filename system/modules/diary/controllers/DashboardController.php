@@ -70,6 +70,7 @@ class DashboardController extends BaseController
                 'reviewlock' => 0
             );
             foreach ($_POST as $key => $value) {
+                $value = \CHtml::encode($value);
                 if (in_array($key, array_keys($fieldArr))) {
                     $fieldArr[$key] = $value;
                 }

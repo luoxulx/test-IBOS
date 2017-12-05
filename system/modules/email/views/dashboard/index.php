@@ -6,10 +6,13 @@ use application\core\utils\StringUtil;
 ?>
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Email module']; ?></h1>
+        <h1 class="mt">应用设置＞<?php echo $lang['Email module']; ?></h1>
     </div>
     <div>
         <form action="<?php echo $this->createUrl('dashboard/edit'); ?>" class="form-horizontal" method="post">
+<?php
+if(ENGINE != 'SAAS'):
+?>
             <!-- 基本设置 -->
             <div class="ctb">
                 <h2 class="st"><?php echo $lang['Base setup']; ?></h2>
@@ -37,6 +40,9 @@ use application\core\utils\StringUtil;
                                         </div>-->
                 </div>
             </div>
+<?php
+endif;
+?>
             <!--邮箱容量分配-->
             <div class="ctb">
                 <h2 class="st"><?php echo $lang['Mailbox capacity allocation']; ?></h2>

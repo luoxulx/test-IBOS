@@ -5,7 +5,7 @@
     <form action="<?php echo $this->createUrl('dashboard/update') ?>" method="post">
         <!-- 招聘管理 start -->
         <div class="ctb">
-            <h2 class="st"><?php echo $lang['Resume field management']; ?></h2>
+            <h2 class="st">应用设置＞<?php echo $lang['Resume field management']; ?></h2>
             <table class="table table-bordered table-hover table-operate" style="width:70%">
                 <thead>
                 <tr>

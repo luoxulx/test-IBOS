@@ -39,4 +39,7 @@ return array(
     'Not support' => '不支持',
 
     'Network error' => '网络出错，请检查网络配置。',
+
+    'The file type is not in white list' => '禁止上传该类型的文件',
+    'Upload failed' => '上传失败',
 );

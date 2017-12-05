@@ -7,6 +7,7 @@ use application\modules\dashboard\model\Stamp;
 use application\modules\message\utils\MessageApi;
 use application\modules\report\model\Report;
 use application\modules\user\model\User;
+use application\modules\report\utils\Report as ReportUtil;
 
 class ReportApi extends MessageApi
 {
@@ -21,11 +22,11 @@ class ReportApi extends MessageApi
     {
         $uid = Ibos::app()->user->uid;
         $subUidArr = User::model()->fetchSubUidByUid($uid);
-        $subReports = Report::model()->fetchAll("FIND_IN_SET({$uid}, `toid`)");
-        if (count($subUidArr) > 0 || !empty($subReports)) {
+        $subReportsCount = Report::model()->countReportByToid($uid);
+        if (count($subUidArr) > 0 || $subReportsCount > 0) {
             return array(
                 'name' => 'report/report',
-                'title' => '工作总结',
+                'title' => '工作汇报',
                 'style' => 'in-report',
                 'tab' => array(
                     array(
@@ -43,7 +44,7 @@ class ReportApi extends MessageApi
         } else {
             return array(
                 'name' => 'report/report',
-                'title' => '工作总结',
+                'title' => '工作汇报',
                 'style' => 'in-report',
                 'tab' => array(
                     array(
@@ -73,11 +74,7 @@ class ReportApi extends MessageApi
         // 下属或者是某篇总结的汇报对象的总结计划
         $subUidArr = User::model()->fetchSubUidByUid($uid);
         $subUidStr = implode(',', $subUidArr);
-        $subReports = Ibos::app()->db->createCommand()->select('*')
-            ->from('{{report}}')
-            ->where("FIND_IN_SET(`uid`, '{$subUidStr}') OR FIND_IN_SET({$uid}, `toid`)")
-            ->order('addtime desc')
-            ->queryAll();
+        $subReports = Report::model()->fetchAll("FIND_IN_SET(`uid`, '{$subUidStr}') OR FIND_IN_SET({$uid}, `toid`) limit 0,4");
         if (!empty($subReports)) {
             $subReports = $this->handleIconUrl($subReports, true);
         }
@@ -106,15 +103,17 @@ class ReportApi extends MessageApi
     {
         $uid = Ibos::app()->user->uid;
         //获取所有直属下属id
-        $uidArr = User::model()->fetchSubUidByUid($uid);
-        if (!empty($uidArr)) {
-            $uidStr = implode(',', $uidArr);
-            $sql = "SELECT COUNT(repid) AS number FROM {{report}} WHERE FIND_IN_SET( `uid`, '{$uidStr}' ) AND isreview = 0";
-            $record = Report::model()->getDbConnection()->createCommand($sql)->queryAll();
-            return intval($record[0]['number']);
-        } else {
-            return 0;
-        }
+        $repids = Ibos::app()->db->createCommand()
+            ->select('relateid')
+            ->from('{{module_reader}}')
+            ->where('module = :module AND uid = :uid', array(
+                ':module' => 'report',
+                ':uid' => $uid
+            ))
+            ->queryColumn();
+        $repidStrs = "\"". implode('","', $repids). "\"";
+        $count = Report::model()->count("repid NOT IN ({$repidStrs}) AND FIND_IN_SET({$uid}, `toid`)");
+        return $count;
     }
 
     /**

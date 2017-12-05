@@ -56,13 +56,15 @@ class WxApi extends Api
     {
         return Setting::model()->fetchSettingValueByKey('aeskey');
     }
-
+    
     /**
      * 目前只是为了微信文件上传下载接口用到
      * 这个接口微信那边说可能会以后会验证ip，嗯……
      * 陈说这个做成本地的，不要官网转发（这锅我不背呢）
      * 如果以后上传下载不可用了，这个应该删除（我真不背锅）
+     *
      * @param string $aeskey
+     * @return mixed
      */
     public function getAccesstoken($aeskey)
     {
@@ -165,6 +167,55 @@ EOT;
         );
     }
 
+    /**
+     * 删除部门
+     * @param $deptid
+     */
+    public function delDept($deptid, $url)
+    {
+        $post = array('dpetid' => $deptid);
+        $return = $this->fetchResult($url, json_encode($post), 'post');
+        file_put_contents('deldept.log', var_export($return, true));
+        Log::write(array('action' => 'wxDelDep', 'postData' => $post, 'url' => $url, 'result' => $return));
+        if (!is_array($return)){
+            $res = CJSON::decode($return, true);
+            if ($res['errcode'] == 0){
+                return true;
+            }else{
+                return false;
+            }
+        }else{
+            return false;
+        }
+    }
+
+    /**
+     * 更新部门
+     * @param $deptid
+     * @param $name
+     * @param $parentid
+     * @param $order
+     * @param $url
+     * @return bool
+     */
+    public function updateDept($deptid, $name, $parentid, $order, $url)
+    {
+        $post = array(
+            'dpetid' => $deptid,
+            'name' => $name,
+            'parentid' => $parentid,
+            'order' => $order
+        );
+        $return = $this->fetchResult($url, json_encode($post), 'post');
+        Log::write(array('action' => 'wxUpdateDep', 'postData' => $post, 'url' => $url, 'result' => $return));
+        $res = CJSON::decode($return, true);
+        if ($res['errcode'] == 0){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
     public function createUser($user, $url)
     {
         $depstr = $user['deptid'];
@@ -212,7 +263,87 @@ EOT;
             return Code::SYNC_ERROR_MSG;
         }
     }
-    
+
+    public function updateUser($user, $url)
+    {
+        $depstr = $user['deptid'];
+        if (empty($depstr)) {
+            $depstr = 1;
+        }
+        $telephone = isset($user['telephone']) ? $user['telephone'] : '';
+        $post = array(
+            'userid' => $user['userid'],
+            'name' => $user['realname'],
+            'department' => array_filter(array_unique(explode(',', $depstr))),
+            'position' => $user['posname'],
+            'mobile' => $user['mobile'],
+            'gender' => $user['gender'],
+            'tel' => $telephone,
+            'email' => $user['email'],
+            'weixinid' => $user['weixin'],
+            'enable' => $user['enable'],
+        );
+        $res = $this->fetchResult($url, json_encode($post), 'post');
+        Log::write(array('action' => 'updateUser', 'postData' => $post, 'url' => $url, 'result' => $res));
+        if (!is_array($res)) {
+            $res = CJSON::decode($res, true);
+            if ($res['errcode'] == '0') {
+                return '';
+            } else {
+                $msg = Code::getErrmsg($res['errcode']);
+                return $msg;
+            }
+        } else {
+            return Code::SYNC_ERROR_MSG;
+        }
+    }
+
+    public function delUser($user, $url)
+    {
+        $post = array(
+            'userid' => $user['userid'],
+        );
+        $res = $this->fetchResult($url, json_encode($post), 'post');
+        Log::write(array('action' => 'delUser', 'postData' => $post, 'url' => $url, 'result' => $res));
+        if (!is_array($res)) {
+            $res = CJSON::decode($res, true);
+            if ($res['errcode'] == '0') {
+                return '';
+            } else {
+                $msg = Code::getErrmsg($res['errcode']);
+                return $msg;
+            }
+        } else {
+            return Code::SYNC_ERROR_MSG;
+        }
+    }
+
+    /**批量删除微信用户
+     * @param $bindvalues
+     * @param $url
+     * @return string
+     */
+    public function batchDelUserByBindValues($bindvalues, $url)
+    {
+        $bindvalues = is_array($bindvalues) ? $bindvalues : explode(',', $bindvalues);
+        $post = array(
+            'userids' => $bindvalues,
+        );
+        $res = $this->fetchResult($url, json_encode($post), 'post');
+        Log::write(array('action' => 'batchDelUserByBindValues', 'postData' => $post, 'url' => $url, 'result' => $res));
+        if (!is_array($res)) {
+            $res = CJSON::decode($res, true);
+            if ($res['errcode'] == '0') {
+                return '';
+            } else {
+                $msg = Code::getErrmsg($res['errcode']);
+                return $msg;
+            }
+        } else {
+            return Code::SYNC_ERROR_MSG;
+        }
+    }
+
     /**
      * 如果是手机邮箱微信存在，微信返回的errmsg里带有userid
      * 如果，我是说如果，这个规则被微信改了……怪我么？

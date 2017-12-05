@@ -49,6 +49,8 @@ CREATE TABLE `{{notify_message}}` (
   `ctime` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '添加时间',
   `isread` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否已读',
   `url` varchar(200) NOT NULL DEFAULT '' COMMENT '链接地址',
+  `isalarm` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否为闹钟提醒',
+  `senduid` mediumint(8) unsigned NOT NULL DEFAULT '0' COMMENT '主动提醒发送用户ID',
   PRIMARY KEY (`id`),
   KEY `uid_read` (`uid`,`isread`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
@@ -198,6 +200,32 @@ CREATE TABLE `{{user_data}}` (
   UNIQUE KEY `user-key` (`uid`,`key`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `{{notify_alarm}}`;
+CREATE TABLE `{{notify_alarm}}` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `uid` mediumint(8) unsigned NOT NULL DEFAULT '0' COMMENT '用户ID',
+  `node` varchar(50) NOT NULL COMMENT '事件节点',
+  `module` char(30) NOT NULL COMMENT '模块名称',
+  `title` varchar(250) NOT NULL COMMENT '标题',
+  `body` text NOT NULL COMMENT '内容',
+  `ctime` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '添加时间',
+  `url` varchar(200) NOT NULL DEFAULT '' COMMENT '链接地址',
+  `receiveuids` text NOT NULL COMMENT '接收提醒的用户ID,逗号隔开',
+  `stime` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '自定义发送时间',
+  `alarmtype` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '提醒类型：0为自定义时间，1为关联事件时间',
+  `issend` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '状态：0未发送，1已发送',
+  `diffetime` int(10) NOT NULL DEFAULT '0' COMMENT '差异量:分钟数,负数代表提前，正数代表增加',
+  `eventid` varchar(60) NOT NULL DEFAULT '0' COMMENT '事件ID',
+  `tablename` varchar(50) NOT NULL COMMENT '关联事件表名',
+  `fieldname` varchar(50) NOT NULL COMMENT '关联事件时间字段名',
+  `uptime` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '修改时间',
+  `idname` varchar(50) NOT NULL COMMENT '关联事件时间id名',
+  `timenode` varchar(50) NOT NULL COMMENT '事件时间节点',
+  PRIMARY KEY (`id`),
+  KEY `notify_state` (`issend`) USING BTREE,
+  KEY `notify_uid` (`uid`) USING BTREE
+) ENGINE=MyISAM AUTO_INCREMENT=775 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
 INSERT INTO `{{notify_node}}` (`node`, `nodeinfo`, `module`, `titlekey`, `contentkey`,`sendemail`,`sendmessage`,`sendsms`,`type`) VALUES ('message_digg', '微博的赞', 'message', 'message/default/Digg message title', 'message/default/Digg message content','1','1','1','2');
 INSERT INTO `{{notify_node}}` (`node`, `nodeinfo`, `module`, `titlekey`, `contentkey`,`sendemail`,`sendmessage`,`sendsms`,`type`) VALUES ('message_empty_digg', '微博的无文字赞', 'message', 'message/default/Digg empty message title', 'message/default/Digg empty message content','1','1','1','2');
 INSERT INTO `{{notify_node}}` (`node`, `nodeinfo`, `module`, `titlekey`, `contentkey`,`sendemail`,`sendmessage`,`sendsms`,`type`) VALUES ('user_follow', '新粉丝提醒', 'message', 'message/default/Follow message title', 'message/default/Follow message content','1','1','1','2');
@@ -206,3 +234,5 @@ INSERT INTO `{{credit_rule}}` (`rulename`, `action`, `cycletype`, `rewardnum`,`e
 INSERT INTO `{{credit_rule}}` (`rulename`, `action`, `cycletype`, `rewardnum`,`extcredits1`, `extcredits2`) VALUES ('被评论', 'getcomment', '3', '20', '2','1');
 INSERT INTO `{{credit_rule}}` (`rulename`, `action`, `cycletype`, `rewardnum`,`extcredits1`, `extcredits2`) VALUES ('删除评论', 'delcomment', '3', '20', '-3','1');
 INSERT INTO `{{cron}}` (`available`, `type`,`module`, `name`, `filename`, `lastrun`, `nextrun`, `weekday`, `day`, `hour`, `minute`) VALUES ( '1', 'system','message', '更新企业QQ授权有效期', 'CronUpdateBQQToken.php', '1391184000', '1393603200', '1', '-1', '0', '0');
+INSERT INTO `{{notify_node}}` (`node`, `nodeinfo`, `module`, `titlekey`, `contentkey`, `sendemail`, `sendmessage`, `sendsms`, `type`) VALUES ('normal_alarm_notily', '普通提醒', 'message', 'message/default/Alarm title', 'message/default/Alarm content', '1', '1', '1', '1');
+INSERT INTO `{{cron}}` (`available`, `type`, `module`, `name`, `filename`, `lastrun`, `nextrun`, `weekday`, `day`, `hour`, `minute`) VALUES ('1', 'system', 'message', '发送通用提醒', 'CronSentNoifyAlarm.php', '1511160683', '1511160720', '-1', '-1', '-1', '*/1');

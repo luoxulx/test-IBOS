@@ -10,6 +10,8 @@
 namespace application\core\utils;
 
 use application\core\components\AssetManager;
+use application\core\components\Engine;
+use application\core\components\Request;
 use application\core\components\Response;
 use application\modules\main\components\Setting as SettingComponent;
 use application\modules\user\components\User as UserComponent;
@@ -38,7 +40,7 @@ use Yii;
  * @property \CCache $cache The cache application component. Null if the component is not enabled.
  * @property \CPhpMessageSource $coreMessages The core message translations.
  * @property \CMessageSource $messages The application message translations.
- * @property \CHttpRequest $request The request component.
+ * @property Request $request The request component.
  * @property \CFormatter $format The formatter component.
  * @property \CUrlManager $urlManager The URL manager component.
  * @property \CController $controller The currently active controller. Null is returned in this base class.
@@ -151,7 +153,7 @@ class Ibos extends Yii
 
     /**
      * 返回当前平台引擎
-     * @return mixed
+     * @return Engine
      */
     public static function engine()
     {

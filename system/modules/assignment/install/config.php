@@ -4,7 +4,7 @@ defined('IN_MODULE_ACTION') or die('Access Denied');
 return array(
     'param' => array(
         'name' => '任务指派',
-        'category' => '个人办公',
+        'category' => '任务指派',
         'description' => '提供企业工作任务指派',
         'author' => 'gzhzh @ IBOS Team Inc',
         'version' => '1.0',

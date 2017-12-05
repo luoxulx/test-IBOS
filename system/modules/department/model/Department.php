@@ -322,6 +322,7 @@ class Department extends Model
             ->select()
             ->from($this->tableName())
             ->where($condition)
+            ->order('pid ASC, sort ASC')
             ->queryAll();
         return $deptArray;
     }
@@ -488,6 +489,29 @@ class Department extends Model
         }else{
             return array();
         }
+    }
+
+    /**
+     * 递归获取下级部门ID.
+     * @param $deptid
+     * @return array
+     */
+    public function fetchDeptAllChildOfChildByDeptID($deptid)
+    {
+        $deptid = !empty($deptid)?$deptid:0;
+        $deptids = is_array($deptid) ? $deptid : explode(',', $deptid);
+        static $childDeptids = array();
+        $sdeptids = \Yii::app()->db->createCommand()
+            ->select('deptid')
+            ->from($this->tableName())
+            ->where(array('in','pid',$deptids))
+            ->queryAll();
+        $cdeptids =  util\ArrayUtil::getColumn($sdeptids, 'deptid');
+        $childDeptids = array_merge($childDeptids, $cdeptids);
+        if (!empty($cdeptids)) {
+            self::fetchDeptAllChildOfChildByDeptID($cdeptids);
+        }
+        return $childDeptids;
     }
 
 }

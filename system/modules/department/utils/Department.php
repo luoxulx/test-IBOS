@@ -56,14 +56,18 @@ class Department
     public static function isDeptParent($deptId, $pid)
     {
         $depts = self::loadDepartment();
-        $_pid = $depts[$deptId]['pid'];
-        if ($_pid == 0) {
+        if (!empty($depts)){
             return false;
+        }else{
+            $_pid = $depts[$deptId]['pid'];
+            if ($_pid == 0) {
+                return false;
+            }
+            if ($_pid == $pid) {
+                return true;
+            }
+            return self::isDeptParent($_pid, $pid);
         }
-        if ($_pid == $pid) {
-            return true;
-        }
-        return self::isDeptParent($_pid, $pid);
     }
 
     /**
@@ -98,6 +102,12 @@ class Department
             if (!empty($py)) {
                 $group[strtoupper($py[0])][] = $k;
             }
+            $list[$k] = array(
+                'pid' => $v['pid'],
+                'deptid' => $v['deptid'],
+                'deptname' => $v['deptname'],
+                'sort' => $v['sort']
+            );
         }
         ksort($group);
         $data = array('datas' => $list, 'group' => $group);

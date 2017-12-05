@@ -17,6 +17,10 @@ class Credit extends System
     private $_coef = 1;
     private $_extraSql = array();
 
+    /**
+     * @param string $className
+     * @return self
+     */
     public static function getInstance($className = __CLASS__)
     {
         return parent::getInstance($className);

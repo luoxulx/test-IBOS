@@ -10,19 +10,19 @@ return array(
     'db' => array(
         'host' => '127.0.0.1',
         'port' => '3306',
-        'dbname' => 'ibos_open',
+        'dbname' => 'open42',
         'username' => 'root',
         'password' => 'root',
-        'tableprefix' => 'ibos_',
+        'tableprefix' => 'open42_',
         'charset' => 'utf8'
     ),
 // -------------------------  CONFIG SECURITY  -------------------------- //
     'security' => array(
-        'authkey' => '68fc036s6b6iTYUD',
+        'authkey' => '83804emuuo9Co5UE',
     ),
 // --------------------------  CONFIG COOKIE  --------------------------- //
     'cookie' => array(
-        'cookiepre' => '9z99_',
+        'cookiepre' => 'ftNK_',
         'cookiedomain' => '',
         'cookiepath' => '/',
     )

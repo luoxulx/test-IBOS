@@ -41,10 +41,7 @@ class RoletypeController extends OrganizationbaseController
     {
         if (Env::submitCheck('posSubmit')) {
             // 获取基本数据
-            $data = array(
-                'rolename' => \CHtml::encode(Env::getRequest('rolename')),
-                'roletype' => $this->roleType,
-            );
+            $data = array('rolename' => \CHtml::encode(Env::getRequest('rolename')), 'roletype' => $this->roleType,);
             // 获取插入ID，以便后续处理
             $newId = Role::model()->add($data, true);
             // 权限处理
@@ -68,7 +65,14 @@ class RoletypeController extends OrganizationbaseController
         } else {
             $authItem = Auth::loadAuthItem();
             $this->filterAuth($authItem);
+            if (Ibos::app()->controller->getId() == 'role' && Module::getIsEnabled('crm')){
+                $data['crmAuthItem'] = $this->getCRMAuthItem();
+                $data['crmRelated'] = isset($relateCombine['crm']) ? $relateCombine['crm'] : array();
+                $data['crmAdvanced'] = $authItem[base64_encode('CRM')]['group'];
+                unset($authItem[base64_encode('CRM')]);
+            }
             $data['authItem'] = $authItem;
+            $data['isInstallCrm'] = Module::getIsEnabled('crm');
             $this->render('add', $data);
         }
     }
@@ -111,7 +115,14 @@ class RoletypeController extends OrganizationbaseController
             // 所有权限节点
             $authItem = Auth::loadAuthItem();
             $this->filterAuth($authItem);
+            if (Ibos::app()->controller->getId() == 'role' && Module::getIsEnabled('crm')){
+                $data['crmAuthItem'] = $this->getCRMAuthItem();
+                $data['crmRelated'] = isset($relateCombine['crm']) ? $relateCombine['crm'] : array();
+                $data['crmAdvanced'] = $authItem[base64_encode('CRM')]['group'];
+                unset($authItem[base64_encode('CRM')]);
+            }
             $data['authItem'] = $authItem;
+            $data['isInstallCrm'] = Module::getIsEnabled('crm');
             $this->render('edit', $data);
         }
     }
@@ -189,7 +200,7 @@ class RoletypeController extends OrganizationbaseController
                 // for js
                 $data['uidString'] = '';
                 foreach ($uids as $uid) {
-                    $data['uidString'] .= "'u_" . $uid . "',";
+                    $data['uidString'] .= "'u_".$uid."',";
                 }
                 $data['uidString'] = trim($data['uidString'], ',');
                 // 当前页要显示的uid（只作显示，并不为实际表单提交数据）
@@ -219,7 +230,7 @@ class RoletypeController extends OrganizationbaseController
         // 所有节点数据
         $nodes = Node::model()->fetchAllSortByPk('id');
         // 更新关联节点数据
-        NodeRelated::model()->deleteAllByRoleId($roleId);
+        NodeRelated::model()->deleteAll(sprintf("roleid = %d", $roleId));
         // 创建认证对象
         $auth = Ibos::app()->authManager;
         $role = $auth->getAuthItem($roleId);
@@ -258,4 +269,38 @@ class RoletypeController extends OrganizationbaseController
         }
     }
 
+    /**
+     * 获得CRM的权限配置，做另外处理
+     * @return array
+     */
+    protected function getCRMAuthItem()
+    {
+        $authItem = Auth::loadAuthItem();
+        $groups = $authItem[base64_encode('CRM')]['group'];
+        $items = array();
+        $filterGroups = array(
+            base64_encode('浏览'),
+            base64_encode('高级设置'),
+        );
+        //过滤到不需要显示的权限项
+        foreach ($groups as $key => $item) {
+            if (!in_array($key, $filterGroups)) {
+                $items[] = array_shift($item['node']);
+            }
+        }
+        $crmItems = array();
+        foreach ($items as $item) {
+            $crmItems[$item['id']] = $item;
+        }
+        ksort($crmItems);
+        // 将子节点的索引从数组换成英文单词，方便前台检索以得出该子节点id
+        foreach ($crmItems as &$item) {
+            $newItems = array();
+            foreach ($item['node'] as $node) {
+                $newItems[$node['node']] = $node;
+            }
+            $item['node'] = $newItems;
+        }
+        return $crmItems;
+    }
 }

@@ -2,12 +2,22 @@
 <link rel="stylesheet" href="<?php echo $assetUrl; ?>/css/organization_role.css?<?php echo VERHASH; ?>">
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt">角色权限管理</h1>
+        <h1 class="mt">通讯录管理 ＞ 前台管理权限</h1>
     </div>
     <div>
         <!-- 部门信息 start -->
         <div class="ctb">
-            <h2 class="st">角色管理</h2>
+            <div class="alert trick-tip">
+                <div class="trick-tip-title">
+                    <i></i>
+                    <strong><?php echo $lang['Function Introduction'] ?></strong>
+                </div>
+                <div class="trick-tip-content">
+                    <ul>
+                        <li>设置选定角色对功能模块的操作及使用权限</li>
+                    </ul>
+                </div>
+            </div>
             <div class="com-list-wrap clearfix">
                 <ul class="db-com-list">
                     <?php foreach ($data as $role): ?>
@@ -71,7 +81,7 @@
                         <a href="<?php echo $this->createUrl('role/add'); ?>">
                             <div class="add-item-wrap">
                                 <i class="o-add-role mbs"></i>
-                                <p class="fsl add-opt-tip">新建角色</p>
+                                <p class="add-opt-tip">新建角色</p>
                             </div>
                         </a>
                     </li>

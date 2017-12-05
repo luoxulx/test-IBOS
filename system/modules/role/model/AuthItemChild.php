@@ -62,7 +62,8 @@ class AuthItemChild extends Model
             "'crm/contract/%'",
             "'crm/receipt/%'",
             "'crm/event/%'",
-            "'crm/api/%'"
+            "'crm/api/%'",
+            "'crm/index/%'"
         );
     }
 

@@ -174,10 +174,6 @@ class Main
     }
 
     /**
-     * 临时： 检查授权人数,在以后版本中可能废除
-     */
-
-    /**
      *
      * @param type $logout
      * @param type $addNums 如果再添加“addNums”人，会不会超出授权人数

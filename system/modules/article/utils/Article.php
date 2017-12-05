@@ -554,7 +554,7 @@ class Article
      */
     public static function formatToTimestamp($str)
     {
-        $datePattern = '/\d{4}-\d{1,2}-\d{1,2}/';
+        $datePattern = '/\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}/';
         preg_match($datePattern, $str, $matches);
 
         if (isset($matches[0])) {

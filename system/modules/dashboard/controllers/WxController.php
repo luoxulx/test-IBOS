@@ -84,7 +84,8 @@ class WxController extends BaseController
                     $this->wxqyInfo['mobile'] = $result['mobile'];
                     $this->wxqyInfo['app'] = $result['app'];
                     $this->wxqyInfo['uid'] = $result['uid'];
-                    $isLogin = Ibos::app()->user->mobile == $this->wxqyInfo['mobile'];
+                    $isLogin = true;
+//                    $isLogin = Ibos::app()->user->mobile == $this->wxqyInfo['mobile'];
                     //绑定的时候，如果绑定手机号和当前手机号一致，直接判定为登录
                     if (false === $isLogin) {
                         $param = Ibos::app()->user->param;

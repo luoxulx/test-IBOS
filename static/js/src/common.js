@@ -228,6 +228,62 @@ var U = Ibos.Util = (function() {
         hasValue: function(selector, value) {
             var oldVal = $(selector).val();
             return ("," + oldVal + ",").indexOf("," + value + ",") !== -1;
+        },
+        /**
+         * 获取对应文件类型icon地址
+         * @DateTime 2017-10-10T15:35:19+0800
+         * @author Clearlove
+         * @param    {String}                 fileSuffix 文件类型后缀字符串
+         * @return   {String}                            文件类型icon地址
+         */
+        getFileTypeIconUrl: function(fileSuffix){
+            var ICON_PATH = 'static/image/filetype/', // 附件图片地址
+                type;
+            if($.inArray(fileSuffix, ['asf', 'avi', 'wm', 'wmp', 'wmv', 'ram', 'rm', 'rmvb', 'rp', 'rpm', 'rt', 'smil', 'scm', 
+                'dat', 'm1v', 'm2v', 'm2p', 'm2ts', 'mp2v', 'mpe', 'mpeg', 'mpeg1', 'mpeg2', 'mpg', 'mpv2', 
+                'pss', 'pva', 'tp', 'tpr', 'ts', 'm4b', 'm4p', 'mp4', 'mpeg4', '3g2', '3gp', '3gp2', '3gpp', 
+                'mov', 'qt', 'mov', 'qt', 'flv', 'f4v', 'swf', 'hlv', 'ifo', 'vob', 'amv', 'csf', 'divx', 'evo', 
+                'mkv', 'mod', 'pmp', 'vp6', 'bik', 'mts', 'xv', 'xlmv', 'ogm', 'ogv', 'ogx', 'dvd']) >= 0) {
+                type = "video";
+            } else if($.inArray(fileSuffix, ['aac', 'ac3', 'acc', 'aiff', 'amr', 'ape', 'au', 'cda', 'dts', 'flac', 'm1a', 'm2a', 
+                'm4a', 'mka', 'mp2', 'mp3', 'mpa', 'mpc', 'ra', 'tta', 'wav', 'wma', 'wv', 'mid', 'midi', 'ogg', 
+                'oga']) >= 0) {
+                type = "music";
+            } else if($.inArray(fileSuffix, ['xlsx', 'xlsm', 'xlsb', 'xltx', 'xltm', 'xlt', 'xls', 'xml', 'xlam', 'xla', 'xlw', 'csv']) >= 0) {
+                type = "excel";
+            } else if($.inArray(fileSuffix, ['pptx', 'pptm', 'ppt', 'potx', 'potm', 'pot', 'pps', 'ppsx', 'ppsm', 'ppam', 'ppa']) >= 0) {
+                type = "ppt";
+            } else if($.inArray(fileSuffix, ['doc', 'docm', 'docx', 'dot', 'dotm', 'dotx']) >= 0) {
+                type = "word";
+            } else if($.inArray(fileSuffix, ['php', 'js', 'pl', 'cgi', 'asp']) >= 0) {
+                type = "code";
+            } else if($.inArray(fileSuffix, ['jpg', 'gif', 'png', 'bmp']) >= 0) {
+                type = "photo";
+            } else if($.inArray(fileSuffix, ['txt', 'rtf', 'wri', 'chm']) >= 0) {
+                type = "txt";
+            } else if($.inArray(fileSuffix, ['fla', 'flv']) >= 0) {
+                type = "fla";
+            } else if($.inArray(fileSuffix, ['html', 'htm']) >= 0) {
+                type = "html";
+            } else if($.inArray(fileSuffix, ['swf', 'swi']) >= 0) {
+                type = "swf";
+            } else if('pdf' == fileSuffix) {
+                type = "pdf";
+            } else if('psd' == fileSuffix) {
+                type = "psd";
+            } else if('exe' == fileSuffix) {
+                type = "exe";
+            } else if('rar' == fileSuffix) {
+                type = "rar";
+            } else if('zip' == fileSuffix) {
+                type = "zip";
+            } else if('7z' == fileSuffix) {
+                type = "7z";
+            } else {
+                type = "unknown";
+            }
+
+            return ICON_PATH + type + '_lt.png';
         }
     };
 

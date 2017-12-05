@@ -196,7 +196,8 @@ VoteIndex.indexTable = function(){
                     var _tpl = 
                         '<% if(issponsor && status == 1){ %>'+
                         '<div class="vote-opt-btnbar">' +
-                        '<a href="javascript:;" data-param=\'{"id": <%= voteid %>, "sponsor": "<%= sponsor %>", "endtimestr": "<%= endtimestr %>", "subject": "<%= subject %>", "sponsorid": "<%= sponsorid %>"}\' title="调整时间" data-action="adjustTime" class="cbtn co-clock"></a>' +
+                        '<a href="javascript:;" data-param=\'{"id": <%= voteid %>, "title": "<%= subject %>"}\' title="设置提醒" data-action="setRemind" class="cbtn o-message"></a>' +
+                        '<a href="javascript:;" data-param=\'{"id": <%= voteid %>, "sponsor": "<%= sponsor %>", "endtimestr": "<%= endtimestr %>", "subject": "<%= subject %>", "sponsorid": "<%= sponsorid %>"}\' title="调整时间" data-action="adjustTime" class="cbtn co-clock mlm"></a>' +
                         '<a href="javascript:;" data-param=\'{"id": <%= voteid %>}\' title="编辑" data-action="editVote" class="cbtn o-edit mlm"></a>' +
                         '<a href="javascript:;" data-param=\'{"id": <%= voteid %>}\' title="删除" data-action="removeVote" class="cbtn o-trash mlm"></a>' +
                         '</div>' +
@@ -394,6 +395,20 @@ $(function() {
             Ui.confirm(Ibos.l("VOTE.EDIT_CLEAR_DATA"), function() {
                 location.href = Ibos.app.url("vote/form/edit", {voteid: param.id});
             });
+        },
+        "setRemind": function(param, elem) {
+            var id = param.id,
+                title = param.title,
+                options = $.extend(
+                    { paramData: { id: id, voteid: id } }, 
+                    { getListParam: { 'module': 'vote', 
+                        'node': 'vote_survey', 
+                        'eventId': id, 
+                        'title': title }
+                    }
+                ),
+                remindDialog = new Ibos.remindDialog('#remind_mainer', options);
+            remindDialog.init();
         }
     });
 });

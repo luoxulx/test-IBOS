@@ -59,16 +59,11 @@ class BaseController extends Controller
         //获取所有直属下属id
         $uidArr = User::model()->fetchSubUidByUid(Ibos::app()->user->uid);
         $count = 0;
-        foreach ($uidArr as $subUid) {
-            $diarys = Diary::model()->fetchAll('uid=:uid AND isreview=:isreview', array(':uid' => $subUid, ':isreview' => 0));
-            $count += count($diarys);
-        }
-        if ($count == 0) {
-            $count = '';
+        if (!empty($uidArr)){
+            $count = Diary::model()->count('uid in(:uid) AND isreview=:isreview', array(':uid' => implode(',', $uidArr), ':isreview' => 0));
         }
         return $count;
     }
-
     /**
      * 通过ajax取得侧栏日历数据
      * @return void

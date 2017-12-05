@@ -61,7 +61,7 @@ use application\modules\main\utils\Main;
                                <?php if ($menu['openway'] == 0): ?>target="_blank"<?php endif; ?>>
                                 <div class="posr">
                                     <img width="64" height="64" class="mbs"
-                                         src="<?php echo 'data/icon/' . $menu['icon']; ?>">
+                                         src="<?php echo $menu['icon']; ?>">
                                     <span class="bubble" data-bubble="<?php echo $menu['module']; ?>"></span>
                                 </div>
                                 <div class="cm-menu-title"><?php echo $menu['name']; ?></div>
@@ -120,12 +120,12 @@ use application\modules\main\utils\Main;
                                  data-href="<?php echo Url::getUrl($menu['url']); ?>"
                                  data-title="<?php echo $menu['name']; ?>"
                                  data-desc="<?php echo $menu['description']; ?>"
-                                 data-src="<?php echo 'data/icon/' . $menu['icon']; ?>">
+                                 data-src="<?php echo $menu['icon']; ?>">
                                 <a href="javascript:;" class="o-mu-plus" data-action="addToCommonMenu"></a>
                                 <a href="javascript:;" class="o-mu-minus" data-action="removeFromCommonMenu"></a>
                                 <div title="<?php echo $menu['description']; ?>">
                                     <img width="64" height="64" src="
-                                         <?php echo 'data/icon/' . $menu['icon']; ?>">
+                                         <?php echo $menu['icon']; ?>">
                                 </div>
                                 <p class="in-mu-title xac fss"><?php echo $menu['name']; ?></p>
                             </div>
@@ -163,11 +163,11 @@ use application\modules\main\utils\Main;
                              data-href="<?php echo Url::getUrl($menu['url']); ?>"
                              data-title="<?php echo $menu['name']; ?>"
                              data-desc="<?php echo $menu['description']; ?>"
-                             data-src="<?php echo 'data/icon/' . $menu['icon']; ?>">
+                             data-src="<?php echo $menu['icon']; ?>">
                             <a href="javascript:;" class="o-mu-plus" data-action="addToCommonMenu"></a>
                             <a href="javascript:;" class="o-mu-minus" data-action="removeFromCommonMenu"></a>
                             <div title="<?php echo $menu['description']; ?>">
-                                <img width="64" height="64" src="<?php echo 'data/icon/' . $menu['icon']; ?>">
+                                <img width="64" height="64" src="<?php echo $menu['icon']; ?>">
                             </div>
                             <p class="in-mu-title xac fss"><?php echo $menu['name']; ?></p>
                         </div>
@@ -235,13 +235,6 @@ use application\modules\main\utils\Main;
 </script>
 <script>
     Ibos.app.s({
-        "guideNextTime": <?php
-        if (Main::getCookie('guideNextTime') == md5(Ibos::app()->user->uid)) {
-            echo 1;
-        } else {
-            echo 0;
-        }
-        ?>,
         "assetUrl": "<?php echo $assetUrl; ?>",
         "refreshInterval": 10000
     })
@@ -250,9 +243,11 @@ use application\modules\main\utils\Main;
 <script src='<?php echo STATICURL; ?>/js/app/ibos.mbox.js?<?php echo VERHASH; ?>'></script>
 <script src='<?php echo $assetUrl; ?>/js/lang/zh-cn.js?<?php echo VERHASH; ?>'></script>
 <script src='<?php echo $assetUrl; ?>/js/index.js?<?php echo VERHASH; ?>'></script>
-<script src='<?php echo $assetUrl; ?>/js/main_default_index.js?<?php echo VERHASH; ?>'></script>
 <script>
     (function () {
+        // 新手引導
+//        In.startIntro();
+
         // 默认配置，已安装的模块，由PHP端判断输出
         var moduleInstalled = [
             <?php foreach ( $widgetModule as $index => $module ): ?>

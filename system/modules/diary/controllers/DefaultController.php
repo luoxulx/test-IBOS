@@ -178,7 +178,10 @@ class DefaultController extends BaseController
                     DiaryRecord::model()->modify($key, array('schedule' => $value));
                 }
             }
-            $date = $_POST['todayDate'] . ' ' . Ibos::lang('Weekday', 'date') . DateTime::getWeekDay(strtotime($_POST['todayDate']));
+            $todayDate = Env::getRequest('todayDate', 'GP', date('Y-m-d'));
+            $todayDate = date('Y-m-d', strtotime($todayDate));
+
+            $date = $todayDate . ' ' . Ibos::lang('Weekday', 'date') . DateTime::getWeekDay(strtotime($_POST['todayDate']));
             //保存最新计划
             $shareUidArr = isset($_POST['shareuid']) ? StringUtil::getId($_POST['shareuid']) : array();
             $diary = array(

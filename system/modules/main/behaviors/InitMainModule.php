@@ -79,10 +79,8 @@ class InitMainModule extends CBehavior
         $owner->attachEventHandler('onInitModule', array($this, 'handleInitSession'));
         // 配置系统设定
         $owner->attachEventHandler('onInitModule', array($this, 'handleSystemConfigure'));
-        if (LOCAL) {
-            // 处理计划任务
-            $owner->attachEventHandler('onInitModule', array($this, 'handleInitCron'));
-        }
+        // 计划任务
+        $owner->attachEventHandler('onInitModule', array($this, 'handleInitCron'));
         // 处理组织架构数据
         $owner->attachEventHandler('onInitModule', array($this, 'handleInitOrg'));
         // 检查更新升级
@@ -186,7 +184,7 @@ class InitMainModule extends CBehavior
         // todo::检查系统设置里ip过滤是否启用，若启用，检查当前ip是否合法 @banyan
         // 处理身份标识
         if (!Ibos::app()->user->isGuest) {
-            defined('FORMHASH') || define('FORMHASH', Env::formHash());
+            defined('FORMHASH') || define('FORMHASH', \CHtml::encode(Env::formHash()));
         } else {
             defined('FORMHASH') || define('FORMHASH', '');
         }
@@ -372,6 +370,9 @@ class InitMainModule extends CBehavior
     public function handleInitCron($event)
     {
         $cronNextRunTime = Ibos::app()->setting->get('cache/cronnextrun');
+        if(empty($cronNextRunTime)){
+            $cronNextRunTime = TIMESTAMP;
+        }
         $enableCronRun = $cronNextRunTime && $cronNextRunTime <= TIMESTAMP;
         if ($enableCronRun) {
             Ibos::app()->cron->run();
@@ -449,6 +450,15 @@ class InitMainModule extends CBehavior
         }
     }
 
+    /**
+     * 检查主授权
+     * @param mixed $event
+     * @author Ring
+     */
+    public function handleCheckLicence($event)
+    {
+        Ibos::app()->licence->checkMainLicence();
+    }
 
     /**
      * 设置时区

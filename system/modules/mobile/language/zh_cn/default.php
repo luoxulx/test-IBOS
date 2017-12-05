@@ -100,4 +100,12 @@ return array(
     'No permission to edit' => '抱歉，您没有权限编辑该主线',
 
     'View access invalid' => '你没有查看该邮件的权限',
+
+    'Turn next to focususer' => '您关注的工作【{runname}】，已被{turnname}转交至步骤{step}-{stepname}',
+    'Workflow back to focususer' => '您关注的工作【{runname}】，已被{backname}退回至步骤{step}-{stepname}',
+    'Workflow entrust to focususer' => '您关注的工作【{runname}】，已被{fromname}委托给{toname}',
+    'Workflow delay to focususer' => '您关注的工作【{runname}】，已被{username}延期至{delaydate}办理',
+    'Workflow end to focususer' => '您关注的工作【{runname}】，已被{username}结束办理',
+    'Free turn next to focususer' => '您关注的工作【{runname}】，已被{turnname}转交至{toname}办理',
+    'Comment my diray' => '评论{realname}的日志<a href="{url}">&nbsp;“{title}”</a>',
 );
