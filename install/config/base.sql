@@ -357,7 +357,7 @@ INSERT INTO `{{setting}}` (`skey`, `svalue`) VALUES ('appclosed', '0'),
 ('coinfo',''),
 ('cacheuserstatus','1'),
 ('cacheuserconfig','{"offset":"0","limit":"1000","uid":"1"}'),
-('version','4.4.2 pro');
+('version','4.4.2 open');
 INSERT INTO `{{regular}}` (`type`, `desc`, `regex`) VALUES('notempty', '不能为空', ''),
 ('chinese', '只能为中文', ''),
 ('letter', '只能为英文', ''),
