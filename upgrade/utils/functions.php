@@ -205,6 +205,7 @@ function execute($version)
             upgradeTo20170609();
             break;
         case '4.4.2 pro':
+        case '4.4.2 open':
             upgradeTo20171128();
             break;
         default:
