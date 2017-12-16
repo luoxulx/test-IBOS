@@ -13,6 +13,9 @@ require_once PATH_ROOT . DS . 'system/defines.php';
 $config = require PATH_ROOT . DS . 'system' . DS . 'config' . DS . 'config.php';
 $versions = require PATH_UPGRADE . DS . 'config' . DS . 'versions.php';
 
+// 修复开源版4.4.2 以下数据库版本问题
+require PATH_UPGRADE . DS . 'utils' . DS . 'repairOpenVersion.php';
+
 session_start();
 error_reporting(E_ALL | E_STRICT);
 

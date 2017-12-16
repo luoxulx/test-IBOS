@@ -205,7 +205,10 @@ function execute($version)
             upgradeTo20170609();
             break;
         case '4.4.2 pro':
+            upgradeTo20171128();
+            break;
         case '4.4.2 open':
+            upgradeTo20170511();
             upgradeTo20171128();
             break;
         default:
@@ -840,9 +843,12 @@ function upgradeTo20170609()
 function getCross($fromVersion)
 {
     global $versions;
+    $fromVersionArr = explode(' ', $fromVersion);
+    $versionType = !empty($fromVersionArr[1]) && !empty($versions[$fromVersionArr[1]])? $fromVersionArr[1] : 'pro';
+    $typeVersions = $versions[$versionType];
     $counter = 0;
     $gotcha = false;
-    foreach ($versions as $key => $ver) {
+    foreach ($typeVersions as $key => $ver) {
         if ($key == $fromVersion) {
             $gotcha = true;
             break;
@@ -850,7 +856,7 @@ function getCross($fromVersion)
         $counter++;
     }
     if ($gotcha) {
-        $crossVersions = array_slice($versions, $counter+1);
+        $crossVersions = array_slice($typeVersions, $counter+1);
         return array_keys($crossVersions);
     } else {
         return array();
