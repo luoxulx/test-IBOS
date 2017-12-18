@@ -1,11 +1,10 @@
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Unit'] ?></h1>
+        <h1 class="mt"><?php echo $lang['Common Setting'];?> > <?php echo $lang['Modify Corp Info'];?></h1>
     </div>
     <div>
         <!-- 企业信息 start -->
         <div class="ctb">
-            <h2 class="st"><?php echo $lang['Enterprise info'] ?></h2>
             <div class="">
                 <form action="<?php echo $this->createUrl('unit/index'); ?>" method="post" enctype="multipart/form-data"
                       class="enterprise-info-form form-horizontal">
@@ -21,15 +20,17 @@
                                            value="<?php echo $unit['logourl']; ?>">
                                 </div>
                                 <div class="showupload pull-left" style="display: none;">
-                                    <input type="file" name="logo"/>
+                                    <input type="file" name="logo" />
                                 </div>
-                                <button id="switchLogo" type="button" class="btn btn-mini pull-right">更换logo</button>
+                                <button id="switchLogo" type="button" class="btn btn-mini">更换logo</button>
+                                <label>(建议尺寸为138*40)</label>
                             <?php else: ?>
-                                <input type="file" name="logo"/>
+                                <input type="file" name="logo" />
+                                <label>(建议尺寸为138*40)</label>
                             <?php endif; ?>
                         </div>
                     </div>
-                    <div class="control-group">
+                    <div class="control-group" <?php if (ENGINE == 'SAAS'):?>style="display: none"<?php endif;?>>
                         <label class="control-label"><?php echo $lang['Enterprise corpcode'] ?></label>
                         <div class="controls">
                             <input type="text" name="corpcode" value="<?php
@@ -50,7 +51,7 @@
                             <?php endif; ?>
                         </div>
                     </div>
-                    <div class="control-group">
+                    <div class="control-group" <?php if (ENGINE == 'SAAS'):?>style="display: none"<?php endif;?>>
                         <label class="control-label"><?php echo $lang['Enterprise shortname'] ?></label>
                         <div class="controls">
                             <?php if (!empty($license)): ?><?php echo $unit['shortname']; ?>
@@ -60,7 +61,7 @@
                             <?php endif; ?>
                         </div>
                     </div>
-                    <div class="control-group">
+                    <div class="control-group" <?php if (ENGINE == 'SAAS'):?>style="display: none"<?php endif;?>>
                         <label class="control-label"><?php echo $lang['System url'] ?></label>
                         <div class="controls">
                             <?php if (!empty($license)): ?><?php echo $unit['systemurl']; ?>
@@ -78,27 +79,17 @@
                         </div>
                     </div>
                     <div class="control-group">
-                        <label for="" class="control-label"><?php echo $lang['Fax'] ?></label>
-                        <div class="controls">
-                            <input type="text" name="fax" value="<?php echo $unit['fax']; ?>">
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label for="" class="control-label"><?php echo $lang['Zipcode'] ?></label>
-                        <div class="controls">
-                            <input type="text" name="zipcode" value="<?php echo $unit['zipcode']; ?>">
-                        </div>
-                    </div>
-                    <div class="control-group">
                         <label for="" class="control-label"><?php echo $lang['Address'] ?></label>
                         <div class="controls">
-                            <input type="text" name="address" value="<?php echo $unit['address']; ?>">
+                            <textarea name="address" rows="3"><?php echo $unit['address']; ?></textarea>
                         </div>
                     </div>
                     <div class="control-group">
-                        <label for="" class="control-label"><?php echo $lang['Admin email'] ?></label>
+                        <label for="" class="control-label"><?php echo $lang['Cancel account']; ?></label>
                         <div class="controls">
-                            <input type="text" name="adminemail" value="<?php echo $unit['adminemail']; ?>">
+                            <button name="cancelCorp" id="cancelCorp" type="button"
+                                    class="btn btn-middle"><?php echo $lang['Cancel']; ?></button>
+                            <p>注销后，系统内的所有数据会被清空，请谨慎操作。</p>
                         </div>
                     </div>
                     <div class="control-group">
@@ -119,5 +110,16 @@
             $('.showlogo').hide().siblings('.showupload').show();
             $(this).hide();
         });
+        $('#cancelCorp').click(function () {
+            Ui.confirm('确定要注销企业吗?', function () {
+                $.get(Ibos.app.url('dashboard/unit/cancel'), function (data) {
+                    if (data.isSuccess){
+                        window.top.location.href = '/cancel.html'
+                    }else {
+                        Ui.tip(data.msg, "danger");
+                    }
+                });
+            });
+        })
     })();
 </script>

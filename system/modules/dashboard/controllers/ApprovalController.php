@@ -20,6 +20,7 @@ namespace application\modules\dashboard\controllers;
 use application\core\utils\Ibos;
 use application\core\utils\Env;
 use application\core\utils\StringUtil;
+use application\modules\main\model\Setting;
 use application\modules\user\model\User;
 use application\modules\dashboard\model\Approval;
 use application\modules\dashboard\model\ApprovalStep;
@@ -37,8 +38,10 @@ class ApprovalController extends BaseController
             $approval = $approval->getAttributes();
             $approval['levels'] = array();
         }
+        $source = Setting::model()->fetchSettingValueByKey('source');
         $params = array(
-            'approvals' => $this->handleShowData($approvals)
+            'approvals' => $this->handleShowData($approvals),
+            'source' => $source,
         );
         $this->render('index', $params);
     }
@@ -96,14 +99,15 @@ class ApprovalController extends BaseController
             $approval['level3'] = '';
             $approval['level4'] = '';
             $approval['level5'] = '';
-            $approval['free'] = '';
             for ($level = 1; $level <= $approval['level']; $level++) {
                 $lev = ApprovalStep::model()->getApprovalerStr($id, $level);
                 $approval["level{$level}"] = StringUtil::wrapId($lev);
             }
             $approval['free'] = StringUtil::wrapId($approval['free']);
             $params = array(
-                'approval' => $approval
+                'approval' => $approval,
+                'lang' => Ibos::getLangSources(),
+                'assetUrl' => $this->getAssetUrl(),
             );
             $this->render('edit', $params);
         }
@@ -204,7 +208,7 @@ class ApprovalController extends BaseController
             'level4' => implode(',', StringUtil::getId($post['level4'])),
             'level5' => implode(',', StringUtil::getId($post['level5'])),
             'free' => implode(',', StringUtil::getId($post['free'])),
-            'desc' => \CHtml::encode($post['desc']),
+            'desc' => isset($post['desc']) ? \CHtml::encode($post['desc']) : '',
         );
         return $ret;
     }

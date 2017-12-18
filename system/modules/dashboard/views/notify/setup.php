@@ -16,16 +16,25 @@
                                 <tr>
                                     <th width="120"><?php echo $lang['Remind desc']; ?></th>
                                     <th width="120"><?php echo $lang['Module name']; ?></th>
+<?php 
+if(ENGINE != 'SAAS' ):
+?>
                                     <th width="120"><?php echo $lang['Email remind']; ?></th>
                                     <th width="120"><?php echo $lang['Sms remind']; ?></th>
+<?php 
+endif;
+?>
                                     <th width="120"><?php echo $lang['Sys remind']; ?></th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <?php foreach ($nodeList as $id => $node): ?>
+<?php foreach ($nodeList as $id => $node): ?>
                                     <tr>
                                         <td><?php echo $node['nodeinfo']; ?></td>
                                         <td><?php echo $node['moduleName']; ?></td>
+    <?php 
+    if(ENGINE != 'SAAS' ):
+    ?>
                                         <td>
                                             <input type="checkbox" data-toggle="switch"
                                                    name="sendemail[<?php echo $node['id']; ?>]" value='1'
@@ -36,13 +45,16 @@
                                                    name="sendsms[<?php echo $node['id']; ?>]" value='1'
                                                    <?php if ($node['sendsms']): ?>checked<?php endif; ?> />
                                         </td>
+    <?php 
+    endif;
+    ?>
                                         <td>
                                             <input type="checkbox" data-toggle="switch"
                                                    name="sendmessage[<?php echo $node['id']; ?>]" value='1'
                                                    <?php if ($node['sendmessage']): ?>checked<?php endif; ?> />
                                         </td>
                                     </tr>
-                                <?php endforeach; ?>
+<?php endforeach; ?>
                                 </tbody>
                                 <tfoot>
                                 <tr>

@@ -100,12 +100,14 @@ class PositionController extends OrganizationbaseController
             return array();
         }
         foreach ($positionList as $position) {
-            $result[] = array(
-                'posid' => $position['positionid'],
-                'posname' => $position['posname'],
-                'catname' => isset($categoryList[$position['catid']]) ? $categoryList[$position['catid']]['name'] : '',
-                'num' => Position::model()->getPositionUserNumById($position['positionid']),
-            );
+            if (!empty($position['posname'])){
+                $result[] = array(
+                    'posid' => $position['positionid'],
+                    'posname' => $position['posname'],
+                    'catname' => isset($categoryList[$position['catid']]) ? $categoryList[$position['catid']]['name'] : '',
+                    'num' => Position::model()->getPositionUserNumById($position['positionid']),
+                );
+            }
         }
         return $result;
     }
@@ -124,6 +126,8 @@ class PositionController extends OrganizationbaseController
                 $data["catid"] = intval(Env::getRequest('catid'));
                 $data["goal"] = ''; // 岗位说明，已去掉
                 $data["minrequirement"] = ''; // 最低要求，已去掉
+            }else{
+                $this->error('岗位名称不能为空', $this->createUrl('position/add'));
             }
             // 获取插入ID，以便后续处理
             $newId = Position::model()->add($data, true);
@@ -137,6 +141,8 @@ class PositionController extends OrganizationbaseController
             // 岗位分类缓存
             $catData = PositionUtil::loadPositionCategory();
             $data['category'] = StringUtil::getTree($catData, $this->selectFormat, $catid);
+            $data['lang'] = Ibos::getLangSources();
+            $data['assetUrl'] = $this->getAssetUrl();
             $this->render('add', $data);
         }
     }
@@ -174,7 +180,8 @@ class PositionController extends OrganizationbaseController
                 // 岗位分类缓存
                 $catData = PositionUtil::loadPositionCategory();
                 $data['category'] = StringUtil::getTree($catData, $this->selectFormat, $pos['catid']);
-
+                $data['lang'] = Ibos::getLangSources();
+                $data['assetUrl'] = $this->getAssetUrl();
                 $this->render('edit', $data);
             }
         }

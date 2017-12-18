@@ -76,16 +76,19 @@ class Database
 
     /**
      * 获取数据库大小
+     * @param boolean $isFormate 是否格式化
      * @return string
      */
-    public static function getDatabaseSize()
+    public static function getDatabaseSize($isFormate = true)
     {
         $tableList = self::getTablelist((string)self::getdbPrefix());
-        $count = 0;
+        $size = 0;
         foreach ($tableList as $table) {
-            $count += $table['Data_length'];
+            $size += $table['Data_length'];
         }
-        $size = Convert::sizeCount($count);
+        if ($isFormate){
+            $size = Convert::sizeCount($size);
+        }
         return $size;
     }
 

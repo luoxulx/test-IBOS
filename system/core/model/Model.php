@@ -296,7 +296,7 @@ class Model extends CActiveRecord
     public function getMaxId($pk = 'id')
     {
         $result = 0;
-        $record = $this->find(array('select' => "COUNT({$pk}) as {$pk}"));
+        $record = $this->find(array('select' => "max({$pk}) as {$pk}"));
         if (!empty($record)) {
             $result = intval($record->$pk);
         }
@@ -463,4 +463,21 @@ class Model extends CActiveRecord
         return $key;
     }
 
+    /**
+     * 过滤模型属性字段
+     * @param $data
+     * @return array
+     */
+    public function getInModelFieldsByData($data)
+    {
+        $fields = array();
+        $attributes = $this->getAttributes();
+        $attributesArray = array_keys($attributes);
+        foreach ($data as $key => $value) {
+            if (in_array($key, $attributesArray) && !is_array($value)) {
+                $fields[$key] = $value;
+            }
+        }
+        return $fields;
+    }
 }

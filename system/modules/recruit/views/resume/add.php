@@ -620,7 +620,7 @@ use application\core\utils\Env;
 </div>
 <script>
     Ibos.app.setPageParam({
-        RSM_ADD_OP: "<?php echo Env::getRequest('op'); ?>",
+        RSM_ADD_OP: "<?php echo $op; ?>",
         RSM_ADD_IMPINFO: '<?php echo addslashes(isset($importInfo) ? $importInfo : ""); ?>',
         // 各字段验证规则
         "resumeFieldRule": '<?php echo $dashboardConfigToJson; ?>',

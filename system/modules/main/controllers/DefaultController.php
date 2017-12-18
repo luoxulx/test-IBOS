@@ -42,6 +42,20 @@ class DefaultController extends Controller
      */
     public function actionIndex()
     {
+        //这里应微信要求改成如果只安装一个非系统应用，就会跳转到对应模块的页面，这里看了一下有个bug，就是查出来的url可能为空
+        //这个只能去怪当初开发对应模块的人，模块config.php的param中没有link这个，所以安装时url为空，如果为空还是跳转到首页吧
+        $count = Module::model()->count("iscore = :iscore", array(':iscore' => 0));
+        if ($count == 1){
+            $url = Ibos::app()->db->createCommand()
+                ->select('url')->from(Module::model()->tableName())
+                ->where("iscore = :iscore", array(':iscore' => 0))
+                ->order('installdate ASC')
+                ->queryScalar();
+            if (!empty($url)){
+                $redirect = Ibos::app()->urlManager->createUrl($url);
+               header("Location: {$redirect}");
+            }
+        }
         // 所有安装模块
         $modules = Module::model()->fetchAllEnabledModule();
         $widgetModule = $modules;
@@ -547,7 +561,7 @@ class DefaultController extends Controller
             MenuCommon::model()->updateAll(array('sort' => 0, 'iscommon' => 0));
             if (!empty($ids)) {
                 foreach ($ids as $index => $id) {
-                    MenuCommon::model()->updateAll(array('sort' => intval($index) + 1, 'iscommon' => 1), "id='{$id}'");
+                    MenuCommon::model()->updateAll(array('sort' => intval($index) + 1, 'iscommon' => 1), "id= :id",array(':id' => $id));
                 }
             }
             $this->ajaxReturn(array('isSuccess' => true));

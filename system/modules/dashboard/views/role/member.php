@@ -9,16 +9,16 @@ use application\modules\user\model\User;
 <link rel="stylesheet" href="<?php echo $assetUrl; ?>/css/organization_role.css?<?php echo VERHASH; ?>">
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt">角色权限管理</h1>
+        <h1 class="mt">后台管理权限</h1>
     </div>
     <div>
         <!-- 部门信息 start -->
         <div class="ctb">
-            <h2 class="st">角色管理</h2>
+            <h2 class="st">普通管理员</h2>
             <div>
                 <div class="btn-group mb">
                     <a href="<?php echo $this->createUrl('role/edit', array('id' => $id)); ?>" class="btn">权限设置</a>
-                    <a href="javascript:;" class="btn active">角色成员管理</a>
+                    <a href="javascript:;" class="btn active">成员管理</a>
                 </div>
                 <div class="limit-info-wrap">
                     <div class="page-list-header clearfix">
@@ -36,7 +36,7 @@ use application\modules\user\model\User;
                         </div>
                     </div>
                     <div>
-                        <form action="<?php echo $this->createUrl('role/edit', array('op' => 'member')); ?>"
+                        <form action="<?php echo $this->createUrl('roleadmin/edit', array('op' => 'member')); ?>"
                               method="post" class="role-member-form">
                             <div class="posr" id="position_member">
                                 <div class="fill-nn position-mumber-wrap">
@@ -59,10 +59,7 @@ use application\modules\user\model\User;
                                                 </div>
                                                 <div class="org-member-item-body">
                                                     <p class="xcn xwb"><?php echo $user['realname']; ?></p>
-                                                    <p class="tcm"><?php
-                                                        echo !empty($depts[$user['deptid']]['deptname']) ?
-                                                            $depts[$user['deptid']]['deptname'] : '--';
-                                                        ?></p>
+                                                    <p class="tcm"><?php echo $user['deptid'] ? $depts[$user['deptid']]['deptname'] : '--'; ?></p>
                                                 </div>
                                             </li>
                                         <?php endforeach; ?>
@@ -81,7 +78,7 @@ use application\modules\user\model\User;
                                 ?>
                             </div>
                             <!-- 当成员数为零时隐藏 -->
-                            <div class="fill-sn">
+                            <div class="fill-sn" id="submit_put_wrap">
                                 <button type="submit" class="btn btn-large btn-primary">提交</button>
                             </div>
                             <input type="hidden" name="postsubmit" value="1"/>

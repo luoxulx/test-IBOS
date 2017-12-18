@@ -1,6 +1,6 @@
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Integral set']; ?></h1>
+        <h1 class="mt">通用设置 > <?php echo $lang['Integral set']; ?></h1>
         <ul class="mn">
             <li>
                 <span><?php echo $lang['Expand credit']; ?></span>

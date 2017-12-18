@@ -1,30 +1,19 @@
 <?php ?>
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt">部门管理</h1>
+        <h1 class="mt">部门管理＞编辑部门</h1>
     </div>
     <div>
         <!-- 部门信息 start -->
         <div class="ctb">
-            <h2 class="st">编辑部门</h2>
             <div class="">
-                <div class="btn-group mb">
+               <!--  <div class="btn-group mb">
                     <a href="javascript:;" class="btn active">部门设置</a>
                     <a href="<?php echo $this->createUrl('department/edit', array('op' => 'member', 'id' => $id)); ?>"
                        class="btn">部门成员管理</a>
-                </div>
+                </div> -->
                 <form action="<?php echo $this->createUrl('department/edit', array('updatesubmit' => 1)); ?>"
-                      method="post" class="department-info-form form-horizontal" id="add_dept_form">
-                    <div class="control-group">
-                        <label class="control-label">上级部门</label>
-                        <div class="controls">
-                            <input type="text" name="pid" value="<?php echo $deptid;?>" id="dept_pid"/>
-                            <!-- <select name="pid" id="dept_pid">
-                                <option value="0"><?php //echo $lang['Top department']; ?></option>
-                                <?php //echo $tree; ?>
-                            </select> -->
-                        </div>
-                    </div>
+                      method="post" class="enterprise-info-form form-horizontal" id="add_dept_form">
                     <div class="control-group">
                         <label class="control-label">部门名称</label>
                         <div class="controls">
@@ -33,10 +22,24 @@
                         </div>
                     </div>
                     <div class="control-group">
+                        <label class="control-label">上级部门</label>
+                        <div class="controls">
+                            <input type="text" name="pid" value="<?php echo $deptid;?>" id="dept_pid"/>
+                        </div>
+                    </div>
+                    <div class="control-group">
                         <label class="control-label">部门主管</label>
                         <div class="controls">
                             <input type="text" name="manager" id="dep_manager"
                                    value="<?php echo $department['manager']; ?>"/>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="" class="control-label">作为分支机构</label>
+                        <div class="controls">
+                            <input type="checkbox" data-toggle="switch" value="1" name="isbranch"
+                                   <?php if ($department['isbranch']): ?>checked<?php endif; ?> />
+                            <!-- <span class="mls vam">部门名称加粗</span> -->
                         </div>
                     </div>
                     <div class="control-group">
@@ -51,14 +54,6 @@
                         <div class="controls">
                             <input type="text" name="subleader" id="superior_branched_manager"
                                    value="<?php echo $department['subleader']; ?>"/>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label for="" class="control-label">作为分支机构</label>
-                        <div class="controls">
-                            <input type="checkbox" data-toggle="switch" value="1" name="isbranch"
-                                   <?php if ($department['isbranch']): ?>checked<?php endif; ?> />
-                            <span class="mls vam">部门名称加粗</span>
                         </div>
                     </div>
                     <div class="control-group">

@@ -1,6 +1,6 @@
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Contact']; ?></h1>
+        <h1 class="mt">应用设置＞<?php echo $lang['Contact']; ?></h1>
     </div>
     <form id="contact_hide_form" action="<?php echo $this->createUrl('api/addhidemobile') ?>" method="post" class="form-horizontal">
         <div class="ctb">

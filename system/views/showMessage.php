@@ -60,7 +60,7 @@
 <div class="ct">
     <div class="status-tip status-tip-<?php echo $messageType; ?>">
         <i></i>
-        <p><?php echo $message ?></p>
+        <p><?php echo CHtml::encode($message); ?></p>
         <p><span id="wait" class='badge badge-info'><?php echo isset($timeout) && $autoJump ? $timeout : ''; ?></span>
         </p>
         <?php if ($autoJump): ?>

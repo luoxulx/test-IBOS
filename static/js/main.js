@@ -39,7 +39,9 @@ require.config({
 
 		"atwho": "lib/atwho/jquery.atwho",
 
-		"dateRangePicker": "lib/daterangepicker/daterangepicker"
+		"dateRangePicker": "lib/daterangepicker/daterangepicker",
+
+		"director": 'lib/director'
 	},
 
 	shim: {
@@ -53,7 +55,7 @@ require.config({
 		},
 
 		"backbone": {
-			deps: ["underscore", "jquery"],
+			deps: ["underscore"],
 			exports: "Backbone"
 		},
 
@@ -204,6 +206,9 @@ require.config({
 		"dateRangePicker": {
 			deps: ["css!lib/daterangepicker/daterangepicker-ibos.css"],
 			exports: "jQuery"
+		},
+		"director": {
+			exports: 'Router'
 		}
 	}
 });
@@ -211,8 +216,8 @@ require.config({
 (function(){
 	require([
 		'underscoreString',
-		'backbone'
-	], function(_, Backbone) {
+		'backbone',
+	], function(_, Backbone, router) {
 		Backbone.emulateHTTP = true;
 		Backbone.emulateJSON = true;
 
@@ -225,11 +230,10 @@ require.config({
 			var modName = _.str.strLeft(urlParam.r, "/");
 			// 静态文件地址
 			var assetUrl = app.getAssetUrl(modName);
-
 			if(assetUrl){
 				// 从入口模块返回路由与脚本的对应表，根据对应关系加载相关脚本
 				require([assetUrl + "/js/" + modName + ".js"], function(route){
-					if(route[urlParam.r]) {
+					if(route && route[urlParam.r]) {
 						require(_.result(route, urlParam.r));
 					}
 				});

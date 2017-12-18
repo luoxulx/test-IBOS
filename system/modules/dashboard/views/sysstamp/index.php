@@ -5,12 +5,11 @@ use application\core\utils\File;
 ?>
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Stamp manage']; ?></h1>
+        <h1 class="mt">通用设置 > <?php echo $lang['Stamp manage']; ?></h1>
     </div>
     <div>
         <form action="<?php echo $this->createUrl('sysstamp/index'); ?>" class="form-horizontal" method="post">
             <div class="ctb" id="stamp_setup">
-                <h2 class="st"><?php echo $lang['Stamp manage']; ?></h2>
                 <div>
                     <ul class="grid-list stamp-list clearfix" id="stamp_list">
                         <?php if (!empty($list)): ?>

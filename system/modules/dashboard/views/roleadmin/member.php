@@ -9,7 +9,7 @@ use application\modules\user\model\User;
 <link rel="stylesheet" href="<?php echo $assetUrl; ?>/css/organization_role.css?<?php echo VERHASH; ?>">
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt">管理员管理</h1>
+        <h1 class="mt">后台管理权限</h1>
     </div>
     <div>
         <!-- 部门信息 start -->

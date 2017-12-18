@@ -7,6 +7,7 @@
  * @link http://www.ibos.com.cn/
  * @copyright Copyright &copy; 2012-2013 IBOS Inc
  */
+
 /**
  * 岗位表的数据层操作
  *
@@ -96,13 +97,14 @@ class Position extends Model
         $posArr = PositionUtil::loadPosition();
         $posIds = is_array($id) ? $id : explode(',', StringUtil::filterStr($id));
         $name = array();
-        if ($returnFirst) {
-            if (isset($posArr[$posIds[0]])) {
-                $name[] = $posArr[$posIds[0]]['posname'];
-            }
-        } else {
-            foreach ($posIds as $posId) {
-                $name[] = isset($posArr[$posId]) ? $posArr[$posId]['posname'] : null;
+        if ($posArr) {
+            foreach ($posArr as $pos) {
+                if (in_array($pos['positionid'], $posIds)) {
+                    $name[] = $pos['posname'];
+                }
+                if ($returnFirst === false && !empty($name)) {
+                    break;
+                }
             }
         }
         return implode($glue, $name);

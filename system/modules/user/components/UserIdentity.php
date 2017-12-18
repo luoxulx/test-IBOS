@@ -77,7 +77,7 @@ class UserIdentity extends CUserIdentity
 
     /**
      * 重写登录验证方法，该方法只返回验证状态码
-     * @return integer 验证状态码
+     * @return integer 如果登录成功，则返回 uid（大于0）；否则，返回验证状态码（小于等于0）。
      */
     public function authenticate($isAdminType = false)
     {

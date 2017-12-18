@@ -277,7 +277,14 @@ class Comment extends CWidget
      */
     public function delComment()
     {
-        $cid = intval(Env::getRequest('cid'));
+        //兼容json数据格式和表单数据格式
+        $body = Ibos::app()->getRequest()->getRawBody();
+        $bodyArray = \CJSON::decode($body);
+        if ($bodyArray === null){
+            $cid = intval(Env::getRequest('cid'));
+        }else{
+            $cid = $bodyArray['cid'];
+        }
         $comment = CommentModel::model()->getCommentInfo($cid);
         // 不存在时
         if (!$comment) {

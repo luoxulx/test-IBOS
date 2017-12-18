@@ -90,7 +90,7 @@ class Attach
         $config['hash'] = md5(substr(md5($authKey), 8) . $uid);
         // 上传限制
         $config['max'] = 0;
-        $max = Ibos::app()->setting->get('setting/attachsize');
+        $max = intval(Ibos::app()->setting->get('setting/attachsize'));
         if ($max) {
             $max = $max * 1024 * 1024;
         }
@@ -132,7 +132,7 @@ class Attach
      * @return boolean
      * @since IBOS1.0
      */
-    public static function updateAttach($aid, $relateId = 0)
+    public static function updateAttach($aid, $relateId = 0, $isFromUploadFile=false)
     {
         $aid = is_array($aid) ? $aid : explode(',', $aid);
         $relateId = $relateId > 0 ? $relateId : mt_rand(0, 9);
@@ -150,6 +150,9 @@ class Attach
                 $unused = AttachmentUnused::model()->fetchByPk($id);
                 $tableId = self::getTableId($relateId);
                 Attachment::model()->modify($id, array('tableid' => $tableId));
+                if ($isFromUploadFile){
+                    $unused['isimage'] = 2;
+                }
                 AttachmentN::model()->add($tableId, $unused);
                 AttachmentUnused::model()->deleteByPk($id);
                 $count++;

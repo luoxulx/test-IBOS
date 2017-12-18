@@ -34,8 +34,9 @@ use application\core\utils\Env;
                             </ul>
                         </div>
                         <div class="btn-group mlm cl-btn-group">
-                            <a title="<?php echo $lang['By organization']; ?>" class="btn active" href="<?php echo $this->createUrl( $this->id . '/index', array( 'op' => 'dept', 'deptid' => Env::getRequest( 'deptid' ) ) ); ?>"><i class="o-organization-chart"></i></a>
-                            <a title="<?php echo $lang['By letter']; ?>" class="btn" href="<?php echo $this->createUrl( $this->id . '/index', array( 'op' => 'letter', 'deptid' => Env::getRequest( 'deptid' ) ) ); ?>"><i class="o-cl-letter"></i></a>
+                            <?php $deptid = \CHtml::encode(urldecode(Env::getRequest( 'deptid' )));?>
+                            <a title="<?php echo $lang['By organization']; ?>" class="btn active" href="<?php echo $this->createUrl( $this->id . '/index', array( 'op' => 'dept', 'deptid' => $deptid)) ?>"><i class="o-organization-chart"></i></a>
+                            <a title="<?php echo $lang['By letter']; ?>" class="btn" href="<?php echo $this->createUrl( $this->id . '/index', array( 'op' => 'letter', 'deptid' => $deptid)) ?>"><i class="o-cl-letter"></i></a>
                         </div>
                     </div>
                 </div>
@@ -56,7 +57,7 @@ use application\core\utils\Env;
 <script>
     Ibos.app.setPageParam({
         "op": "<?php echo Env::getRequest( 'op' ); ?>",
-        "deptid": "<?php echo Env::getRequest( 'deptid' ); ?>"
+        "deptid": "<?php echo $deptid; ?>"
     });
 <?php if ( Cloud::getInstance()->isOpen( ) ): ?>
        $('#cl_rolling_sidebar').delegate("#call_land",'click', function() {

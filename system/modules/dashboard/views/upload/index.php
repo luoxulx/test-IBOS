@@ -16,14 +16,16 @@ use application\core\utils\File;
 </style>
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Upload setting']; ?></h1>
+        <h1 class="mt"><?php echo $lang['Common Setting'];?> > <?php echo $lang['Upload file limit']; ?></h1>
     </div>
     <div>
-        <form action="" method="post" class="form-horizontal">
+        <form action="" method="post" class="form-horizontal enterprise-info-form" id="upload_settings_form">
             <!-- 上传设置 start -->
             <div class="ctb">
-                <h2 class="st"><?php echo $lang['Upload setting']; ?></h2>
                 <div class="ctbw">
+                    <?php 
+                    if(ENGINE != 'SAAS' ):
+                    ?>
                     <div class="control-group">
                         <label for="" class="control-label"><?php echo $lang['Local attachment dir']; ?></label>
                         <div class="controls">
@@ -36,34 +38,36 @@ use application\core\utils\File;
                             <input type="text" name="attachurl" value="<?php echo $upload['attachurl']; ?>" readonly>
                         </div>
                     </div>
+                    <?php 
+                    endif;
+                    ?>
                     <!-- @Todo: php -->
                     <div class="control-group">
                         <label class="control-label"><?php echo $lang['File type']; ?></label>
                         <div class="controls">
-                            <input type="text" name="filetype" value="<?php echo $upload['filetype']; ?>"/>
+                            <textarea type="text" name="filetype" ><?php echo $upload['filetype']; ?></textarea>
                         </div>
                     </div>
                     <div class="control-group">
                         <label class="control-label"><?php echo $lang['File size limit']; ?></label>
                         <div class="controls">
                             <div class="row">
-                                <div class="span6">
+                                <div class="span6" style="margin-left: -10px;">
                                     <div class="input-group">
-                                        <input type="text" name="attachsize"
-                                               value="<?php echo $upload['attachsize']; ?>"/>
+                                        <input type="text" name="attachsize" id="file_size" value="<?php echo $upload['attachsize']; ?>"/>
                                         <span class="input-group-addon">MB</span>
 
                                     </div>
                                 </div>
                             </div>
-                            环境最大限制：
-                            <?php
-                            echo $size;
-                            ?>
-                            上传限制修改方法：<a href='http://doc.ibos.com.cn/article/detail/id/270' target="_blank"/>点我</a>
+                            最大限制：
+                            <?php echo $size; ?>
+                            <?php if(ENGINE != 'SAAS' ): ?>
+                                上传最大限制修改方法：<a href='http://doc.ibos.com.cn/article/detail/id/270' target="_blank"/>点我</a>
+                            <?php endif; ?>
                         </div>
                     </div>
-                    <div class="control-group">
+                    <div class="control-group <?php if (ENGINE == 'SAAS'):?> hidden <?php endif;?>">
                         <label class="control-label"><?php echo $lang['Thumb quality']; ?></label>
                         <div class="controls" data-toggle="tooltip">
                             <div id="thumbnail" data-value="<?php echo $upload['thumbquality']; ?>"></div>
@@ -74,6 +78,9 @@ use application\core\utils\File;
                 </div>
             </div>
             <!-- 水印设置 start -->
+            <?php 
+            if(ENGINE != 'SAAS' ):
+            ?>
             <div class="ctb">
                 <h2 class="st"><?php echo $lang['Watermark setup']; ?></h2>
                 <div class="ctbw">
@@ -274,6 +281,9 @@ use application\core\utils\File;
                     </div>
                 </div>
             </div>
+            <?php 
+            endif;
+            ?>
             <div class="control-group">
                 <label class="control-label"></label>
                 <div class="controls">
@@ -284,6 +294,12 @@ use application\core\utils\File;
         </form>
     </div>
 </div>
+<script type="text/javascript">
+    Ibos.app.s({
+        'siezLimit': '<?php echo $size; ?>'
+    });
+</script>
+<script src='<?php echo STATICURL; ?>/js/lib/formValidator/formValidator.packaged.js?<?php echo VERHASH; ?>'></script>
 <script src="<?php echo STATICURL; ?>/js/lib/SWFUpload/swfupload.packaged.js?<?php echo VERHASH; ?>"></script>
 <script src="<?php echo STATICURL; ?>/js/lib/SWFUpload/handlers.js?<?php echo VERHASH; ?>"></script>
 <script src="<?php echo $assetUrl; ?>/js/db_upload.js"></script>

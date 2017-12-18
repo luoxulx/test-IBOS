@@ -111,34 +111,10 @@
 .mal-folder-table th, 
 .mal-folder-table td{ padding-top: 5px; padding-bottom: 5px; height: 30px; } 
 
-
-/* What is this? */
-#receipt_div{
-    width: 738px;
-    height:100px;
-    background: #FCF8E3;
-    margin-left: 20px;
-    border:1px solid #EEE1B9;
-}
-#receipt_div p{
-    padding-top: 10px;
-    text-align:center;
-    font-size:100%;
-    color:#743E04;
-}
-#receipt_div div{
-    height:50px;
-    position: relative;
-}
-#receipt_div div button.receipt-send{
-    position: absolute;
-    top: 10px;
-    left: 285px;
-}
-#receipt_div div button.receipt-cancel{
-    position: absolute;
-    top: 10px;
-    left: 375px;
+.frame-container{
+	width: 740px;
+	min-height: 400px;
+	overflow-x: auto;
 }
 
 @media print{

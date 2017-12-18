@@ -9,12 +9,11 @@ use application\modules\user\model\User;
 <link rel="stylesheet" href="<?php echo $assetUrl; ?>/css/organization_role.css?<?php echo VERHASH; ?>">
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt">岗位管理</h1>
+        <h1 class="mt">岗位管理 ＞ 编辑岗位</h1>
     </div>
     <div>
         <!-- 部门信息 start -->
         <div class="ctb">
-            <h2 class="st">新增岗位</h2>
             <div>
                 <div class="btn-group mb">
                     <a href="<?php echo $this->createUrl('position/edit', array('id' => $id)); ?>" class="btn">岗位设置</a>

@@ -2,7 +2,7 @@
 <form action="<?php echo $this->createUrl('dashboard/index'); ?>" class="form-horizontal" method="post">
     <div class="ct">
         <div class="clearfix">
-            <h1 class="mt"><?php echo $lang['Stats setup']; ?></h1>
+            <h1 class="mt">应用设置＞<?php echo $lang['Stats setup']; ?></h1>
         </div>
         <div>
             <!-- 微博设置 -->

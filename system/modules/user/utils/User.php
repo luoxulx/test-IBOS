@@ -29,6 +29,12 @@ use application\modules\position\utils\Position as PositionUtil;
 use application\modules\role\model as RoleModel;
 use application\modules\role\utils\Role as RoleUtil;
 use application\modules\user\model as UserModel;
+use application\modules\department\model\DepartmentRelated;
+use application\modules\position\model\PositionRelated;
+use application\modules\role\model\RoleRelated;
+use application\modules\position\model\Position;
+use application\modules\dashboard\utils\SyncWx;
+use CHtml;
 use CDbCriteria;
 use CJSON;
 use Exception;
@@ -498,12 +504,10 @@ class User
                     );
                     //如果设置返回禁用数据或者用户启用
                     if (true === $returnDisabled || $user['status'] == '0') {
-                        $connection->schema->commandBuilder
-                            ->createInsertCommand('{{cache_user_detail}}', $insert)
-                            ->execute();
+                        //如果存在则删除原先的uid数据并重新插入更新后的uid数据
+                        UserModel\CacheUserDetail::model()->deleteByPk($user['uid']);
+                        $connection->createCommand()->insert('{{cache_user_detail}}', $insert);
                     }
-
-                    unset($user);
                 }
                 $transaction->commit();
             } catch (Exception $e) {
@@ -804,7 +808,7 @@ class User
      * @param integer $uid
      * @param string $limitCondition 默认为空，取全部
      * @param boolean $uidFlag 是否只返回uid数组
-     * @return type
+     * @return array
      */
     public static function getAllSubs($uid, $limitCondition = '', $uidFlag = false)
     {
@@ -827,8 +831,8 @@ class User
                 //取得该部门除部门主管外的用户数据
                 $records = UserModel\User::model()->fetchAll(array(
                     'select' => array('uid'),
-                    'condition' => 'deptid=:deptid AND uid NOT IN(:uid) AND status != 2 ' . $limitCondition,
-                    'params' => array(':deptid' => $department['deptid'], ':uid' => $uid)
+                    'condition' => 'deptid=:deptid AND upuid=:upuid AND uid NOT IN(:uid) AND status != 2 AND positionid!=:manager ' . $limitCondition,
+                    'params' => array(':deptid' => $department['deptid'], ':upuid' => $uid, ':uid' => $uid,':manager'=>$department['manager'])
                 ));
                 $deptUidArr = array();
                 foreach ($records as $record) {
@@ -851,27 +855,31 @@ class User
 
     /**
      * 判断某个uid是否是另一个uid的下属
-     * @param integer $uid 参照上司uid
-     * @param integer $subUid 参照下属uid
+     *
+     * @param integer $upUid 参照上司 uid
+     * @param integer $searchSubUid 参照下属 uid
      * @return boolean
      */
-    public static function checkIsSub($uid, $subUid)
+    public static function checkIsSub($upUid, $searchSubUid)
     {
-        // 是直属下属直接返回真
-        $subUidArr = UserModel\User::model()->fetchSubUidByUid($uid);
-        if (in_array($subUid, $subUidArr)) {
+        $hasSub = false;
+
+        $subUidArr = UserModel\User::model()->fetchSubUidByUid($upUid);
+        if (in_array($searchSubUid, $subUidArr)) {
             return true;
         }
-        // 不是直属，判断是否是下下级
-        if (!empty($subUidArr)) {
-            foreach ($subUidArr as $uid) {
-                $allSubUids = self::getAllSubs($uid, '', true);
-                if (in_array($subUid, $allSubUids)) {
-                    return true;
-                }
+
+        foreach ($subUidArr as $looSubUid) {
+            if($upUid == $looSubUid) {
+                continue;
+            }
+            $hasSub = $hasSub || static::checkIsSub($looSubUid, $searchSubUid);
+            if ($hasSub === true) {
+                return $hasSub;
             }
         }
-        return false;
+
+        return $hasSub;
     }
 
     /**
@@ -1014,7 +1022,13 @@ class User
         if (!isset($users[$uid])) {
             $access = array();
             $user = UserModel\User::model()->fetchByUid($uid);
-            foreach (explode(',', $user['allroleid']) as $roleId) {
+            $relateRoleId = RoleModel\RoleRelated::model()->fetchAllRoleIdByUid($user['uid']);
+            if (!empty($relateRoleId)){
+                $allroleid = array_merge(array($user['roleid']), $relateRoleId);
+            }else{
+                $allroleid = array($user['roleid']);
+            }
+            foreach ($allroleid as $roleId) {
                 $access = array_merge($access, RoleUtil::getPurv($roleId));
             }
             $users[$uid] = $access;
@@ -1025,12 +1039,13 @@ class User
     /**
      * 按拼音排序用户
      *
-     * @param array $uids 要排序的用户uid
-     * @param boolean $returnDisabled 是否包含禁用的用户
-     * @param bool|int $first
+     * @param array        $uids            要排序的用户uid
+     * @param boolean      $returnDisabled  是否包含禁用的用户
+     * @param boolean|int  $first
+     * @param boolean      $summary         是否只获取关键信息
      * @return array
      */
-    public static function getUserByPy($uids = null, $returnDisabled = false, $first = false)
+    public static function getUserByPy($uids = null, $returnDisabled = false, $first = false, $summary = false)
     {
         $group = array();
         $list = UserModel\User::model()->fetchAllByUids($uids, $returnDisabled);
@@ -1043,6 +1058,28 @@ class User
             $py = Convert::getPY($v['realname'], $first);
             if (!empty($py)) {
                 $group[strtoupper($py[0])][] = $k;
+            }
+            if($summary) {
+                $list[$k] = array(
+                    'avatar_big' => $v['avatar_big'],
+                    'avatar_middle' => $v['avatar_middle'],
+                    'avatar_small' => $v['avatar_small'],
+                    'bg_big' => $v['bg_big'],
+                    'bg_middle' => $v['bg_middle'],
+                    'bg_small' => $v['bg_small'],
+                    'bio' => $v['bio'],
+                    'deptid' => $v['deptid'],
+                    'deptname' => $v['deptname'],
+                    'guid' => $v['guid'],
+                    'jobnumber' => $v['jobnumber'],
+                    'positionid' => $v['positionid'],
+                    'posname' => $v['posname'],
+                    'realname' => $v['realname'],
+                    'roleid' => $v['roleid'],
+                    'rolename' => $v['rolename'],
+                    'uid' => $v['uid'],
+                    'username' => $v['username'],
+                );
             }
         }
         ksort($group);
@@ -1260,4 +1297,296 @@ class User
         $isRegistered = $fieldExists ? true : false;
         return !$isRegistered;
     }
+
+    /**
+     * 找出全部下属，每次传进去的是一个一维数组
+     * @param array $followers
+     * @return array
+     */
+    public static function fetchAllSubUid($followers)
+    {
+        static $result; // 返回结果数组
+        if (empty($result)) {
+            $result = array();
+        }
+        if (!empty($followers)) {
+            $staff = array(); // 辅助数组，存放当前循环的下属数组
+            foreach ($followers as $follower) {
+                $_staff = UserModel\User::model()->fetchSubUidByUid($follower);
+                $staff = array_merge($staff, $_staff);
+            }
+            $result = array_merge($result, $staff); // 这一层循环完了，合并到结果数组
+            self::fetchAllSubUid($staff);
+        }
+
+        return $result;
+    }
+
+    /**
+     * 用户添加
+     * @param $userData
+     * @return mixed
+     */
+    public static function createUserByUserData($userData)
+    {
+        //虽然不支持事务，还是写上先
+        $transaction = Ibos::app()->db->beginTransaction();
+        try {
+            $data = UserModel\User::model()->create($userData);
+            UserModel\User::model()->checkUnique($data);
+            $newId = UserModel\User::model()->add($data, true);
+            if ($newId) {
+                UserModel\UserCount::model()->add(array('uid' => $newId));
+                $ip = Ibos::app()->setting->get('clientip');
+                UserModel\UserStatus::model()->add(
+                    array(
+                        'uid' => $newId,
+                        'regip' => $ip,
+                        'lastip' => $ip
+                    )
+                );
+                UserModel\UserProfile::model()->add(array('uid' => $newId));
+                $userData['uid'] = $newId;
+                //关联更新
+                self::userOtherAssociationUp($userData);
+                $transaction->commit();
+                return $newId;
+            }
+        } catch (\Exception $e) {
+            $transaction->rollback();
+            return false;
+        }
+        return $newId;
+    }
+
+    /**
+     *  关联更新
+     * @param $userData
+     */
+    public static function userOtherAssociationUp($userData,$origPositionId = '')
+    {
+        // 辅助部门
+        self::upToAuxiliaryDept($userData);
+        // 辅助岗位
+        self::upToAuxiliaryPosition($userData);
+        //岗位
+        self::upPositionUserNumById($userData,$origPositionId);
+        // 辅助角色
+        self::upToAuxiliaryRole($userData);
+        // 直属下属
+        self::upToSubordinate($userData);
+    }
+
+    /**
+     * 用户更新修改辅助部门
+     * @param array $userData 关联数组的形式必须包含部门id和用户id以及数据库字段
+     */
+    public static function upToAuxiliaryDept($userData)
+    {
+        if (isset($userData['auxiliarydept'])) {
+            $deptIds = StringUtil::getId($userData['auxiliarydept']);
+            self::handleAuxiliaryDept($userData['uid'], $deptIds, $userData['deptid']);
+        }
+    }
+
+    /**
+     * 辅助部门插入数据处理
+     * @param integer $uid 用户ID
+     * @param array $deptIds 辅助部门ID
+     * @param string $except 主部门id
+     */
+    public static function handleAuxiliaryDept($uid, $deptIds, $except = '')
+    {
+        DepartmentRelated::model()->deleteAll('`uid` = :uid', array(':uid' => $uid));
+        foreach ($deptIds as $deptId) {
+            if (strcmp($deptId, $except) !== 0) {
+                DepartmentRelated::model()->add(array('uid' => $uid, 'deptid' => $deptId));
+            }
+        }
+    }
+
+    /**
+     * 更新修改辅助岗位
+     * @param array $userData 关联数组的形式必须包含岗位id和用户id以及数据库字段
+     */
+    public static function upToAuxiliaryPosition($userData)
+    {
+        if (isset($userData['auxiliarypos'])) {
+            $posIds = StringUtil::getId($userData['auxiliarypos']);
+            $auxPos = PositionRelated::model()->fetchAllPositionIdByUid($userData['uid']);
+            $child = array_diff($posIds, $auxPos);
+            if (!empty($child)) {
+                foreach ($child as $value) {
+                    $auNumber = Position::model()->getPositionUserNumById($value);
+                    $auNumber = $auNumber + 1;
+                    Position::model()->updatePositionNum($value, $auNumber);
+                }
+            } else {
+                $childPos = array_diff($auxPos, $posIds);
+                foreach ($childPos as $value) {
+                    $auNumber = Position::model()->getPositionUserNumById($value);
+                    $auNumber = $auNumber - 1;
+                    if ($auNumber < 0) {
+                        $auNumber = 0;
+                    }
+                    Position::model()->updatePositionNum($value, $auNumber);
+                }
+            }
+            self::handleAuxiliaryPosition($userData['uid'], $posIds, $userData['positionid']);
+        }
+    }
+
+    /**
+     * 辅助岗位插入数据处理
+     * @param integer $uid 用户ID
+     * @param array $posIds
+     * @param string $except 主岗位ID
+     */
+    public static function handleAuxiliaryPosition($uid, $posIds, $except = '')
+    {
+        PositionRelated::model()->deleteAll('`uid` = :uid', array(':uid' => $uid));
+        foreach ($posIds as $posId) {
+            if (strcmp($posId, $except) !== 0) {
+                PositionRelated::model()->add(array('uid' => $uid, 'positionid' => $posId));
+            }
+        }
+    }
+
+    /**
+     * 修改岗位人数
+     * @param $userData
+     */
+    public static function upPositionUserNumById(array $userData,$origPositionId = '',$num = 1)
+    {
+        if (!empty($origPositionId) && (!isset($userData['positionid']) || $origPositionId != $userData['positionid'])){
+            $origNum = -1;
+            self::upPositionUserNumById(array('positionid'=>$origPositionId),'',$origNum);
+        }
+        if (isset($userData['positionid']) && $userData['positionid'] != $origPositionId) {
+            $number = Position::model()->getPositionUserNumById($userData['positionid']);
+            $number = $number + $num;
+            if ($number <= 0){
+                $number = 0;
+            }
+            Position::model()->updatePositionNum($userData['positionid'], $number);
+        }
+    }
+
+    /**
+     * 更新修改辅助角色
+     * @param array $userData 关联数组的形式必须包含角色id和用户id以及数据库字段
+     */
+    public static function upToAuxiliaryRole($userData)
+    {
+        if (isset($userData['auxiliaryrole'])) {
+            $roleIds = StringUtil::getId($userData['auxiliaryrole']);
+            self::handleAuxiliaryRole($userData['uid'], $roleIds, $userData['roleid']);
+        }
+    }
+
+    /**
+     * 辅助角色插入数据处理
+     * @param integer $uid 用户ID
+     * @param array $roleIds 副角色ids
+     * @param string $except 主角色ID
+     */
+    public static function handleAuxiliaryRole($uid, $roleIds, $except = '')
+    {
+        RoleRelated::model()->deleteAll('`uid` = :uid', array(':uid' => $uid));
+        foreach ($roleIds as $roleId) {
+            if (strcmp($roleId, $except) != 0 && !empty($roleId)) {
+                RoleRelated::model()->add(array('uid' => $uid, 'roleid' => $roleId));
+            }
+        }
+    }
+
+    /**
+     * 修改直属下属
+     * @param $userData
+     * @param $uid
+     */
+    public static function upToSubordinate($userData)
+    {
+        if (isset($userData['subordinate']) && isset($userData['uid'])) {
+            UserModel\User::model()->updateAll(array('upuid' => 0), "`upuid`={$userData['uid']}"); // 先把旧的下属upuid清0
+            $subUids = StringUtil::getId($userData['subordinate']);
+            UserModel\User::model()->updateAll(array('upuid' => $userData['uid']), sprintf("FIND_IN_SET(`uid`,'%s')", implode(',', $subUids)));
+        }
+    }
+
+    /**
+     * 处理需要提交到数据库的参数
+     * @param array $userData
+     * @param bool $generateParams 是否生成密码的盐和md5密码 和guid
+     * @return array
+     */
+    public static function handleUpdateParams(array $userData,$generateParams = false)
+    {
+        foreach ($userData as $key=>$value){
+            switch ($key){
+                case 'realname':
+                case 'weixin':
+                case 'jobnumber':
+                    $userData[$key] = CHtml::encode($value);
+                    break;
+                case 'upuid':
+                    $userData[$key] =  implode(',', StringUtil::getUid($value));
+                    break;
+                case 'deptid':
+                case 'positionid':
+                case 'roleid':
+                    $userData[$key] =  implode(',', StringUtil::getId($value));
+                    break;
+            }
+        }
+        if ($generateParams){
+            $userData['salt'] = StringUtil::random(6);
+            $userData['password'] = !empty($userData['password'])?md5(md5($userData['password']) . $userData['salt']) : '';
+            $userData['guid'] = StringUtil::createGuid();
+        }
+        return $userData;
+    }
+
+    /**
+     * 重建缓存，给新加的用户生成缓存
+     * @param $newId
+     * @param $status
+     * @param string $origPass
+     */
+    public static function rebuildUserCache($uid,$status,$origPass = '')
+    {
+        self::wrapUserInfo($uid, false, true); //这个方法的第三个参数为true会强制更新缓存
+        if ($status != UserModel\User::USER_STATUS_ABANDONED) {
+            // 更新组织架构js调用接口
+            Org::update();
+            // 同步用户钩子
+            if ($origPass != ''){
+                Org::hookSyncUser($uid, $origPass, 1);
+            }
+        }
+        Cache::update();
+    }
+
+    /**
+     * 检测用户新增或修改提交过来的值的长度
+     * @param $userData
+     * @return bool
+     */
+    public static function checkRequrestUserDataLength($userData)
+    {
+        $err = false;
+        if (!empty($userData['username'])){
+            $err = StringUtil::strLength($userData['username'])<=32?false:'用户名';
+        }elseif (!empty($userData['jobnumber'])){
+            $err = StringUtil::strLength($userData['jobnumber'])<=20?false:'工号';
+        }elseif (!empty($userData['realname'])){
+            $err = StringUtil::strLength($userData['realname'])<=20?false:'真实姓名';
+        }elseif (!empty($userData['mobile'])){
+            $err = StringUtil::strLength($userData['mobile'])<=11?false:'手机';
+        }elseif (!empty($userData['email'])){
+            $err = StringUtil::strLength($userData['email'])<=50?false:'邮箱';
+        }
+        return $err;
+    }
+
 }

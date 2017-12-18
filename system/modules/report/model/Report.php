@@ -17,8 +17,10 @@
 namespace application\modules\report\model;
 
 use application\core\model\Model;
+use application\core\utils\ArrayUtil;
 use application\core\utils\Convert;
 use application\core\utils\Ibos;
+use application\modules\report\utils\Report as ReportUtil;
 use CDbCriteria;
 use CPagination;
 
@@ -360,4 +362,89 @@ class Report extends Model
         return $this->fetchAllSortByPk('repid', $criteria);
     }
 
+    /**
+     * 添加汇报
+     * @param array $report 汇报内容
+     */
+    public function addReport($report)
+    {
+        Ibos::app()->db->createCommand()->insert($this->tableName(), $report);
+        $newTemplateId = Ibos::app()->db->getLastInsertID();
+        return $newTemplateId;
+    }
+
+    /**
+     * 更新汇报
+     * @param integer $repid 汇报ID
+     * @param array $report 汇报内容数组
+     * @return bool
+     */
+    public function updateReport($repid, $report)
+    {
+        $row = Ibos::app()->db->createCommand()->update($this->tableName(), $report, 'repid = :repid', array(
+            ':repid' => $repid,
+        ));
+        if (false !== $row)
+        {
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    /**
+     * 通过条件得到汇报列表
+     * @param string $condition 查询条件
+     */
+    public function getReportByCondition($condition = '', $limit, $offset)
+    {
+        $query = Ibos::app()->db->createCommand()
+            ->from($this->tableName())
+            ->where($condition);
+        $queryClone = clone $query;
+        $list = $query->select('*')
+            ->offset($offset)
+            ->limit($limit)
+            ->order('addtime DESC')
+            ->queryAll();
+        $count = $queryClone->select('count(*)')->queryScalar();
+        return array(
+            'list' => $list,
+            'count' => $count,
+        );
+    }
+
+    /**
+     * 删除汇报
+     * @param integer $repid 汇报ID
+     */
+    public function DelReport($repids)
+    {
+        $uid = Ibos::app()->user->uid;
+        if ($repids == 0){
+            $condition = ReportUtil::getListCondition('send', $uid);
+            $list = $this->findAll($condition);
+            if (!empty($list)){
+                $repid = ArrayUtil::getColumn($list, 'repid');
+                $repidAll = implode(',', $repid);
+                $this->updateAll(array('isdel' => 1), "repid IN ({$repidAll})");
+            }
+        }else{
+            $this->updateAll(array('isdel' => 1), "repid IN ({$repids})");
+        }
+    }
+
+    /**
+     * 计算给一个用户发送的工作汇报数量
+     * @param $toid
+     */
+    public function countReportByToid($toid)
+    {
+        $count = Ibos::app()->db->createCommand()
+            ->select('count(`repid`)')
+            ->from($this->tableName())
+            ->where("FIND_IN_SET({$toid}, `toid`)")
+            ->queryScalar();
+        return $count;
+    }
 }

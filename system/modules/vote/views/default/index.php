@@ -140,10 +140,10 @@ use application\modules\vote\utils\VoteRoleUtil;
                                 <th width="32">
                                     <i class="i-lt o-art-list"></i>
                                 </th>
-                                <th width="230">标题</th>
+                                <th>标题</th>
                                 <th width="100">发布人</th>
                                 <th width="100">截止时间</th>
-                                <th width="100">状态</th>
+                                <th width="135">状态</th>
                             </tr>
                             </thead>
                         </table>
@@ -251,5 +251,6 @@ use application\modules\vote\utils\VoteRoleUtil;
         </form>
     </script>
     <script src="<?php echo STATICURL; ?>/js/lib/dataTable/js/jquery.dataTables.js?<?php echo VERHASH; ?>"></script>
+    <script src="<?php echo STATICURL; ?>/js/app/remind/remind.js?<?php echo VERHASH; ?>"></script>
     <script src="<?php echo $assetUrl; ?>/js/lang/zh-cn.js?<?php echo VERHASH; ?>"></script>
     <script src="<?php echo $assetUrl; ?>/js/vote_default_index.js?<?php echo VERHASH; ?>"></script>

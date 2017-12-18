@@ -360,7 +360,7 @@ class Officialdoc
      * @param array $list 文章数据
      * @return array
      */
-    private static function handlePurv($list)
+    public static function handlePurv($list)
     {
         if (empty($list)) {
             return $list;

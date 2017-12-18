@@ -253,16 +253,24 @@ $(function(){
         oldLength += getinputedControlLength($oldInputs);
 
         if(!oldLength) {
-            Ui.tip("请至少填写一条工作记录", "warning");
+            Ui.tip(Ibos.l("DA.INPUT_LEAST_ONE_WORK_RECORD"), "warning");
+            return false;
+        }
+
+        // 表单验证，工作总结内容必填
+        var content = UE.getEditor("diary_editor").getContent();
+        if(!content){
+            Ui.tip(Ibos.l("DA.INOUT_WORK_SUMMARY"), "warning");
             return false;
         }
 
         $newInputs = $form.find('[data-node-type="newPlanInput"]'); // 计划
         newLength = getinputedControlLength($newInputs);
         if(!newLength) {
-            Ui.tip("请至少填写一条工作计划", "warning");
+            Ui.tip(Ibos.l("DA.INPUT_LEAST_ONE_WORK_PLAN"), "warning");
             return false;
         }
+
 
         $.data(this, "submiting", true);
     });

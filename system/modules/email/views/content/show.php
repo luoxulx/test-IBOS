@@ -140,9 +140,9 @@ use application\core\utils\StringUtil;
                     </div>
                 </div>
                 <div class="ctb text-overflow">
-                    <div class="xcm bdbs editor-content text-break" style="min-height: 400px;">
+                    <div class="xcm bdbs editor-content text-break">
                         <?php if ($email['isweb']): ?>
-                            <div id="mainFrameContainer">
+                            <div id="mainFrameContainer" class="frame-container">
                                 <iframe onload="setScale()" style="width:100%;" src="<?php
                                 echo $this->createUrl('content/show', array('id' => $email['emailid'], 'op' => 'showframe'));
                                 ?>" name="mainFrame" id="mainFrame" frameborder="no" scrolling="no" hidefocus></iframe>

@@ -1,24 +1,21 @@
 <?php
-/**
- * @namespace application\core\utils\HttpClient
- * @filename Client.php
- * @encoding UTF-8
- * @author zqhong <i@zqhong.com>
- * @link http://www.ibos.com.cn/
- * @copyright Copyright &copy; 2012-2016 IBOS Inc
- * @datetime 2016/12/21 11:38
- */
-
 namespace application\core\utils\HttpClient;
 
 use application\core\model\Log;
 use application\core\utils\HttpClient\exception\ConnectFailedException;
 use application\core\utils\Ibos;
+use application\core\utils\Json\JsonTools;
 
 /**
  * HTTP 客户端
  *
  * @package application\core\utils\HttpClient
+ * @method Response get($uri, $headers = array(), $body = null, $options = array())
+ * @method Response head($uri, $headers = array(), $body = null, $options = array())
+ * @method Response delete($uri, $headers = array(), $body = null, $options = array())
+ * @method Response put($uri, $headers = array(), $body = null, $options = array())
+ * @method Response patch($uri, $headers = array(), $body = null, $options = array())
+ * @method Response post($uri, $headers = array(), $body = null, $options = array())
  */
 class HttpClient
 {
@@ -59,6 +56,30 @@ class HttpClient
      * @var bool
      */
     protected $gzip = true;
+
+    /**
+     * 支持的 HTTP METHOD 列表
+     *
+     * @var array
+     */
+    protected $supportedHttpMethodArr = array(
+        self::GET,
+        self::PUT,
+        self::POST,
+        self::DELETE,
+        self::HEAD,
+        self::CONNECT,
+        self::OPTIONS,
+        self::TRACE,
+        self::PATCH,
+    );
+
+    /**
+     * 是否 RAW BODY
+     *
+     * @var bool
+     */
+    protected $isRawBody = false;
 
     /**
      * 发送 HTTP 请求
@@ -103,62 +124,20 @@ class HttpClient
     }
 
 
-    /**
-     * 发送 HTTP GET 请求
-     *
-     * @param string $uri
-     * @param array|null $headers
-     * @param array $options
-     * @return Response
-     */
-    public function get($uri, $headers = array(), $options = array())
+    public function __call($functionName, $arguments)
     {
-        return $this->request(static::GET, $uri, $headers, null, $options);
+        $methodName = strtoupper($functionName);
+        if (in_array($methodName, $this->supportedHttpMethodArr)) {
+            array_unshift($arguments, $methodName);
+            return call_user_func_array(array($this, 'request'), $arguments);
+        }
+
+        return false;
     }
 
-    /**
-     * 发送 HTTP HEAD 请求
-     *
-     * @param string $uri
-     * @param null|array $headers
-     * @param array $options
-     * @return Response
-     */
-    public function head($uri, $headers = array(), array $options = array())
-    {
-        return $this->request(static::HEAD, $uri, $headers, null, $options);
-    }
 
     /**
-     * 发送 HTTP DELETE 请求
-     *
-     * @param string $uri
-     * @param null|array $headers
-     * @param null|string $body
-     * @param array $options
-     * @return Response
-     */
-    public function delete($uri, $headers = array(), $body = null, array $options = array())
-    {
-        return $this->request(static::DELETE, $uri, $headers, $body, $options);
-    }
-
-    /**
-     * 发送 HTTP PUT 请求
-     *
-     * @param string $uri
-     * @param null|array $headers
-     * @param null $body
-     * @param array $options
-     * @return Response
-     */
-    public function put($uri, $headers = array(), $body = null, array $options = array())
-    {
-        return $this->request(static::PUT, $uri, $headers, $body, $options);
-    }
-
-    /**
-     * 发送 HTTP PATCH 请求
+     * 发送 HTTP JSON POST 请求
      *
      * @param string $uri
      * @param null|array $headers
@@ -166,35 +145,12 @@ class HttpClient
      * @param array $options
      * @return Response
      */
-    public function patch($uri, $headers = array(), $body = null, array $options = array())
+    public function jsonPost($uri, $headers = array(), $body = null, array $options = array())
     {
-        return $this->request(static::PATCH, $uri, $headers, $body, $options);
-    }
+        $this->isRawBody = true;
+        $this->saveHeader('Content-Type', 'application/json');
 
-    /**
-     * 发送 HTTP POST 请求
-     *
-     * @param string $uri
-     * @param null|array $headers
-     * @param null|array $body
-     * @param array $options
-     * @return Response
-     */
-    public function post($uri, $headers = array(), $body = null, array $options = array())
-    {
-        return $this->request(static::POST, $uri, $headers, $body, $options);
-    }
-
-    /**
-     * 发送 HTTP OPTIONS 请求
-     *
-     * @param string $uri
-     * @param array $options
-     * @return Response
-     */
-    public function options($uri, array $options = array())
-    {
-        return $this->request(static::OPTIONS, $uri, null, null, $options);
+        return $this->post($uri, $headers, \CJSON::encode($body), $options);
     }
 
     /**
@@ -313,7 +269,7 @@ class HttpClient
             $curlOptions[CURLOPT_CUSTOMREQUEST] = $method;
             $curlOptions[CURLOPT_POST] = 1;
 
-            if (is_string($body)) {
+            if (is_string($body) && $this->isRawBody === false) {
                 parse_str($body, $body);
             }
             $curlOptions[CURLOPT_POSTFIELDS] = $body;
@@ -326,15 +282,10 @@ class HttpClient
         curl_setopt_array($ch, $curlOptions);
         $response = curl_exec($ch);
 
-        Log::write(array('uri' => $uri, 'raw_resp' => base64_encode($response)));
-
+        
         // CURL 错误代码：https://curl.haxx.se/libcurl/c/libcurl-errors.html
         $errorNo = curl_errno($ch);
         if ($errorNo != CURLE_OK) {
-            Log::write(array(
-                'msg' => sprintf('Curl error no: %d, url: %s', $errorNo, $uri),
-                'trace' => debug_backtrace(),
-            ), 'action', 'application.core.utils.HttpClient.requestWithCurl');
             throw new ConnectFailedException(Ibos::lang('Network error', 'error', array('{code}' => $errorNo)));
         }
 

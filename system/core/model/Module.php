@@ -15,12 +15,16 @@
 
 namespace application\core\model;
 
+use application\core\utils\ArrayUtil;
 use application\core\utils\Cache;
 use application\core\utils\Ibos;
 
 class Module extends Model
 {
-
+    /**
+     * @param string $className
+     * @return Module
+     */
     public static function model($className = __CLASS__)
     {
         return parent::model($className);
@@ -103,4 +107,16 @@ class Module extends Model
             ->queryAll();
     }
 
+    /**
+     * 检查模块是否启用
+     *
+     * @param string $moduleName
+     * @return bool
+     */
+    public function isModuleEnable($moduleName)
+    {
+        $enableModules = $this->findAllEnabledModuleArray();
+        $enableModulesNames = ArrayUtil::getColumn($enableModules, 'module');
+        return in_array($moduleName, $enableModulesNames);
+    }
 }

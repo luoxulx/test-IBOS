@@ -34,6 +34,7 @@ use application\modules\vote\model\VoteItem;
 use application\modules\vote\model\VoteItemCount;
 use application\modules\vote\model\VoteTopic;
 use application\modules\vote\VoteModule;
+use application\core\utils\Convert;
 
 class VoteUtil
 {
@@ -538,7 +539,7 @@ class VoteUtil
                 'voteid' => $voteId,
                 'subject' => $item['subject'],
                 'endtime' => $endTime,
-                'endtimestr' => date('Y-m-d H:i', $endTime),
+                'endtimestr' =>  Convert::formatDate($endTime, 'dt'),
                 'sponsor' => $currentUser['realname'],
                 'sponsorid' => $item['uid'],
                 'status' => $status,

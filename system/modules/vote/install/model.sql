@@ -64,4 +64,5 @@ INSERT INTO `{{nav}}`(`pid`, `name`, `url`, `targetnew`, `system`, `disabled`, `
 INSERT INTO `{{menu}}`(`name`, `pid`, `m`, `c`, `a`, `param`, `sort`, `disabled`) VALUES ('调查投票','0','vote','dashboard','index','','15','0');
 INSERT INTO `{{notify_node}}`(`node`, `nodeinfo`, `module`, `titlekey`, `contentkey`, `sendemail`, `sendmessage`, `sendsms`, `type`) VALUES ('vote_publish_message','投票发布提醒','vote','vote/default/New message title','vote/default/New message content','1','1','1','2');
 INSERT INTO `{{notify_node}}`(`node`, `nodeinfo`, `module`, `titlekey`, `contentkey`, `sendemail`, `sendmessage`, `sendsms`, `type`) VALUES ('vote_update_message','投票更新提醒','vote','vote/default/Update message title','vote/default/Update message content','1','1','1','2');
+INSERT INTO `{{notify_node}}` (`node`, `nodeinfo`, `module`, `titlekey`, `contentkey`, `sendemail`, `sendmessage`, `sendsms`, `type`) VALUES ('vote_survey', '调查投票', 'vote', 'message/default/Alarm title', 'message/default/Alarm content', '1', '1', '1', '1');
 

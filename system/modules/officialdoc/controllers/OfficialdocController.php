@@ -191,7 +191,7 @@ class OfficialdocController extends BaseController
         }
         if ($option == 'default') {
             if (!empty($_GET['catid'])) {
-                $this->catId = $_GET['catid'];
+                $this->catId = intval($_GET['catid']);
             }
             // 是否是免审人能直接发布
             $allowPublish = OfficialdocCategory::model()->checkIsAllowPublish($this->catId, Ibos::app()->user->uid);
@@ -290,8 +290,17 @@ class OfficialdocController extends BaseController
      */
     public function actionDel()
     {
-        if (Ibos::app()->request->isAjaxRequest) {
-            $docids = trim(Env::getRequest('docids'), ',');
+        $docids = trim(Env::getRequest('docids'), ',');
+        if (Ibos::app()->request->isAjaxRequest && !empty($docids)) {
+            // 判断删除权限
+            $docids = $this->removerWithoutDelPermissionDocids($docids);
+            if(empty($docids)) {
+                $this->ajaxReturn(
+                    array(
+                        'isSuccess' => false,
+                        'info' => Ibos::lang('No Permission Del'),
+                        'msg' => Ibos::lang('No Permission Del')));
+            }
             // 删除附件
             $attachmentIdArr = Officialdoc::model()->fetchAidsByDocids($docids);
             Attach::delAttach($attachmentIdArr);
@@ -1073,4 +1082,32 @@ class OfficialdocController extends BaseController
         return $this->renderPartial('move', $param);
     }
 
+    /**
+     * 去除无删除权限的id
+     * @param $docids  前端传来的id字符串
+     * @return $docids 去除没有删除权限的id字符串
+     */
+    private function removerWithoutDelPermissionDocids($docids) {
+        $docidA = array_unique( explode(',', $docids) );
+        $docList = Ibos::app()->db->createCommand()
+            ->select('docid,author')
+            ->from(Officialdoc::model()->tableName())
+            ->where('FIND_IN_SET(docid, :docids)', array(':docids' => $docids))
+            ->queryAll();
+        if(empty($docList)) {
+            return ''; // 统一返回字符串
+        }
+
+        // 多个处理权限方法
+        $docList = ICOfficialdoc::handlePurv($docList);
+
+        foreach ($docList as $doc) {
+            if($doc['allowDel'] == '0') {
+                // 无权限删除
+                unset($docidA[array_search($doc['docid'], $docidA  )]);
+            }
+        }
+
+        return implode(',', $docidA);
+    }
 }

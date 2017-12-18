@@ -64,16 +64,10 @@
                     </div>
                 </div>
             </div>
-            <div class="control-group">
+            <div class="control-group mbl">
                 <label class="control-label">免审核人员</label>
                 <div class="controls">
                     <input type="text" name="free" id="exempt_auditor" value="<?php echo $approval['free']; ?>">
-                </div>
-            </div>
-            <div class="control-group mbl">
-                <lebel class="control-label">描述</lebel>
-                <div class="controls">
-                    <textarea name="desc" id="" cols="30" rows="5"><?php echo $approval['desc']; ?></textarea>
                 </div>
             </div>
             <div class="control-group">

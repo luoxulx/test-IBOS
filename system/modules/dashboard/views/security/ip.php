@@ -10,9 +10,15 @@ use application\core\utils\Ibos;
             <li>
                 <a href="<?php echo $this->createUrl('security/setup'); ?>"><?php echo $lang['Account security setup']; ?></a>
             </li>
+            <?php 
+            if(ENGINE != 'SAAS' ):
+            ?>
             <li>
                 <a href="<?php echo $this->createUrl('security/log'); ?>"><?php echo $lang['Run log']; ?></a>
             </li>
+            <?php 
+            endif;
+            ?>
             <li>
                 <span><?php echo $lang['Disabled ip']; ?></span>
             </li>

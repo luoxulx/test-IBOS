@@ -16,7 +16,6 @@ use application\modules\email\model\EmailBody;
 use application\modules\email\model\EmailFolder;
 use application\modules\email\model\EmailWeb;
 use application\modules\email\utils\Email as EmailUtil;
-use application\modules\email\utils\RoleUtils;
 use application\modules\email\utils\WebMail as WebMailUtil;
 use application\modules\officialdoc\model\Officialdoc;
 use application\modules\thread\model\Thread;
@@ -298,17 +297,20 @@ class ContentController extends BaseController
             if (!$email) {
                 $this->error(Ibos::lang('Email not exists'), $this->createUrl('list/index'));
             }
-            // 阅读权限判断
-            $isReceiver = RoleUtils::getInstance()->canRead($this->uid, $email['toid'], $email['fromid'], $email['copytoids'], $email['toids']);
-            if ($isReceiver === false) {
+            // 阅读权限判定
+            $isReceiver = $email['toid'] == $this->uid ||
+                $email['fromid'] == $this->uid ||
+                StringUtil::findIn($email['copytoids'], $this->uid) ||
+                StringUtil::findIn($email['toids'], $this->uid);
+            if (!$isReceiver) {
                 $this->error(Ibos::lang('View access invalid'), $this->createUrl('list/index'));
             }
-
-            $email['content'] = nl2br($email['content']);
             // 显示外部邮件框架内容
             if (Env::getRequest('op') == 'showframe') {
                 echo $email['content'];
                 exit();
+            }else{
+                $email['content'] = nl2br($email['content']);
             }
             // 阅读状态更改权限判定
             if (($email['toid'] == $this->uid || StringUtil::findIn($email['toids'], $this->uid)) && $email['isread'] == 0) {
@@ -430,7 +432,7 @@ class ContentController extends BaseController
         $usedSize = EmailFolder::model()->getUsedSize($this->uid);
         //如果要比较数字大小，只要其中一个是数字即可
         if ((float)$usedSize > implode('', StringUtil::ConvertBytes($userSize . 'm'))) {
-            $this->error(Ibos::lang('Capacity overflow', '', array('{size}' => $usedSize)), $this->createUrl('email/list'));
+            $this->error(Ibos::lang('Capacity overflow', '', array('{size}' => ($usedSize/1024/1024).'MB' )), $this->createUrl('list/index'));
         }
     }
 

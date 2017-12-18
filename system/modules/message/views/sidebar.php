@@ -2,6 +2,14 @@
 <div class="aside" id="aside">
     <div class="sbb sbbl sbbf">
         <ul class="nav nav-strip nav-stacked">
+            <li <?php if (($this->getAction()->getId() == 'index' || $this->getAction()->getId() == 'detail') && $this->getId() == 'notify'): ?>class="active"<?php endif; ?>>
+                <a href="<?php echo $this->createUrl('notify/index'); ?>">
+                    <i class="o-msg-remind"></i>
+                    <?php echo $lang['Notify']; ?>
+                    <?php if (!empty($unreadMap['notify'])): ?><span
+                            class="badge pull-right"><?php echo $unreadMap['notify']; ?></span><?php endif; ?>
+                </a>
+            </li>
             <li <?php if ($this->getId() == 'mention'): ?>class="active"<?php endif; ?>>
                 <a href="<?php echo $this->createUrl('mention/index'); ?>">
                     <i class="o-msg-at"></i>
@@ -33,12 +41,12 @@
                         class="badge pull-right"><?php echo $unreadMap['pm']; ?></span><?php endif; ?>
                 </a>
             </li>
-            <li <?php if (($this->getAction()->getId() == 'index' || $this->getAction()->getId() == 'detail') && $this->getId() == 'notify'): ?>class="active"<?php endif; ?>>
-                <a href="<?php echo $this->createUrl('notify/index'); ?>">
-                    <i class="o-msg-remind"></i>
-                    <?php echo $lang['Notify']; ?>
-                    <?php if (!empty($unreadMap['notify'])): ?><span
-                        class="badge pull-right"><?php echo $unreadMap['notify']; ?></span><?php endif; ?>
+            <li <?php if ($this->getId() == 'notifymanage'): ?>class="active"<?php endif; ?>>
+                <a href="<?php echo $this->createUrl('notifymanage/index'); ?>">
+                    <i class="o-msg-alarm"></i>
+                    <?php echo $lang['Notify Manage']; ?>
+                    <?php if (!empty($unreadMap['notifymanage'])): ?><span
+                            class="badge pull-right"><?php echo $unreadMap['notifymanage']; ?></span><?php endif; ?>
                 </a>
             </li>
         </ul>

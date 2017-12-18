@@ -213,8 +213,8 @@ class NewsController extends BaseController
         $data = $temp[0];
 
         // 4. 将 $data 中的 addtime、uptime 索引转换为时间戳
-        $data["addtime"] = (int)UtilsArticle::formatToTimestamp($data["addtime"]);
-        $data["uptime"] = (int)UtilsArticle::formatToTimestamp($data["uptime"]);
+        $data["addtime"] = (int)UtilsArticle::formatToTimestamp($data["createtime"]);
+        $data["uptime"] = (int)UtilsArticle::formatToTimestamp($data["updatetime"]);
 
 
         $retData["isSuccess"] = true;

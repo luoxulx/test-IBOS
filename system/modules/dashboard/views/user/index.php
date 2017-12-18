@@ -11,22 +11,28 @@ use application\modules\role\utils\Role as RoleUtil;
 <link rel="stylesheet" href="<?php echo $assetUrl; ?>/css/organization_role.css?<?php echo VERHASH; ?>">
 <div class="ct">
 	<div class="clearfix">
-		<h1 class="mt">部门人员管理</h1>
+		<h1 class="mt">通讯录管理＞部门与用户管理</h1>
 	</div>
 	<div>
 		<!-- 部门信息 start -->
 		<div class="ctb">
-			<h2 class="st">组织架构管理</h2>
-			<div class="btn-group mb">
-				<a class="btn active" data-action="getStatusList" href="javascript:;" data-type="enabled"><?php echo $lang['Enable']; ?></a>
-				<a class="btn" data-action="getStatusList" href="javascript:;" data-type="lock"><?php echo $lang['Lock']; ?></a>
-				<a class="btn" data-action="getStatusList" href="javascript:;" data-type="disabled"><?php echo $lang['Disabled']; ?></a>
-				<a class="btn" data-action="getStatusList" href="javascript:;" data-type="all"><?php echo $lang['All']; ?></a>
-			</div>
+			<?php if (!$canwrite): ?>
+				<div class="alert trick-tip">
+	        <div class="trick-tip-title">
+	            <i></i>
+	            <strong>提示</strong>
+	        </div>
+	        <div class="trick-tip-content">
+	            <ul>
+	                <li><span>未安装通讯录套件，无法进行管理。<a href="<?php echo $contacturl;?>" target="_blank">马上安装</a></span></li>
+	            </ul>
+	        </div>
+	      </div>
+      <?php endif;?>
 			<div class="mc clearfix">
 				<div class="aside">
 					<div class="fill-ss">
-						<a href="<?php echo $this->createUrl( 'department/add' ); ?>" class="btn btn-warning add-dept-btn">新增部门</a>
+                        <a href="<?php echo $this->createUrl( 'department/add' ); ?>" class="btn btn-primary add-dept-btn" <?php if (!$canwrite):?>style="display: none" <?php endif;?>>新增部门</a>
 					</div>
 					<div class="ztree-wrap">
 						<div>
@@ -49,37 +55,66 @@ use application\modules\role\utils\Role as RoleUtil;
 						<div class="page-list-header">
 							<div class="pull-left">
 								<div class="btn-group">
-									<button type="button" onclick="location.href = '<?php echo $this->createUrl( 'user/add' ) . "&deptid=" . Env::getRequest( 'deptid' ); ?>';" class="btn btn-primary"><?php echo $lang['Add user']; ?></button>
+									<button type="button" onclick="location.href = '<?php echo $this->createUrl( 'user/add' ) . "&deptid=" . Env::getRequest( 'deptid' ); ?>';" class="btn btn-primary" <?php if (!$canwrite):?>style="display: none" <?php endif;?>><?php echo $lang['Add user']; ?></button>
 								</div>
+                                <div class="btn-group mlm">
+                                    <button type="button" class="btn dropdown-toggle" data-toggle="dropdown" <?php if (!$canwrite):?>disabled <?php endif;?>>
+                                        同步人员
+                                        <i class="caret"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="<?php echo $this->createUrl('wxsync/index');?>">企业微信同步</a></li>
+                                        <li><a href="<?php echo $this->createUrl('cobinding/index');?>">酷办公同步</a></li>
+                                    </ul>
+                                </div>
 								<div class="btn-group mlm">
-									<button type="button" data-action="batchImport" class="btn btn-primary"><?php echo Ibos::lang('batch import'); ?></button>
-								</div>
-								<div class="btn-group mlm">
-									<button type="button" data-action="checkRelationship" class="btn">查看上下级关系</button>
-								</div>
-								<div class="btn-group mlm">
-									<button type="button" class="btn dropdown-toggle" data-toggle="dropdown"><?php echo $lang['More operation']; ?>
+									<button type="button" class="btn dropdown-toggle" data-toggle="dropdown" <?php if (!$canwrite):?>disabled <?php endif;?>>
+										切换人员状态
 										<i class="caret"></i>
-									</button>
+									</button>						
 									<ul class="dropdown-menu" id="list_act">
 										<li><a data-action="setUserStatus" data-param='{"op": "enabled"}' href="javascript:;"><?php echo $lang['Enable']; ?></a></li>
-										<li><a data-action="setUserStatus" data-param='{"op": "lock"}' href="javascript:;"><?php echo $lang['Lock']; ?></a></li>
 										<li><a data-action="setUserStatus" data-param='{"op": "disabled"}' href="javascript:;"><?php echo $lang['Disabled']; ?></a></li>
-										<li><a data-action="exportUser" href="javascript:;"><?php echo $lang['Export']; ?></a></li>
-										<li><a data-action="updateUserInfo" href="javascript:;">修改用户信息</a></li>
+									</ul>
+								</div>
+								<div class="btn-group mlm">
+									<button type="button" data-action="batchImport" class="btn" <?php if (!$canwrite):?>disabled <?php endif;?>><?php echo Ibos::lang('batch import'); ?></button>
+								</div>
+								<div class="btn-group mlm">
+									<button type="button" data-action="exportUser" class="btn"><?php echo $lang['Export']; ?></button>
+								</div>
+								<div class="btn-group mlm">
+									<button type="button" class="btn dropdown-toggle" data-toggle="dropdown" <?php if (!$canwrite):?>disabled <?php endif;?>>
+										更多<i class="caret"></i>
+									</button>
+									<ul class="dropdown-menu" id="list_act">
+										<li><a data-action="checkRelationship" href="javascript:;">管理上下级关系</a></li>
+										<li><a data-action="updateUserInfo" href="javascript:;">设置所在部门/岗位</a></li>
 									</ul>
 								</div>
 							</div>
 							<form method="post" action="javascript:;">
-								<div class="search pull-right span4">
+								<div class="search pull-right span3 mls">
 									<input type="text" name="keyword" placeholder="<?php echo $lang['User search tip']; ?>" id="mn_search" nofocus>
 									<a href="javascript:;">search</a>
 								</div>
-								<!--
-								<input type="hidden" name="search" value="1" />
-								<input type="hidden" name="formhash" value="<?php //echo FORMHASH; ?>" />
-								-->
 							</form>
+							<div class="btn-group pull-right">
+								<button type="button" class="btn dropdown-toggle" data-toggle="dropdown">
+									在职<i class="caret"></i>
+								</button>
+								<ul class="dropdown-menu">
+									<li>
+										<a data-action="getStatusList" href="javascript:;" data-type="all"><?php echo $lang['All']; ?></a>
+									</li>
+									<li>
+										<a data-action="getStatusList" href="javascript:;" data-type="enabled"><?php echo $lang['Enable']; ?></a>
+									</li>
+									<li>
+										<a data-action="getStatusList" href="javascript:;" data-type="disabled">禁用</a>
+									</li>
+								</ul>
+							</div>
 						</div>
 						<div class="page-list-mainer">
 							<table class="table table-striped table-hover org-user-table" id="org_user_table">
@@ -94,8 +129,8 @@ use application\modules\role\utils\Role as RoleUtil;
 										<th width="100"><?php echo $lang['Full name']; ?></th>
 										<th><?php echo $lang['Department']; ?></th>
 										<th>角色</th>
+										<th>人员状态</th>
 										<th>手机</th>
-										<th>微信号</th>
 										<th width="60"><?php echo $lang['Operation']; ?></th>
 									</tr>
 								</thead>
@@ -110,20 +145,22 @@ use application\modules\role\utils\Role as RoleUtil;
 
 <div id="update_userinfo_dialog" style="display:none;">
     <div class="user-form-con">
-        <form class="form-horizontal" id="update_userinfo_form">
-            <div class="dialog-form-header">
-                <ul>
-                    <li class="active">
-                        <a class="form-head-list" data-type="dept" href="javascript:;">按部门</a>
-                    </li>
-                    <li>
-                        <a class="form-head-list" data-type="pos" href="javascript:;">按岗位</a>
-                    </li>
-                </ul>
-            </div>
-            <div class="dialog-form-content">
-                <div id="update_user_dept"></div>
-                <div id="update_user_pos" style="display:none;"></div>
+        <form class="form-horizontal update-userinfo-form" id="update_userinfo_form">
+            <ul class="nav nav-skid nav-skid-inverse" id="dept_post_tab">
+                <li class="active">
+                    <a href="#update_user_dept" data-toggle="tab">按部门</a>
+                </li>
+                <li>
+                    <a href="#update_user_pos" data-toggle="tab">按岗位</a>
+                </li>
+            </ul>
+            <div class="dialog-form-content tab-content">
+                <div class="tab-pane active" id="update_user_dept">
+                	<ul class="ztree" id="dept_tree"></ul>
+                </div>
+                <div class="tab-pane" id="update_user_pos">
+                	<ul class="ztree" id="pos_tree"></ul>
+                </div>
                 <input type="hidden" name="deptid" value=""/>
                 <input type="hidden" name="posid" value=""/>
                 <input type="hidden" name="type" value="dept"/>
@@ -131,13 +168,12 @@ use application\modules\role\utils\Role as RoleUtil;
         </form>
     </div>
 </div>
-
 <div id="update_userinfo_box"></div>
 <script>
-	Ibos.app.setPageParam({
-		//"selectedDeptId": <?php //echo $deptId; ?>,
-		"auxiliaryId": [<?php echo $deptStr; ?>]
-	})
+    Ibos.app.s({
+        'canwrite': <?php echo $canwrite;?>,
+        "auxiliaryId": [<?php echo $deptStr; ?>]
+    });
 </script>
 <script src="<?php echo STATICURL; ?>/js/lib/dataTable/js/jquery.dataTables.js?<?php echo VERHASH; ?>"></script>
 <script src='<?php echo $assetUrl; ?>/js/lang/zh-cn.js?<?php echo VERHASH; ?>'></script>
@@ -145,3 +181,4 @@ use application\modules\role\utils\Role as RoleUtil;
 <script src='<?php echo STATICURL; ?>/js/lib/SWFUpload/handlers.js?<?php echo VERHASH; ?>'></script>
 <script src='<?php echo STATICURL; ?>/js/app/ibos.importData.js?<?php echo VERHASH; ?>'></script>
 <script src='<?php echo $assetUrl; ?>/js/org_user_index.js?<?php echo VERHASH; ?>'></script>
+

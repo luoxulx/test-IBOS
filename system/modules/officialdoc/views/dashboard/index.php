@@ -5,21 +5,24 @@ use application\core\utils\Ibos;
 ?>
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo Ibos::lang('Information officialdoc'); ?></h1>
+        <h1 class="mt">应用设置＞<?php echo Ibos::lang('Information officialdoc'); ?></h1>
     </div>
     <div>
         <form action="<?php echo $this->createUrl('dashboard/add'); ?>" class="form-horizontal" method="post">
-            <!-- 邮件发送设置 start -->
+            <!-- start -->
             <div class="ctb">
                 <h2 class="st"><?php echo Ibos::lang('Officialdoc setting'); ?></h2>
                 <div class="">
                     <div class="control-group">
-                        <label for="" class="control-label"><?php echo Ibos::lang('Comment'); ?></label>
+                        <label for="" class="control-label">是否允许评论</label>
                         <div class="controls">
                             <input type="checkbox" name="commentSwitch" value='1' id="" data-toggle="switch"
                                    class="visi-hidden" <?php if ($commentSwitch): ?>checked<?php endif; ?>>
                         </div>
                     </div>
+                </div>
+                <h2 class="st">通知模版管理</h2>
+                <div class="">
                     <div>
                         <table class="table table-striped table-bordered">
                             <thead>

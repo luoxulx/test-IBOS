@@ -9,6 +9,10 @@ return array(
         'author' => 'banyanCheung @ IBOS Team Inc',
         'version' => '1.0',
         'pushMovement' => 1,
+        'indexShow' => array(
+            'widget' => true,
+            'link' => 'vote/default/index'
+        )
     ),
     'config' => array(
         'modules' => array(

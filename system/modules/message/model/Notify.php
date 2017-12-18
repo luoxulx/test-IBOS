@@ -123,6 +123,14 @@ class Notify extends Model
             //比如查看id=1的日志，这里的id就是1
             'id' => isset($config['id']) ? $config['id'] : '',
         );
+        // 区分是否是主动提醒类型
+        if(!empty($config['isalarm'])){
+            $data['isalarm'] = 1;
+        }
+        // 主动提醒发送人
+        if(!empty($config['senduid'])){
+            $data['senduid'] = $config['senduid'];
+        }
         if (empty($nodeInfo['contentkey'])) {
             $data['body'] = $data['title'];
             $data['hasContent'] = false;
@@ -326,6 +334,7 @@ class Notify extends Model
             );
         } else {
             // 客户自定义接口，待项目版定制
+            return true;
         }
         NotifySms::model()->sendSms($row);
     }

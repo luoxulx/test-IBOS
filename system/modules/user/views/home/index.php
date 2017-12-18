@@ -233,89 +233,7 @@ use application\core\utils\StringUtil;
         </div>
     </div>
     <?php if ($this->getIsMe()): ?>
-        <div class="row">
-            <div class="span6">
-                <div class="mbox">
-                    <div class="mbox-header adjust-box-header">
-                        <span><?php echo $lang['Security Rating']; ?></span>
-                    </div>
-                    <div class="mbox-body">
-                        <!-- status 1 start -->
-                        <div class="fill-nn bglg">
-                            <div class="pc-safe-point pull-right fsf xar xco">
-                                <span id="security_point"></span>
-                                <?php echo $lang['Point']; ?>
-                            </div>
-                            <div>
-                                <div id="security_point_desc" class="mb xco"></div>
-                                <div class="progress" id="security_progress">
-                                    <div class="progress-bar progress-bar-warning"></div>
-                                </div>
-                            </div>
-                            <div class="xac fill-sn">
-                                <button id="recheck" type="button"
-                                        data-loading-text="<?php echo $lang['Rechecking']; ?>..." autocomplete="off"
-                                        class="btn btn-primary">
-                                    <?php echo $lang['Recheck']; ?></button>
-                            </div>
-                        </div>
-                        <?php if (!$securityRating !== 100): ?>
-                            <div class="fill-sn">
-                                <div class="mb">
-                                    <?php echo $lang['You can']; ?>：
-                                </div>
-                                <ul>
-                                    <li class="clearfix mbs">
-                                        <?php if ($user['validationemail'] == 1): ?> <i class="o-small-mail-bind"></i>
-                                            <?php echo $lang['Email address']; ?>
-                                            ：
-                                            <?php echo $user['email']; ?>
-                                            <span class="tcm">
-												<?php echo $lang['Already bind']; ?></span>
-                                            <a href="javascript:;" data-action="bind" data-param='{"type": "email"}'
-                                               class="btn btn-small pull-right">
-                                                <?php echo $lang['Modify']; ?></a>
-                                        <?php else: ?>
-                                            <!-- 已绑定样式类为o-mail-bind --> <i class="o-small-mail-unbind"></i>
-                                            <?php echo $lang['Email address']; ?>
-                                            ：
-                                            <?php echo $user['email']; ?>
-                                            <span class="tcm">
-												<?php echo $lang['Unbind']; ?></span>
-                                            <a href="javascript:;" data-action="bind" data-param='{"type": "email"}'
-                                               class="btn btn-small pull-right">
-                                                <?php echo $lang['Bind']; ?></a>
-                                        <?php endif; ?></li>
-                                    <li class="clearfix">
-                                        <?php if ($user['validationmobile'] == 1): ?>
-                                            <i class="o-small-phone-bind"></i>
-                                            <?php echo $lang['Mobile number']; ?>
-                                            ：
-                                            <?php echo $user['mobile']; ?>
-                                            <span class="tcm">
-												<?php echo $lang['Already bind']; ?></span>
-                                            <a href="javascript:;" data-action="bind" data-param='{"type": "mobile"}'
-                                               class="btn btn-small pull-right">
-                                                <?php echo $lang['Modify']; ?></a>
-                                        <?php else: ?>
-                                            <i class="o-small-phone-unbind"></i>
-                                            <?php echo $lang['Mobile number']; ?>
-                                            ：
-                                            <?php echo $user['mobile']; ?>
-                                            <span class="tcm">
-												<?php echo $lang['Unbind']; ?></span>
-                                            <a href="javascript:;" data-action="bind" data-param='{"type": "mobile"}'
-                                               class="btn btn-small pull-right">
-                                                <?php echo $lang['Bind']; ?></a>
-                                        <?php endif; ?>
-                                    </li>
-                                </ul>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-            <div class="span6">
+        <div class="mb">
                 <div class="mbox mbox-stable">
                     <div class="mbox-header adjust-box-header">
 						<span>
@@ -356,7 +274,6 @@ use application\core\utils\StringUtil;
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     <?php endif; ?>
 </div>

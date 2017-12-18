@@ -67,27 +67,7 @@ class ApiController extends Controller
     {
         set_exception_handler(array($this, 'handleException'));
     }
-
-    /**
-     * 登录验证：如果用户未登录，则返回相应的提示。
-     *
-     * @return bool
-     */
-    protected function checkLogin()
-    {
-        if (Ibos::app()->user->isGuest) {
-            $msg = Ibos::lang('Need login', 'default');
-
-            if (Ibos::app()->request->getIsAjaxRequest()) {
-                return $this->ajaxBaseReturn(false, array(), $msg);
-            } else {
-                return $this->error($msg);
-            }
-        }
-
-        return true;
-    }
-
+    
     /**
      * 重写 action 执行方法，在执行 action 前验证请求参数是否合法。
      *

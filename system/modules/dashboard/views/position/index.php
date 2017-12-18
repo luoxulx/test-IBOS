@@ -4,16 +4,15 @@
       href="<?php echo STATICURL; ?>/js/lib/dataTable/css/jquery.dataTables_ibos.min.css?<?php echo VERHASH; ?>">
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt">岗位管理</h1>
+        <h1 class="mt">通讯录管理＞岗位管理</h1>
     </div>
     <div>
         <!-- 部门信息 start -->
         <div class="ctb">
-            <h2 class="st">岗位管理</h2>
             <div class="mc clearfix">
                 <div class="aside">
                     <div class="fill-ss">
-                        <a href="javascript:;" class="btn btn-warning add-dept-btn" data-action="addType">添加分类</a>
+                        <a href="javascript:;" class="btn btn-primary add-dept-btn" data-action="addType">新增分类</a>
                     </div>
                     <div class="ztree-wrap">
                         <ul id="ptree" class="ztree position-ztree">
@@ -34,7 +33,7 @@
                                         class="btn"><?php echo $lang['Delete']; ?></button>
                             </div>
                             <form method="post" action="javascript:;">
-                                <div class="search pull-right span4">
+                                <div class="search pull-right span3">
                                     <input type="text" name="keyword"
                                            placeholder="<?php echo $lang['Position search tip']; ?>" id="mn_search"
                                            nofocus/>
@@ -55,7 +54,7 @@
                                     </th>
                                     <th><?php echo $lang['Position name']; ?></th>
                                     <th><?php echo $lang['Position category']; ?></th>
-                                    <th width="100"><?php echo $lang['Position users']; ?></th>
+                                    <th width="120"><?php echo $lang['Position users']; ?></th>
                                     <th width="100"><?php echo $lang['Operation']; ?></th>
                                 </tr>
                                 </thead>

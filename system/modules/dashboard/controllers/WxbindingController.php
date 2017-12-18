@@ -60,17 +60,17 @@ class WxbindingController extends WxController
             // $params['access'] = $isSuccess;
             // $params['msg'] = $msg;
         }
-        if (true === $this->isBinding) {
-            $params['wxlogo'] = $this->wxqyInfo['logo'];
-            $params['wxcorpid'] = $this->wxqyInfo['corpid'];
-            $params['wxname'] = $this->wxqyInfo['name'];
-            $params['mobile'] = $this->wxqyInfo['mobile'];
-            $params['app'] = $this->wxqyInfo['app'];
-            if (true === $isLogin) {
-                return $this->redirect($this->createUrl('wxsync/index'));
-            }
-        }
-
+//        if (true === $this->isBinding) {
+//            $params['wxlogo'] = $this->wxqyInfo['logo'];
+//            $params['wxcorpid'] = $this->wxqyInfo['corpid'];
+//            $params['wxname'] = $this->wxqyInfo['name'];
+//            $params['mobile'] = $this->wxqyInfo['mobile'];
+//            $params['app'] = $this->wxqyInfo['app'];
+//            if (true === $isLogin) {
+//                return $this->redirect($this->createUrl('wxsync/app'));
+//            }
+//        }
+//        return $this->redirect($this->createUrl('wxsync/app'));
         return $this->render($view, $params);
     }
 

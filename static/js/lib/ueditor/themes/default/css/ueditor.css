@@ -151,8 +151,10 @@ div.edui-box {
     -webkit-box-shadow:0 1px 4px rgba(204, 204, 204, 0.6);
     -moz-box-shadow:0 1px 4px rgba(204, 204, 204, 0.6);
     box-shadow:0 1px 4px rgba(204, 204, 204, 0.6);
-    border-top-left-radius:2px;
-    border-top-right-radius:2px;
+    -moz-border-radius-topleft:2px;
+         border-top-left-radius:2px;
+    -moz-border-radius-topright:2px;
+         border-top-right-radius:2px;
 }
 
 .edui-default .edui-editor-toolbarboxouter {
@@ -161,11 +163,10 @@ div.edui-box {
     background-image: -moz-linear-gradient(top, #ffffff, #f2f2f2);
     background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#f2f2f2));
     background-image: -webkit-linear-gradient(top, #ffffff, #f2f2f2);
-    background-image: -o-linear-gradient(top, #ffffff, #f2f2f2);
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#f2f2f2));
     background-image: linear-gradient(to bottom, #ffffff, #f2f2f2);
     background-repeat: repeat-x;
     /*border: 1px solid #d4d4d4;*/
-    -webkit-border-radius: 4px 4px 0 0;
     -moz-border-radius: 4px 4px 0 0;
     border-radius: 4px 4px 0 0;
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#fff2f2f2', GradientType=0);
@@ -1061,13 +1062,11 @@ div.edui-box {
     border: 1px solid rgba(0, 0, 0, 0.2);
     *border-right-width: 2px;
     *border-bottom-width: 2px;
-    -webkit-border-radius: 6px;
     -moz-border-radius: 6px;
     border-radius: 6px;
     -webkit-box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2);
     -moz-box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2);
     box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2);
-    -webkit-background-clip: padding-box;
     -moz-background-clip: padding;
     background-clip: padding-box;
     padding: 5px;
@@ -1133,7 +1132,8 @@ div.edui-box {
     position: relative;
 }
 .edui-default .edui-message-body{
-    border-radius: 3px;
+    -moz-border-radius: 3px;
+         border-radius: 3px;
     padding: 8px 15px 8px 8px;
     color: #c09853;
     background-color: #fcf8e3;
@@ -1222,13 +1222,11 @@ div.edui-box {
     border: 1px solid rgba(0, 0, 0, 0.2);
     *border-right-width: 2px;
     *border-bottom-width: 2px;
-    -webkit-border-radius: 6px;
     -moz-border-radius: 6px;
     border-radius: 6px;
     -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
     -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
     box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-    -webkit-background-clip: padding-box;
     -moz-background-clip: padding;
     background-clip: padding-box;
 }
@@ -1839,7 +1837,8 @@ div.edui-box {
     height: 50px;
     background-color: #fff;
     border: 1px solid #ccc;
-    border-radius: 5px;
+    -moz-border-radius: 5px;
+         border-radius: 5px;
 }
 
 /*粘贴弹出菜单*/

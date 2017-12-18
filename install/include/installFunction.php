@@ -91,7 +91,7 @@ function mysqlEngineCheck($object){
     if($bool){
         return ajaxReturn(array(
             'isSuccess' => false,
-            'msg' => '数据库引擎需要为InnoDB',
+            'msg' => '数据库需要支持 InnoDB 引擎',
             'data' => array('type' => 'engine'),
         ));
     }

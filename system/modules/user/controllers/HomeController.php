@@ -10,6 +10,7 @@ use application\core\utils\StringUtil;
 use application\modules\dashboard\model\CreditLog;
 use application\modules\dashboard\model\CreditRule;
 use application\modules\dashboard\model\CreditRuleLog;
+use application\modules\dashboard\utils\SyncWx;
 use application\modules\main\model\Setting;
 use application\modules\message\core\co\CoApi;
 use application\modules\message\model\Notify;
@@ -59,7 +60,7 @@ class HomeController extends HomebaseController
             // 个人资料提交
             if ($op == 'profile') {
                 $profileField = array('birthday', 'bio', 'telephone', 'address', 'qq');
-                $userField = array('mobile', 'email');
+                $userField = array('mobile', 'email', 'weixin');
                 $model = array();
                 // 确定更新所使用MODEL
                 foreach ($_POST as $key => $value) {
@@ -92,6 +93,7 @@ class HomeController extends HomebaseController
                 foreach ($model as $modelObject => $value) {
                     $modelObject::model()->modify($this->getUid(), $value);
                 }
+                SyncWx::getInstance()->updateWxUser($this->getUid());
             } else if ($op == 'password') {// 密码设置
                 $user = $this->getUser();
                 $update = false;

@@ -26,12 +26,16 @@
 }
 
 .o-message{
-	background-image: url(../../image/news_tip.png);
+	background-image: url("../../image/news_tip.png");
 	background-position: 0 0; 
 }
 .o-message:hover{
-	background-image: url(../../image/btn_icon.png);
+	background-image: url("../../image/btn_icon.png");
 	background-position: 0 -120px; 
+}
+.o-manager{
+	background-image: url("../../image/btn_icon.png");
+	background-position: -360px -120px; 
 }
 
 .usi a{

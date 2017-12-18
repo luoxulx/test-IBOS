@@ -875,20 +875,24 @@ class CosyncController extends CoController
             return array();
         }
         $url = $this->getUrl('syncuser');
-
         $res = Api::getInstance()->fetchResult($url, CJSON::encode($userArray), 'post');
         if (is_string($res)) {
             $array = CJSON::decode($res);
-            if (false === $array['isSuccess']) {
-                $this->ajaxReturn(array(
-                    'isSuccess' => false,
-                    'message' => $array['msg'],
-                ));
+            if(!is_null($array)){
+                if (false === $array['isSuccess']) {
+                    $this->ajaxReturn(array(
+                        'isSuccess' => false,
+                        'message' => $array['msg'],
+                    ));
+                }
+                !empty($array['data']['bind']) && $this->userBind($msgPlatform, $array['data']['bind']);
+                !empty($array['data']['delete']) && $this->userDelete($msgPlatform, $array['data']['delete']);
+                // 更新缓存表
+                $this->updateSuccessInfo($array, 'co');
+            }else{ 
+                //如果返回的数据出错，则跳过当前操作继续到下一步。
+                $userArray = array('bind' =>array() ,'delete'=>array() );
             }
-            !empty($array['data']['bind']) && $this->userBind($msgPlatform, $array['data']['bind']);
-            !empty($array['data']['delete']) && $this->userDelete($msgPlatform, $array['data']['delete']);
-            // 更新缓存表
-            $this->updateSuccessInfo($array, 'co');
         }
         return $userArray;
     }
@@ -901,12 +905,14 @@ class CosyncController extends CoController
     protected function userBind($msgPlatform, $array)
     {
         foreach ($array as $uid => $bindvalue) {
-            Ibos::app()->db->createCommand()
-                ->insert('{{user_binding}}', array(
-                    'uid' => $uid,
-                    'bindvalue' => $bindvalue,
-                    'app' => $msgPlatform
-                ));
+            Ibos::app()->db->createCommand()->delete(UserBinding::model()->tableName(), 'uid = :uid', array(
+                ':uid' => $uid,
+            ));
+            Ibos::app()->db->createCommand()->insert(UserBinding::model()->tableName(), array(
+                'uid' => $uid,
+                'bindvalue' => $bindvalue,
+                'app' => $msgPlatform,
+            ));
         }
     }
 
@@ -921,7 +927,6 @@ class CosyncController extends CoController
             Ibos::app()->db->createCommand()
                 ->delete('{{user_binding}}'
                     , " `uid` = '{$uid}' AND"
-                    . " `bindvalue` = '{$bindvalue}' AND"
                     . " `app` = '{$msgPlatform}' ");
             Ibos::app()->db->createCommand()
                 ->update('{{user}}'

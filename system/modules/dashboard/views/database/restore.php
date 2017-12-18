@@ -7,7 +7,7 @@ use application\core\utils\StringUtil;
 ?>
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Database']; ?></h1>
+        <h1 class="mt">通用设置 > <?php echo $lang['Database']; ?></h1>
         <ul class="mn">
             <li>
                 <a href="<?php echo $this->createUrl('database/backup'); ?>"><?php echo $lang['Backup']; ?></a>
@@ -23,7 +23,7 @@ use application\core\utils\StringUtil;
     <div>
         <div class="ctb">
             <!-- 数据备份记录 start -->
-            <h2 class="st"><?php echo $lang['Data backup record']; ?></h2>
+            <!-- <h2 class="st"><?php echo $lang['Data backup record']; ?></h2> -->
             <div class="alert trick-tip">
                 <div class="trick-tip-title">
                     <i></i>

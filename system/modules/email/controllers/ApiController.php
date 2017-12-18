@@ -173,7 +173,7 @@ class ApiController extends BaseController
                     $config = array(
                         '{reader}' => Ibos::app()->user->realname,
                         '{url}' => Ibos::app()->urlManager->createUrl('email/content/show', array('id' => $id)),
-                        '{title}' => $fromInfo['subject'],
+                        '{title}' => html_entity_decode($fromInfo['subject']),
                         'id' => $fromInfo['bodyid'],
                     );
                     Notify::model()->sendNotify($fromInfo['fromid'], 'email_receive_message', $config);

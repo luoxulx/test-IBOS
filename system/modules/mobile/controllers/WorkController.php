@@ -13,6 +13,7 @@ use application\modules\main\components\CommonAttach;
 use application\modules\main\utils\Main;
 use application\modules\main\utils\Main as MainUtil;
 use application\modules\message\model\Notify;
+use application\modules\message\model\NotifyMessage;
 use application\modules\mobile\utils\Mobile;
 use application\modules\user\model\User;
 use application\modules\workflow\core\FlowConst;
@@ -36,6 +37,7 @@ use application\modules\workflow\utils\Handle;
 use application\modules\workflow\utils\Handle as WfHandleUtil;
 use application\modules\workflow\utils\Preview as WfPreviewUtil;
 use application\modules\workflow\utils\WfNew as WfNewUtil;
+use application\core\utils\Convert;
 
 class WorkController extends BaseController
 {
@@ -156,6 +158,12 @@ class WorkController extends BaseController
             ->limit(self::DEFAULT_PAGE_SIZE)
             ->offset($offset)
             ->queryAll();
+        if (!empty($runProcess)) {
+            $runProcess = array_map(function ($v){
+                $v['runName'] = html_entity_decode($v['runName']);
+                return $v;
+            }, $runProcess);
+        }
         if (count($runProcess) < self::DEFAULT_PAGE_SIZE) {
             $hasMore = false;
         } else {
@@ -511,6 +519,7 @@ class WorkController extends BaseController
                     $value = isset($_POST[$index]) ? $_POST[$index] : '';
                     $formData[$index] = $value;
                 }
+                $this->handleAttachComponent($formData);
                 $formData && $this->handleImgComponent($formData);
                 $formData && FlowDataN::model()->update($this->flowid, $this->runid, $formData);
             }
@@ -531,6 +540,19 @@ class WorkController extends BaseController
             }
             FlowRun::model()->modify($this->runid, array('attachmentid' => $attachmentID));
             Attach::updateAttach($attachmentID, $this->runid);
+            if (!empty($attachmentID)) {
+                $flowRun = FlowRun::model()->findByPk($this->runid);
+                $flowRunStep = $flowRun->attachmentstep;
+                $flowRunStepArray = !empty($flowRunStep) ? \CJSON::decode($flowRunStep) : array();
+                foreach (explode(',', $attachmentID) as $aid) {
+                    if (empty($flowRunStepArray['aid'])) {
+                        $flowRunStepArray[$aid] = $this->flowprocess;
+                    }
+                }
+                $flowRunStepString = \CJSON::encode($flowRunStepArray);
+                $flowRun->attachmentstep = $flowRunStepString;
+                $flowRun->save();
+            }
             // 执行保存插件
             $plugin = FlowProcess::model()->fetchSavePlugin($this->flowid, $this->flowprocess);
             if (!empty($plugin)) {
@@ -625,19 +647,12 @@ class WorkController extends BaseController
                     $this->setParentToHandle($run->parentrun, $this->runid);
                 }
             }
-            // 修改上一步骤状态为已经办理完毕
-            // $preProcess = $this->processid - 1;
-            // if ( $preProcess ) {
-            // 	if ( $flow->isFree() ||
-            // 			$flow->isFixed() && !empty( $attr ) && $process->gathernode != self::FORCE
-            // 	) {
-            // 		$this->setProcessDone( $preProcess );
-            // 	}
-            // }
+
             // 如果是固定流程并设置了超时间隔的
             if ($flow->isFixed() && !empty($attr) && $process->timeout != 0) {
                 // 如果该步骤未接收并且不是第一步，流程开始的时间为上一步的办结完的时间
                 if ($runProcess->flag == self::UN_RECEIVE && $this->processid !== 1) {
+                    $preProcess = $runProcess->parent;
                     $processBegin = FlowRunProcess::model()->fetchDeliverTime($this->runid, $preProcess);
                 } else {
                     // 否则，为该步骤开始办理的时间
@@ -646,6 +661,8 @@ class WorkController extends BaseController
                 $timeUsed = TIMESTAMP - $processBegin;
             }
             // 处理表单
+            $flow->name = html_entity_decode($flow->name);
+            $run->name = html_entity_decode($run->name);
             $viewer = new ICFlowFormViewer(
                 array(
                 'flow' => $flow,
@@ -673,8 +690,6 @@ class WorkController extends BaseController
 
             // 按可写,已写,空值 三种状态来划分控件. 手机端：
             $formdata = array(
-                'run' => $data['run'],
-                'flow' => $data['flow'],
                 'enableArr' => '',
                 'valueArr' => '',
                 'emptyArr' => '',
@@ -682,13 +697,15 @@ class WorkController extends BaseController
             $data['enablefiled'] = array();
 
             if (isset($data['model']['itemData']) && is_array($data['model']['itemData'])) {
+                // 固定流程
                 if ($flow->isFixed()) {
                     if (isset($data['prcscache'][$data['rp']['flowprocess']]['processitem'])) {
                         $enableFiled = explode(",", $data['prcscache'][$data['rp']['flowprocess']]['processitem']);
                     } else {
                         $enableFiled = array();
                     }
-                } elseif ($flow->isFree()) {  // 自由流程
+                // 自由流程
+                } elseif ($flow->isFree()) {
                     if (isset($data['rp']['freeitem'])) {
                         $enableFiled = explode(",", $data['rp']['freeitem']);
                     } else {
@@ -699,85 +716,80 @@ class WorkController extends BaseController
                     if (substr($k, 0, 5) != "data_") {
                         continue;
                     }
-                    if (!empty($data['model']['structure'][$k]['data-title'])) {
-                        $data['model']['structure'][$k]['origin-value'] = $v;
-                        $data['model']['structure'][$k]['value'] = $v;
 
-                        if (in_array($data['model']['structure'][$k]['data-title'], $enableFiled)) {
-                            //记下可修改的页面
-                            $data['enablefiled'][] = $k;
-                            $data['model']['structure'][$k]['value'] = empty($data['model']['eleout'][$k]) ? '' : $data['model']['eleout'][$k];
-                            $formdata['enableArr'][] = $data['model']['structure'][$k];
+                    if(isset($data['model']['structure'][$k])) {
+                        $structure = $data['model']['structure'][$k];
+
+                        // 标签控件永远是可用状态
+                        if ($structure['data-type'] == 'label') {
+                            $formdata['valueArr'][] = $structure;
                             continue;
                         }
-                        if ($v != "") {
-                            $formdata['valueArr'][] = $data['model']['structure'][$k];
-                            continue;
-                        }
-                        // 自由流程为可写字段未设置时，默认都可写
-                        if ($flow->isFree() && empty($data['rp']['freeitem'])) {
-                            $data['enablefiled'][] = $k;
-                            $data['model']['structure'][$k]['value'] = $data['model']['eleout'][$k];
-                            $formdata['enableArr'][] = $data['model']['structure'][$k];
-                        }
-                        if ($flow->isFixed()) {
-                            $formdata['emptyArr'][] = $data['model']['structure'][$k];
+
+                        // 判断是否有效组件
+                        if (!empty($structure['data-title'])) {
+                            $structure['origin-value'] = $v;
+                            $structure['value'] = $v;
+
+                            if (in_array($structure['data-title'], $enableFiled)) {
+                                //记下可修改的页面
+                                $data['enablefiled'][] = $k;
+                                $structure['value'] = empty($data['model']['eleout'][$k]) ? '' : $data['model']['eleout'][$k];
+                                $formdata['enableArr'][] = $structure;
+                                continue;
+                            }
+                            if ($v != "") {
+                                if ($structure['data-type'] == 'fileupload'){
+                                    $structure['value'] = empty($data['model']['eleout'][$k]) ? '' : $data['model']['eleout'][$k];
+                                    $formdata['valueArr'][] = $structure;
+
+                                }else{
+                                    $formdata['valueArr'][] = $structure;
+                                }
+                                continue;
+                            }
+                            // 自由流程为可写字段未设置时，默认都可写
+                            if ($flow->isFree() && empty($data['rp']['freeitem'])) {
+                                $data['enablefiled'][] = $k;
+                                $structure['value'] = $data['model']['eleout'][$k];
+                                $formdata['enableArr'][] = $structure;
+                            }
+                            if ($flow->isFixed()) {
+                                $formdata['emptyArr'][] = $structure;
+                            }
+
+                            $data['model']['structure'][$k] = $structure;
                         }
                     }
                 }
             }
-            //记下可修改的页面
-            $data['model'] = $this->renderPartial('application.modules.mobile.views.work.form', $formdata, true);
-            $data['model'] .= '<input type="hidden" name="key" value="' . $this->key . '">';
-            $data['model'] .= '<input type="hidden" name="hidden" value="' . $data['hidden'] . '">';
-            $data['model'] .= '<input type="hidden" name="readonly" value="' . $data['readonly'] . '">';
-            $data['model'] .= '<input type="hidden" name="attachmentid" id="attachmentid" value="' . $data['run']['attachmentid'] . '">';
-            $data['model'] .= '<input type="hidden" name="fbattachmentid" id="fbattachmentid" value="">';
-            $data['model'] .= '<input type="hidden" name="topflag" value="' . $data['rp']['opflag'] . '">';
-            $data['model'] .= '<input type="hidden" name="saveflag">';
-            $data['model'] .= '<input type="hidden" name="formhash" value="' . FORMHASH . '">';
-            $data['model'] .= '<input type="hidden" name="enablefiled" value="' . implode(",", $data['enablefiled']) . '">';
+
+            $sortOfStructure = isset($data['model']['structure']) ? $data['model']['structure'] : 0;
 
             $data['enableArr'] = ArrayUtil::getValue($formdata, 'enableArr', array());
             $data['valueArr'] = ArrayUtil::getValue($formdata, 'valueArr', array());
             $data['emptyArr'] = ArrayUtil::getValue($formdata, 'emptyArr', array());
 
+            // 按照表单结构排序
+            $data['enableArr'] = $this->sortByStructure($sortOfStructure, $data['enableArr']);
+            $data['valueArr'] = $this->sortByStructure($sortOfStructure, $data['valueArr']);
+            $data['emptyArr'] = $this->sortByStructure($sortOfStructure, $data['emptyArr']);
 
-            // 根据 data-id，从小到大排序
-            if (!empty($data['enableArr']) && is_array($data['enableArr'])) {
-                usort($data['enableArr'], function($a, $b) {
-                    // $a 和 $b 需要同时包含 data-id 键，没有的话，就认为二者相等。
-                    if (!(isset($a['data-id']) && isset($b['data-id']))) {
-                        return 0;
-                    }
-                    $aDataId = $a['data-id'];
-                    $bDataId = $b['data-id'];
-
-                    if ($aDataId == $bDataId) {
-                        return 0;
-                    }
-
-                    return ($aDataId < $bDataId) ? -1 : 1;
-                });
-            }
-
-            // exit($data['form']);
             // 处理公共附件
-            if ($this->isEnabledAttachment($flow, $run, $process, $runProcess)) {
-                $data['allowAttach'] = true;
-                if (!empty($run->attachmentid)) {
-                    $attachPurv = $this->getAttachPriv($flow, $process, $runProcess);
-                    $down = $attachPurv['down'];
-                    $edit = $attachPurv['edit'];
-                    $del = $attachPurv['del'];
-                    // 暂时没用到
-                    // $read = $attachPurv['read'];
-                    // $print = $attachPurv['print'];
-                    $data['attachData'] = Attach::getAttach($run->attachmentid, $down, $down, $edit, $del);
-                }
-            } else {
-                $data['allowAttach'] = false;
+            if (!empty($run->attachmentid)) {
+                $attachPurv = $this->getAttachPriv($flow, $process, $runProcess);
+                $down = $attachPurv['down'];
+                $edit = $attachPurv['edit'];
+                $del = $attachPurv['del'];
+                // 暂时没用到
+                // $read = $attachPurv['read'];
+                // $print = $attachPurv['print'];
+                $data['attachData'] = Attach::getAttach($run->attachmentid, $down, $down, $edit, $del);
+            }else{
+                $data['attachData'] = array();
             }
+
+            $data['allowAttach'] = $this->isEnabledAttachment($flow, $run, $process, $runProcess);
 
             // 是否允许会签及读取会签意见信息
             if ($flow->isFixed() && !empty($attr) && $process->signlook == 0) {
@@ -807,9 +819,32 @@ class WorkController extends BaseController
                     $data['otherEnd'] = true;
                 }
             }
+            NotifyMessage::model()->setReadByModule($this->uid, 'workflow');
             $this->ajaxReturn($data, Mobile::dataType());
             /////////////////////////////////////////////////////////////
         }
+    }
+
+
+    /**
+     * 根据表单结构对数据进行排序
+     * @param array $sortOfStructure
+     * @param array $data
+     */
+    public function sortByStructure($sortOfStructure, $data)
+    {
+        $tempArray = array();
+        if (is_array($sortOfStructure) && is_array($data)) {
+            foreach ($sortOfStructure as $sortItem) {
+                foreach ($data as $arrItem) {
+                    if ($sortItem['itemid'] == $arrItem['itemid'] ) {
+                        array_push($tempArray, $arrItem);
+                    }
+                }
+            }
+            return $tempArray;
+        }
+        return $data;
     }
 
     /**
@@ -842,19 +877,50 @@ class WorkController extends BaseController
         // 处理图片上传控件
         foreach ($GLOBALS['_FILES'] as $key => $value) {
             if (strtolower(substr($key, 0, 5)) == "data_") {
-                $formData["{$key}"] = "";
-                $old = $_POST["imgid_" . substr($key, 5)];
-                if ($value['name'] != "") {
-                    if (!empty($old)) {
-                        Attach::delAttach($old);
+                if (isset($_POST["imgid_" . substr($key, 5)])){
+                    $formData["{$key}"] = "";
+                    $old = $_POST["imgid_" . substr($key, 5)];
+                    if ($value['name'] != "") {
+                        if (!empty($old)) {
+                            Attach::delAttach($old);
+                        }
+                        $upload = new CommonAttach($key, 'workflow');
+                        $upload->upload();
+                        $info = $upload->getUpload()->getAttach();
+                        $upload->updateAttach($info['aid'], $this->runid);
+                        $formData["{$key}"] = $info['aid'];
+                    } else {
+                        $formData["{$key}"] = $old;
                     }
-                    $upload = new CommonAttach($key, 'workflow');
-                    $upload->upload();
-                    $info = $upload->getUpload()->getAttach();
-                    $upload->updateAttach($info['aid'], $this->runid);
-                    $formData["{$key}"] = $info['aid'];
-                } else {
-                    $formData["{$key}"] = $old;
+                }
+            }
+        }
+    }
+
+    /**
+     * 表单处理提交时对于文件上传控件的特别处理
+     * @param array $formData
+     */
+    protected function handleAttachComponent(&$formData)
+    {
+        // 处理图片上传控件
+        foreach ($GLOBALS['_FILES'] as $key => $value) {
+            if (strtolower(substr($key, 0, 5)) == "data_") {
+                if (isset($_POST["fileid_" . substr($key, 5)])){
+                    $formData["{$key}"] = "";
+                    $old = $_POST["fileid_" . substr($key, 5)];
+                    if ($value['name'] != "") {
+                        if (!empty($old)) {
+                            Attach::delAttach($old);
+                        }
+                        $upload = new CommonAttach($key, 'workflow');
+                        $upload->upload();
+                        $info = $upload->getUpload()->getAttach();
+                        $upload->updateAttach($info['aid'], $this->runid);
+                        $formData["{$key}"] = $info['aid'];
+                    } else {
+                        $formData["{$key}"] = $old;
+                    }
                 }
             }
         }
@@ -1241,6 +1307,7 @@ class WorkController extends BaseController
                 ));
                 if ($temp) {
                     $lastUID = $temp['uid'];
+                    $parent = $temp['parent'];
                 }
                 $log = Ibos::lang('Return to step', '', array('{step}' => FlowProcess::model()->fetchName($flowId, $flowProcessNew)));
             }
@@ -1274,6 +1341,9 @@ class WorkController extends BaseController
                 '{msg}' => $msg
             );
             Notify::model()->sendNotify($lastUID, 'workflow_goback_notice', $config);
+            //通知关注者
+            $backname = User::model()->fetchRealnameByUid($this->uid);
+            Common::sendNotifyToFocusUser($runId, 'Workflow back to focususer', $backname, $flowProcessNew);
             WfCommonUtil::runlog($runId, $processId, $flowProcess, $this->uid, 1, $log);
             $this->ajaxReturn(array('isSuccess' => true), Mobile::dataType());
         } else {
@@ -1325,10 +1395,6 @@ class WorkController extends BaseController
         // $message = filter_input( INPUT_POST, 'message', FILTER_SANITIZE_STRING );
         $message = Env::getRequest('message');
         $toId = $nextId = $beginUserId = $toallId = '';
-        $ext = array(
-            '{url}' => Ibos::app()->urlManager->createUrl('workflow/list/index', array('op' => 'category')),
-            '{message}' => $message
-        );
         //下一步骤主办人
         $remind = Env::getRequest('remind');
         $prcs_user_op = Env::getRequest('prcs_user_op');
@@ -1340,7 +1406,7 @@ class WorkController extends BaseController
                 $nextId = intval($prcs_user_op);
             } else {
                 foreach ($prcsChooseArr as $k => $v) {
-                    $prcs_user_op_k = Env::getRequest('prcs_user_op' . $k);
+                    $prcs_user_op_k = Env::getRequest('prcs_user_op' . $v);
                     if (isset($prcs_user_op_k)) {
                         // $nextId .= filter_input( INPUT_POST, 'prcs_user_op' . $k, FILTER_SANITIZE_STRING ) . ',';
                         $nextId .= $prcs_user_op_k . ',';
@@ -1372,9 +1438,6 @@ class WorkController extends BaseController
         }
         $idstr = $nextId . ',' . $beginUserId . ',' . $toallId;
         $toId = StringUtil::filterStr($idstr);
-        if ($toId) {
-            Notify::model()->sendNotify($toId, 'workflow_turn_notice', $ext);
-        }
         //更新当前步骤为已办结
         FlowRunProcess::model()->updateToOver($runId, $processId, $flowProcess);
         //-----  结束流程 -----
@@ -1482,6 +1545,10 @@ class WorkController extends BaseController
                     WfCommonUtil::runlog($runId, $processId, $flowProcess, $this->uid, 1, $content);
                     FlowRun::model()->modify($pId, array('endtime' => null));
                 }
+            } else {
+                //结束办理通知关注者
+                $turnUsername = User::model()->fetchRealnameByUid(Ibos::app()->user->uid);
+                Common::sendNotifyToFocusUser($runId, 'Workflow end to focususer', $turnUsername);
             }
             //工作流日志
             $content = Ibos::lang('Form endflow');
@@ -1489,6 +1556,9 @@ class WorkController extends BaseController
         } else {
             //---------------------是否允许按转交规则转交-----------------------
             $freeother = FlowType::model()->fetchFreeOtherByFlowId($flowId);
+            $flowrun = FlowRun::model()->fetchByPk($runId);
+            $flowtype = FlowType::model()->fetchTypeByFlowId($runId);
+            $turnUsername = User::model()->fetchRealnameByUid(Ibos::app()->user->uid);
             $prcsChooseArrCount = count($prcsChooseArr);
             for ($i = 0; $i < $prcsChooseArrCount; $i++) {
                 $flowPrcsNext = $prcsToArr[$prcsChooseArr[$i]]; //下一步骤序号
@@ -1604,6 +1674,8 @@ class WorkController extends BaseController
                     $content = Ibos::lang('Log new subflow') . $runidNew;
                     WfCommonUtil::runlog($runId, $processId, $flowProcess, $this->uid, 1, $content);
                 }
+                //通知关注者
+                Common::sendNotifyToFocusUser($runId, 'Turn next to focususer', $turnUsername, $flowPrcsNext);
             }//for
         } // end else
         //------------------- 流程监控的硬性转交，要模拟接收办理过程------手机端不需要 -----------------
@@ -1652,6 +1724,59 @@ class WorkController extends BaseController
                 //如果已经结束，强制结束所有的步骤
                 Ibos::app()->db->createCommand()
                     ->update('{{flow_run_process}}', array('flag' => 4), "runid = '{$runId}' ");
+            }
+        }
+        $toIdArr = explode(',', $toId);
+        if (!empty($toIdArr)) {
+            $flowType = FlowType::model()->findByPk($flowId);
+            $nextProcess = $processId + 1;
+            $flowRunProcess = Ibos::app()->db->createCommand()
+                ->select('*')
+                ->from('{{flow_run_process}}')
+                ->where('processid = :processid AND runid = :runid', array(':processid' => $nextProcess, ':runid' => $runId))
+                ->queryAll();
+            $alreadySendUidArr = array();
+            for ($i =0; $i < count($flowRunProcess); $i++) {
+                $remindedUid = $flowRunProcess[$i]['uid'];
+                if (!in_array($remindedUid, $toIdArr)) {
+                    continue;
+                }
+                $alreadySendUidArr[] = $remindedUid;
+                $param = array(
+                    'runid' => $runId,
+                    'flowid' => $flowId,
+                    'processid' => $flowRunProcess[$i]['processid'],
+                    'flowprocess' => $flowRunProcess[$i]['flowprocess'],
+                    'type' => $flowType->type,
+                );
+                // 如果是最后一个流程，跳转到预览页面
+                $returnUrl = Ibos::app()->urlManager->createUrl('workflow/form/index', array('key' => Common::param($param)));
+                if (true === $lastProcessFlag) {
+                    $returnUrl = Ibos::app()->urlManager->createUrl('workflow/preview/print', array('key' => Common::param($param)));
+                }
+                $config = array(
+                    '{message}' => html_entity_decode($message),
+                    '{url}' => $returnUrl
+                );
+                Notify::model()->sendNotify($remindedUid, 'workflow_turn_notice', $config);
+            }
+        }
+
+        // 发送提醒消息给发起人
+        if (isset($_POST['remind'][2])) {
+            $beginUid = $run['beginuser'];
+            if (!in_array($beginUid, $alreadySendUidArr) && in_array($beginUid, $toIdArr)) {
+                // 当发起人不在已发送消息的用户列表，并且在需要提醒的用户列表中，才发送提醒消息
+                Notify::model()->sendNotify($beginUid, 'workflow_turn_notice', array(
+                    '{message}' => html_entity_decode($message),
+                    '{url}' => Ibos::app()->urlManager->createUrl('workflow/preview/print', array('key' => Common::param(array(
+                        'runid' => $runId,
+                        'flowid' => $flowId,
+                        'processid' => 1,
+                        'flowprocess' => 1,
+                        'type' => $flowType->type,
+                    )))),
+                ));
             }
         }
         $this->ajaxReturn(array("isSuccess" => true), Mobile::dataType());
@@ -1715,38 +1840,46 @@ class WorkController extends BaseController
                 // 自己已经转交并且是当前步骤的话不能重复转交
                 Env::iExit(Ibos::lang('Already trans'));
             }
-            $flowProcessArray = array($flowProcess);
-            $all = $flowProcessArray;
-            $find = array();
+            $flowProcessidArray = array($flowProcess);
+            $all = $flowProcessidArray;
+            $find = $notFind = array();
             while (1) {
-                foreach ($flowProcessArray as $flowProcessid) {
-                    $fromFlowProcess = Ibos::app()->db->createCommand()
+                foreach ($flowProcessidArray as $flowProcessid) {
+                    $fromFlowProcessidArray = Ibos::app()->db->createCommand()
                         ->select('processid')
                         ->from(FlowProcess::model()->tableName())
                         ->where(" `flowid` = '{$flowId}' ")
                         ->andWhere(" FIND_IN_SET( '{$flowProcessid}', `processto` ) ")
                         ->queryColumn();
-                    foreach ($fromFlowProcess as $row) {
+                    foreach ($fromFlowProcessidArray as $rowid) {
                         $list2 = Ibos::app()->db->createCommand()
-                            ->select('uid,flowprocess')
+                            ->select('uid,flowprocess,flag,opflag,topflag')
                             ->from(FlowRunProcess::model()->tableName())
                             ->where(" `runid` = '{$runId}' ")
-                            ->andWhere(" FIND_IN_SET( `flowprocess`, '{$row}' ) ")
-                            ->andWhere(" `flag` != '{$done}' ")
+                            //->andWhere(" FIND_IN_SET( `flowprocess`, '{$rowid}' ) ")
                             ->queryAll();
-                        foreach ($list2 as $row2) {
-                            $notAllFinished[] = $row2['uid'];
-                            $find[] = $row2['flowprocess'];
-                            $canCombile = false;
+                        if (!empty($list2)) {
+                            foreach ($list2 as $row2) {
+                                if ($row2['flag'] != FlowConst::PRCS_DONE && (($row2['opflag'] == 0 && $row2['topflag'] !=2) || ($row2['flowprocess'] == $rowid))) {
+                                    $notAllFinished[] = $row2['uid'];
+                                    $find[] = $row2['flowprocess'];
+                                    $canCombile = false;
+                                } else {
+                                    //都是完成的，则break了
+                                }
+                            }
+                        } else {
+                            $notFind[] = $rowid;
                         }
                     }
                 }
                 $diff = array_diff($find, $all);
-                if (empty($diff)) {
+                if (empty($diff) && empty($notFind)) {
                     break;
                 } else {
-                    $flowProcessArray = array_unique($diff);
-                    $all = array_unique(array_merge($all, $find));
+                    $flowProcessidArray = array_unique(array_merge($diff, $notFind));
+                    $all = array_unique(array_merge($all, $find, $notFind));
+                    $notFind = array();
                 }
             }
             if (!empty($notAllFinished)) {
@@ -1756,7 +1889,8 @@ class WorkController extends BaseController
             }
             // 检查强制合并
             if ($process->gathernode == 1) {
-                if (false === $canCombile) {
+                $isLastProcessTurn = $this->isLastProcessTurn($flowId, $flowProcess, $runId);
+                if ($isLastProcessTurn === false) {
                     //此步骤为强制合并步骤，尚有步骤未转交至此步骤，不能继续转交下一步
                     Env::iExit(Ibos::lang('Gathernode trans error'));
                 }
@@ -1897,6 +2031,12 @@ class WorkController extends BaseController
     {
         $lang = Ibos::getLangSource('workflow.default');
         $nopriv = '';
+
+        /**
+         * todo
+         * 下一步为合并流程，并且已经有并发流程选择了下一步的主办人和经办人
+         */
+        $isMergerProcess = $this->mergerProcessUserSelect($process, $runId, $processId);
 
         //子流程
         if ($process['childflow'] != 0) {
@@ -2162,7 +2302,8 @@ class WorkController extends BaseController
                 'prcsOpUser' => $prcsOpUser,
                 'prcsUser' => $prcsUserAuto,
                 'prcsEnabledUsers' => $prcsuser,
-                'nopriv' => $nopriv
+                'nopriv' => $nopriv,
+                'ismergerprocess' => $isMergerProcess
             );
         }
         return $userSelect;
@@ -2326,6 +2467,9 @@ class WorkController extends BaseController
                 // 'uid' => $backUserOp
             );
             $flag = Env::getRequest('flag');
+            // 结束自由流程通知关注者
+            $turnUsername = User::model()->fetchRealnameByUid(Ibos::app()->user->uid);
+            Common::sendNotifyToFocusUser($runId, 'Workflow end to focususer', $turnUsername);
             if ($flowType == 2 && $flag != 1) {
                 $inajax && $this->ajaxReturn(array('isSuccess' => true, 'data' => $datas));
 //                $this->redirect( $this->createUrl( 'list/index' ) );
@@ -2526,4 +2670,220 @@ class WorkController extends BaseController
         }
     }
 
+    /**
+     * 强制合并流程，并且已经有并发流程选择了下一步的主办人的特殊处理 .data('userSelect').setReadOnly()
+     * 做到并发流程有第一个选择好了人员，那么不能转交给其他人
+     * @param $process   设计流程数组
+     * @param $runId     运行id
+     * @param $processId 运行步骤id
+     */
+    private function mergerProcessUserSelect(&$process, $runId, $processId) {
+        // 判断设计流程是不是合并流程
+        $gatherNodelist = FlowProcess::model()->fetchAllGatherNode($process['flowid'], $process['processid']);
+        if(!empty($gatherNodelist) && count($gatherNodelist) == 1) {
+            return false; // 上一步流程节点只有一个，不为合并流程
+        }
+
+        // 获取运行步骤主办人
+        $hostRunProcess = FlowRunProcess::model()->fetchAllRunProcessUserlistByRunIdANDFlowProcessANDOpFlag($runId, $process['processid'], 1);
+        // 获取运行步骤经办人
+        $agentRunProcess = FlowRunProcess::model()->fetchAllRunProcessUserlistByRunIdANDFlowProcessANDOpFlag($runId, $process['processid'], 0);
+
+        // 没有转交到该合并步骤
+        if(empty($hostRunProcess) && empty($agentRunProcess)) {
+            return false;
+        }
+
+        $process['autotype'] = 3; // 选人为默认选择
+        $process['autouserop'] = implode(',' , Convert::getSubByKey($hostRunProcess, 'uid')); // 默认选择主办人
+        $process['autouser'] = implode(',' , Convert::getSubByKey($agentRunProcess, 'uid')); // 默认经办人
+
+        return true;
+    }
+
+    /**
+     * 检查强制合并流程是否能转交下一步
+     * 思路：判断所有未完成步骤，是否能和要检查的强制合并步骤相连成一条线段
+     * 如果能相连，标识强制合并步骤有可能被转交，不能转交下一步
+     * 如果不能相连，证明与该强制合并步骤无关
+     * @param $flowId
+     * @param $processId
+     */
+    private function isLastProcessTurn($flowId, $processId, $runId)
+    {
+        // 获得所有未完成且需要寻找的步骤
+        $needFindNotPrceDoneProcessIds = $this->getNeedFindDoneProcessIds($flowId, $processId, $runId);
+        if(empty($needFindNotPrceDoneProcessIds)){
+            return true;
+        }
+        // 获得设计流程 未完成的步骤到强制合并步骤中是否构成流程线段
+        $isProcessLine = $this->isflowProcessLine($flowId, $needFindNotPrceDoneProcessIds, $processId, $runId);
+        // 有线段代表强制合并流程未完成
+        return !$isProcessLine;
+    }
+
+    /**
+     * 获得需要判断强制合并的流程步骤
+     * @param $flowId
+     * @param $processId
+     * @param $runId
+     * @return array
+     */
+    private function getNeedFindDoneProcessIds($flowId, $processId, $runId)
+    {
+        $res = array();
+        $notPrceDoneList = FlowRunProcess::model()->fetchAllNotPrceDoneProcess($runId, 'flowprocess,opflag,topflag');
+        if(empty($notPrceDoneList)){
+            return array();
+        }
+        foreach ($notPrceDoneList as $processRun){
+            if($processRun['flowprocess'] == $processId){
+                continue; // 当前步骤自己没必要寻找
+            }
+            if($processRun['opflag'] == '1'){
+                // 主办的步骤未办理完成一定要确认是否会走到强制合并步骤
+                $res[] = $processRun['flowprocess'];
+            } else if($processRun['opflag'] == '1' && $processRun['topflag'] == '2') {
+                // 经办人必须是无主办会签的时候才一定要判断强制合并步骤
+                $res[] = $processRun['flowprocess'];
+            }
+        }
+        return array_unique($res);
+    }
+
+    /**
+     * 是否找到该从开始步骤到目标步骤的流程线路
+     * @param string $startProcessId 开始的步骤
+     * @param $flowId
+     * @param string $processId 结束的步骤
+     */
+    private function isflowProcessLine($flowId, $startProcessIdA, $processId, $runId)
+    {
+        $find = $startProcessIdA; // 第一步为起点
+        $finish = array();
+        $finishIds = array(); // 查找过的id
+        while (1) {
+            if(empty($find) && empty($finish)){
+                break;
+            }
+            foreach ($find as $key => $findItem){
+                $line = explode(',' , $findItem);
+                $findItemEnd = (int) end($line);
+
+                if(max(array_count_values($line)) > 1){
+                    // 一条路径超过两次
+                    unset($find[$key]);
+                    continue;
+                }
+
+                if($findItemEnd == $processId){
+                    unset($find[$key]);
+                    $finish[] = $findItem;
+                    continue;
+                }
+
+                if($findItemEnd == 0){
+                    unset($find[$key]); // 彻底结束都没有找到改合并路线
+                    continue;
+                }
+
+                $nextProcessA = $this->getNextProcess($flowId, $findItemEnd);
+                if(empty($nextProcessA)){
+                    // 如果下一步为空，且该步骤id不为0，那么断头路可以不必找
+                    unset($find[$key]);
+                }
+
+                unset($find[$key]); // 路径将原来那条删除，新增多条路径
+                foreach ($nextProcessA as $nextProcess){
+                    $finishIds[] = $nextProcess;
+                    $find[] = $findItem. ','.$nextProcess;
+                }
+            }
+
+            // 处理找到的线段
+            foreach ($finish as $finishKey =>$finishItem){
+                $line = explode(',' , $finishItem);
+                $findItemEnd = (int) end($line);
+                if($findItemEnd == 0){
+                    unset($finish[$finishKey]);
+                    continue;
+                }
+                // 判断这条线该合并流程的上一步是否有结办记录
+                // 合并流程上一步
+                $lastProcessKey = count($line) - 2;
+                // 如果上一步没有结办记录，证明有可能会转交到这一步，强制合并不能转交下一步
+                if(!$this->isProcessPrceDone($line[$lastProcessKey], $runId)){
+                    return true;
+                } else {
+                    unset($finish[$finishKey]);
+                    continue;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * getNextProcess 获得设计流程当前步骤的下一步设计流程id数组
+     * @param $flowId
+     * @param $nowProcessId
+     * @return array
+     */
+    private function getNextProcess($flowId, $nowProcessId)
+    {
+        $allflowProcess = $this->getAllFlowProcess($flowId);
+
+        static $nextProcess = array();
+        if(empty($nextProcess)){
+            foreach ($allflowProcess as $process){
+                // 结束步骤没必要查找下一步
+                if($process['processid'] === 0) {
+                    continue;
+                }
+                $nextProcess[$process['processid']] = $process['processto'];
+            }
+        }
+        return explode(',' ,$nextProcess[$nowProcessId]);
+    }
+
+    /**
+     * 获得一个设计流程的全部步骤，并用静态变量缓存起来
+     * @param $flowId
+     * @return mixed
+     */
+    private function getAllFlowProcess($flowId)
+    {
+        static $allflowProcess = array();
+        if(empty($allflowProcess[$flowId])){
+            $allflowProcess[$flowId] = FlowProcess::model()->fetchAllByFlowId($flowId);
+        }
+        return $allflowProcess[$flowId];
+    }
+
+    /**
+     * 判断步骤是否有结办记录
+     * @param $flowProcess 设计流程id
+     * @param $runId
+     */
+    private function isProcessPrceDone($flowProcess, $runId)
+    {
+        static $prceDoneList = array();
+        if(empty($prceDoneList)){
+            $prceDoneList = FlowRunProcess::model()->fetchAllPrceDoneProcess($runId, "*");
+        }
+        foreach ($prceDoneList as $processRun){
+            if($flowProcess == $processRun['flowprocess']){
+                if($processRun['opflag'] == '1'){
+                    // 主办的步骤未办理完成一定要确认是否会走到强制合并步骤
+                    return true; // 主办人办理完成该步骤便办理完成
+                } else if($processRun['opflag'] == '0' && $processRun['topflag'] == '2') {
+                    // 经办人必须是无主办会签的时候才算办理完成
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }

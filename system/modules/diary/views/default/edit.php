@@ -87,7 +87,7 @@
                             <td>
                                 <div style="min-height: 375px;">
                                     <script name="diaryContent" type="text/plain"
-                                            id="editor"><?php echo $diary['content']; ?></script>
+                                            id="diary_editor"><?php echo $diary['content']; ?></script>
                                 </div>
                             </td>
                         </tr>

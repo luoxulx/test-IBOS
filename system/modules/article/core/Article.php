@@ -85,7 +85,8 @@ class Article
         } else {
             $data['approver'] = Ibos::lang('None');
         }
-
+        $data['createtime'] = date('Y-m-d H:i', $data['addtime']);
+        $data['updatetime'] = date('Y-m-d H:i', $data['uptime']);
         $data['addtime'] = Convert::formatDate($data['addtime'], 'u');
         $data['uptime'] = empty($data['uptime']) ? '' : Convert::formatDate($data['uptime'], 'u');
         $data['categoryName'] = ArticleCategory::model()->fetchCateNameByCatid($data['catid']);

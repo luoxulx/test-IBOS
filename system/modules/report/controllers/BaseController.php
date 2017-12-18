@@ -7,6 +7,7 @@ use application\core\utils\Attach;
 use application\core\utils\Convert;
 use application\core\utils\Env;
 use application\core\utils\Ibos;
+use application\core\utils\Module;
 use application\core\utils\Org;
 use application\core\utils\StringUtil;
 use application\modules\dashboard\model\Stamp;
@@ -15,6 +16,7 @@ use application\modules\message\model\Comment;
 use application\modules\report\model\Report;
 use application\modules\report\model\ReportRecord;
 use application\modules\report\utils\Report as ReportUtil;
+use application\modules\role\utils\Role;
 use application\modules\user\model\User;
 use CHtml;
 use CJSON;
@@ -36,6 +38,7 @@ use CJSON;
 class BaseController extends Controller
 {
 
+    public $layout = 'application.theme.default.views.layouts.main2';
     /**
      * 查询条件
      * @var string
@@ -45,6 +48,22 @@ class BaseController extends Controller
 
     const COMPLETE_FALG = 10;
     const UNSTART_FALG = 0;
+
+    const SILDERVIEW = "application.modules.report.views.sidebar";
+
+    public function getSidebar()
+    {
+        //当前用户是否有管理模板的权限
+        $manager = Role::checkRouteAccess("report/manger/index");
+        //判断后台有开启统计模块，左侧栏的个人统计和评阅统计
+        $statistics = Module::getIsEnabled('statistics');
+        $params = array(
+            'manager' => $manager,
+            'statistics' => $statistics,
+        );
+        $sidebarView = $this->renderPartial(self::SILDERVIEW, $params, true);
+        return $sidebarView;
+    }
 
     /**
      * 获取总结模块后台设置

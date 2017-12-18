@@ -31,24 +31,24 @@
 	width: 54px;
 	height: 54px;
 }
-.avatar-circle{ border-radius: 30px; }
-.avatar-circle img{ border-radius: 27px; }
+.avatar-circle{ -moz-border-radius: 30px; border-radius: 30px; }
+.avatar-circle img{ -moz-border-radius: 27px; border-radius: 27px; }
 
 .avatar-circle-small,
 .avatar-circle-small img{
 	width: 30px;
 	height: 30px;
 }
-.avatar-circle-small{ border-radius: 17px; padding: 1px; }
-.avatar-circle-small img{ border-radius: 15px;}
+.avatar-circle-small{ -moz-border-radius: 17px; border-radius: 17px; padding: 1px; }
+.avatar-circle-small img{ -moz-border-radius: 15px; border-radius: 15px;}
 
 .avatar-circle-large,
 .avatar-circle-large img{
 	width: 180px;
 	height: 180px;
 }
-.avatar-circle-large{ border-radius: 93px; }
-.avatar-circle-large img{ border-radius: 90px; }
+.avatar-circle-large{ -moz-border-radius: 93px; border-radius: 93px; }
+.avatar-circle-large img{ -moz-border-radius: 90px; border-radius: 90px; }
 
 
 .avatar-circle-40,
@@ -58,7 +58,7 @@
 }
 
 .mc{
-	width: 1001px;
+	min-width: 1122px;
 	-webkit-box-shadow: 0 1px 3px rgba(0,0,0,.1);
 	-moz-box-shadow: 0 1px 3px rgba(0,0,0,.1);
 	box-shadow: 0 1px 3px rgba(0,0,0,.1);
@@ -83,7 +83,9 @@
 	/* @Todo: 思考更好的方法; */
 	/*overflow: hidden;*/
 	float: left;
-	width: 780px;
+	width: -moz-calc(100% - 223px);
+	width: calc(100% - 223px);
+	min-width: 780px;
 	min-height: 600px;
 	_height: 600px;
 	border-left: 1px #f6f6f7 solid;
@@ -256,13 +258,23 @@
 	cursor: pointer;
 }
 
-/**/
+/*
+部門与用戶
+ */
 .org-positon-table.table thead th,
 .org-positon-table.table td,
 .org-user-table.table thead th,
 .org-user-table.table td{
 	padding: 10px;
 	vertical-align: middle;
+}
+.nav-skid-inverse.nav-skid > li:hover,
+.nav-skid-inverse.nav-skid > .active{
+	margin-bottom: 1px;
+	border-bottom: 1px #FFF solid;
+}
+.update-userinfo-form .dialog-form-content{
+	min-height: 250px;
 }
 
 .org-limit-box{
@@ -286,6 +298,9 @@
 	background-color: #fafafa;
 	font-weight: 700;
 }
+.org-limit-entry .opt-tip{
+	font-weight: 400;
+}
 .org-limit-list{
 	margin: -20px 0 20px 0;
 }
@@ -303,19 +318,11 @@
 	list-style: none;
 }
 .org-limit-list li label{
-	/*-webkit-box-shadow: 0 0 2px rgba(0, 0, 0, .1);
-	-moz-box-shadow: 0 0 2px rgba(0, 0, 0, .1);
-	box-shadow: 0 0 2px rgba(0, 0, 0, .1);
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	border-radius: 4px;*/
 	display: block;
 	padding: 5px 10px;
 	width: 200px;
-	/*border: 1px solid #E6E6E7;*/
 	background: #FFF;
 	color: #82939E;
-	/*background: url(../image/icon_check.png) no-repeat -100px 0;*/
 }
 .org-limit-list li .active{
 	background-position: 185px -23px;
@@ -371,7 +378,6 @@
 	-webkit-box-shadow: 0 0 1px rgba(0, 0, 0, .1);
 	-moz-box-shadow: 0 0 1px rgba(0, 0, 0, .1);
 	box-shadow: 0 0 1px rgba(0, 0, 0, .1);
-	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
 	border-radius: 4px;
 	float: left;
@@ -437,6 +443,14 @@
 	background-color: #FFF;
 	vertical-align: middle;
 	background: url(../image/pri_level.png) no-repeat;
+}
+.privilege-level i.setting{
+	display: inline-block;
+	width: 25px;
+	height: 25px;
+	background-color: #FFF;
+	vertical-align: middle;
+	background: url(../image/batch_opt.png) no-repeat;
 }
 .privilege-level p{
 	font-size: 12px;
@@ -561,8 +575,9 @@ a.level2.curSelectedNode a.opt-btn{
 .position-ztree.ztree li a.o-org-ztree-del,
 .org-utree.ztree li a.o-org-ztree-edit,
 .org-utree.ztree li a.o-org-ztree-del{
-	height: 18px;
+	display: inline-block;
 	margin-top: 2px;
+	height: 18px;
 }
 .position-ztree.ztree li a span.edit,
 .position-ztree.ztree li a span.remove,

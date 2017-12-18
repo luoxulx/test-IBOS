@@ -10,6 +10,7 @@
 namespace application\modules\message\controllers;
 
 use application\core\controllers\Controller;
+use application\core\model\Module;
 use application\core\utils\Ibos;
 use application\modules\message\model\UserData;
 
@@ -43,4 +44,93 @@ class BaseController extends Controller
         return $sidebarUnreadMap;
     }
 
+    /**
+     * 通用获取所属模块函数
+     * @param array $data 视图赋值
+     * @return string 视图html
+     */
+    public function getModulebar($data = array())
+    {
+        $tag = empty($data['tag']) ? '' : $data['tag'];
+        $data['modulelist'] = $this->getModuleList($tag);
+        $sidebarAlias = 'application.modules.message.views.modulebar';
+        $sidebarView = $this->renderPartial($sidebarAlias, $data, true);
+        return $sidebarView;
+    }
+
+    /*
+     * 获得modulelist的数据，用于导航栏
+     */
+    public function getModuleList($tag)
+    {
+        switch ($tag)
+        {
+            case 'notify':
+                $moduleList = $this->getNotifyModuleList();
+                break;
+            case 'notifyManage':
+                $moduleList = $this->getNotifyManageModuleList();
+                break;
+            default:
+                $moduleList = array();
+                break;
+        }
+        return $moduleList;
+    }
+
+    /**
+     * 提醒管理的模块筛选
+     */
+    private function getNotifyManageModuleList()
+    {
+        $modules = array(
+                'message',
+                'crm',
+                'workflow',
+                'activity',
+                'thread',
+                'meeting',
+                'assets',
+                'vote',
+                'assignment');
+        $modulelist = array();
+        $notCoreModule = Module::model()->fetchAllNotCoreModule();
+        foreach ($notCoreModule as $key => $val) {
+            if(in_array($key, $modules)){
+                $modulelist[$key] = $val['name'];
+            }
+        }
+        $modulelist['message'] = Ibos::lang("Message Module List another name");
+
+        return $modulelist;
+    }
+
+    /**
+     * 获得提醒列表模块分类
+     * @return mixed
+     */
+    private function getNotifyModuleList()
+    {
+        $removerModule = array('app');
+        $orderList = array('workflow','crm','article','diary','email'); // 需要调整顺讯的模块,最后的排最前
+        $notCoreModule = Module::model()->fetchAllNotCoreModule();
+        $sortList = array();
+        foreach ($notCoreModule as $key => $val) {
+            if(in_array($key, $removerModule)){
+                continue;
+            }
+            $modulelist[$key] = $val['name'];
+        }
+
+        foreach ($orderList as $val) {
+            if(!empty($modulelist[$val])){
+                $sortList[$val] = $modulelist[$val];
+                unset($modulelist[$val]);
+            }
+        }
+
+        $modulelist['message'] = Ibos::lang("Message Module List another name");
+        $modulelist = array_merge($sortList, $modulelist);
+        return $modulelist;
+    }
 }

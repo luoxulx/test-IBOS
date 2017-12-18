@@ -67,6 +67,8 @@ class BaseController extends Controller
      */
     public function init()
     {
+        //检查是否登录
+        $this->checkLogin();
         $this->uid = $uid = intval(Ibos::app()->user->uid);
         // 个人文件夹
         $this->folders = EmailFolder::model()->fetchAllUserFolderByUid($uid);

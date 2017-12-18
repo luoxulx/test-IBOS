@@ -30,6 +30,25 @@ class ArrayUtil
     }
 
     /**
+     * @param $array
+     * @param array $keys
+     * @return array
+     */
+    public static function getValueArrayByArrayAndKey($array, $keys = array())
+    {
+        $returnArray = array();
+        if (empty($keys)){
+            return $array;
+        }
+        foreach ($keys as $key){
+            if (isset($array[$key])){
+                $returnArray[] = $array[$key];
+            }
+        }
+        return $returnArray;
+    }
+
+    /**
      * Retrieves the value of an array element or object property with the given key or property name.
      * If the key does not exist in the array or object, the default value will be returned instead.
      *
@@ -85,5 +104,44 @@ class ArrayUtil
         } else {
             return $default;
         }
+    }
+
+    /**
+     * 二维数组排序
+     * @param array $arr 需要排序的二维数组
+     * @param string $keys 所根据排序的key
+     * @param string $type 排序类型，desc、asc
+     * @return array $new_array 排好序的结果
+     */
+    public static function array_muliSort($arr, $keys, $type = 'desc')
+    {
+        $key_value = $new_array = array();
+        foreach ($arr as $k => $v) {
+            $key_value[$k] = $v[$keys];
+        }
+        if ($type == 'asc') {
+            asort($key_value);
+        } else {
+            arsort($key_value);
+        }
+        reset($key_value);
+        foreach ($key_value as $k => $v) {
+            $new_array[$k] = $arr[$k];
+        }
+        return $new_array;
+
+    }
+
+    /**
+     *  格式化数组成mysql中IN查询所需要的格式
+     *  @param $array
+     * @return string
+     */
+    public static function formatArrayForSearchInByArray($array)
+    {
+        if (!is_array($array)) {
+            $array = explode(',', $array);
+        }
+        return '"' . implode('","', $array) . '"';
     }
 }

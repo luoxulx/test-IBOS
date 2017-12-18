@@ -18,7 +18,6 @@ use application\modules\user\model\User;
 
 class WebController extends BaseController
 {
-
     /**
      * 外部邮件附件下载
      * GET参数：id,i,都是数字
@@ -110,6 +109,9 @@ class WebController extends BaseController
      */
     public function actionAdd()
     {
+        if(extension_loaded('openssl') === false){
+            $this->setPageState('remind', true);
+        }
         $inAjax = (bool)Env::getRequest('inajax');
         if ($inAjax) {
             return $this->ajaxAdd();
@@ -124,7 +126,7 @@ class WebController extends BaseController
                 array('name' => Ibos::lang('Email center'), 'url' => $this->createUrl('list/index')),
                 array('name' => Ibos::lang('Add web email'))
             ));
-            $this->render('add', array('more' => false));
+            $this->render('add', array('more' => false,'remindLang' => Ibos::lang('OpenSSL needed'), 'remind' => $this->getPageState('remind')));
         }
     }
 

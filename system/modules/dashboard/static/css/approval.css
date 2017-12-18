@@ -77,12 +77,12 @@
 	vertical-align: middle;
 }
 .process-add-icon{
-	width: 96px;
-	height: 96px;
+	width: 60px;
+	height: 60px;
 	margin-bottom: 10px;
 }
 .item-add:hover .process-add-icon{
-	background-position: -96px 0;
+	background-position: -60px 0;
 }
 .form-horizontal .mbl{ margin-bottom: 40px; }
 .ps-type-title{ background-color: #F5F7F8; }
@@ -94,38 +94,43 @@
 	float: left;
 	position: relative;
 	list-style: none;
-	width: 360px;
-	height: 380px;
+	width: 365px;
+	height: 400px;
 }
-.process-list li:hover .process-step-list{
-	min-height:216px;
-	height: auto;
-}
-.process-list li:hover{
-	z-index: 2;
-}
+
 .approval-box{
 	position: absolute;
 	margin-left: 20px;
 	margin-bottom: 20px;
-	border-radius: 4px;
-	background-color: #FFF;
 	width: 300px;
+	border:  2px #fff solid;
+	-moz-border-radius: 4px;
+	     border-radius: 4px;
+	background-color: #FFF;
 	-webkit-box-shadow: 0 0 4px rgba(0, 0, 0, .1);
 	-moz-box-shadow: 0 0 4px rgba(0, 0, 0, .1);
 	box-shadow: 0 0 4px rgba(0, 0, 0, .1);
 }
+.item-add .approval-box{
+	border:  3px #EBEDF0 dotted;
+	-webkit-box-shadow: none;
+	   -moz-box-shadow: none;
+	        box-shadow: none;
+}
+.approval-box:hover{
+	border:  2px #3497db solid;
+}
+.item-add .approval-box:hover{
+	border:  2px #3497db dotted;
+}
 .process-step{
-	padding-top: 10px;
+	padding-top: 15px;
 	border-top: 1px #ebeff6 solid;
 }
 .process-step-list{
 	overflow: hidden;
 	margin-bottom: 10px;
-	height: 216px;
-}
-.step-list{
-	background: url(../image/process_line.png) left top repeat-y;
+	height: 215px;
 }
 .step-content,
 .escape-person{
@@ -155,7 +160,7 @@
 	padding-top: 20px;  
 }
 .process-item-add{
-	padding: 101px 0;
+	padding: 122px 0;
 	text-align: center;
 	display: block;
 }
@@ -170,6 +175,10 @@
 .pf-select-area .control-group:first-child{
 	display: block;
 }
+.approve-description{
+	padding-top: 10px;
+	border-top: 1px #ebeff6 solid;
+}
 .description-content{
 	overflow: hidden;
 	max-width:310px;
@@ -177,6 +186,6 @@
 	white-space: nowrap;
 }
 .apploval-flow-title{
-	line-height: 30px;
+	line-height: 32px;
 	vertical-align: middle;
 }

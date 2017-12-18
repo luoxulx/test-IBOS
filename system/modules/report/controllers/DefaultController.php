@@ -32,6 +32,7 @@ use application\modules\report\model\ReportRecord;
 use application\modules\report\model\ReportStats;
 use application\modules\report\model\ReportType;
 use application\modules\report\utils\Report as ReportUtil;
+use application\modules\role\utils\Role;
 use application\modules\user\model\User;
 use application\modules\user\utils\User as UserUtil;
 use application\modules\weibo\utils\Common as WbCommonUtil;
@@ -64,47 +65,19 @@ class DefaultController extends BaseController
      */
     public function actionIndex()
     {
-        $typeid = Env::getRequest('typeid');
-        $uid = Ibos::app()->user->uid;
-        $op = Env::getRequest('op');
-        if (!in_array($op,
-            array('default', 'showDetail', 'getReaderList', 'getCommentList'))
-        ) {
-            $op = 'default';
-        }
-        if ($op == 'default') {
-            //是否搜索
-            //post类型的请求
-            if (Env::getRequest('param') == 'search' && Ibos::app()->request->isPostRequest) {
-                $this->search();
-            }
-            if (empty($typeid)) {
-                $typeCondition = 1;
-            } else {
-                $typeCondition = "typeid = '{$typeid}'";
-            }
-            $this->_condition = ReportUtil::joinCondition($this->_condition,
-                "uid = '{$uid}' AND {$typeCondition}");
-            $paginationData = Report::model()->fetchAllByPage($this->_condition);
-            $params = array(
-                'typeid' => $typeid,
-                'pagination' => $paginationData['pagination'],
-                'reportList' => ICReport::handelListData($paginationData['data']),
-                'reportCount' => Report::model()->count("uid='{$uid}'"),
-                'commentCount' => Report::model()->count("uid='{$uid}' AND isreview=1"),
-                'user' => User::model()->fetchByUid($uid),
-            );
-            $this->setPageTitle(Ibos::lang('My report'));
-            $this->setPageState('breadCrumbs',
-                array(
-                    array('name' => Ibos::lang('Personal Office')),
-                    array('name' => Ibos::lang('Work report'), 'url' => $this->createUrl('default/index')),
-                    array('name' => Ibos::lang('My report list'))
-                ));
-            $this->render('index', $params);
-        } else {
-            $this->$op();
-        }
+        $params = array(
+            'userid' => Ibos::app()->user->uid,
+            'manager' => Role::checkRouteAccess('report/api/savetemplate'),
+            'set' => Role::checkRouteAccess('report/api/settemplate'),
+        );
+        $this->setPageTitle(Ibos::lang('Work report'));
+        $this->setPageState('breadCrumbs',
+            array(
+                array('name' => Ibos::lang('Personal Office')),
+                array('name' => Ibos::lang('Work report'), 'url' => $this->createUrl('default/index')),
+                array('name' => Ibos::lang('Work report'))
+            ));
+        $this->render('index', $params);
     }
 
     /**

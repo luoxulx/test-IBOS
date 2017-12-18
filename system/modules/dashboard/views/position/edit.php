@@ -3,12 +3,11 @@
 <link rel="stylesheet" href="<?php echo $assetUrl; ?>/css/organization_role.css?<?php echo VERHASH; ?>">
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt">角色权限管理</h1>
+        <h1 class="mt">岗位管理 ＞ 编辑岗位</h1>
     </div>
     <div>
         <!-- 部门信息 start -->
         <div class="ctb">
-            <h2 class="st">角色管理</h2>
             <div>
                 <div class="btn-group mb">
                     <a href="javascript:;" class="btn active">岗位设置</a>

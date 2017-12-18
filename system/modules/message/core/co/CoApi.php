@@ -17,6 +17,7 @@ namespace application\modules\message\core\co;
 
 use application\core\utils\Api;
 use application\core\utils\ApiCode;
+use application\core\utils\Ibos;
 use CJSON;
 
 class CoApi extends Api
@@ -68,6 +69,8 @@ class CoApi extends Api
     const API_WHETHER_BIND = 'http://api.ibos.cn/v2/corp/whetherbind';
     // API 中心判断当前ibos是否绑定酷办公企业接口（不需要登录用户）
     const API_JUDGE_BIND = 'http://api.ibos.cn/v2/corp/judgebind';
+    // 获取微信授权信息
+    const API_WX_GET_CONTACT_PERMISSION = 'http://api.ibos.cn/v4/wetools/getcontactpermission';
     /**
      * 签名的参数名称
      */
@@ -162,6 +165,10 @@ class CoApi extends Api
         return $this->_signType;
     }
 
+    /**
+     * @param string $className
+     * @return CoApi
+     */
     public static function getInstance($className = __CLASS__)
     {
         return parent::getInstance($className);
@@ -688,5 +695,18 @@ class CoApi extends Api
         $result = $this->fetchResult($url, $postJson, 'post');
         return $this->returnJsonDecode($result);
     }
+    
+    public function getWxPermission()
+    {
+        $url = $this->buildUrl(self::API_WX_GET_CONTACT_PERMISSION, array(
+            'systemurl' => Ibos::app()->request->getSystemUrl(),
+        ));
+        $result = @json_decode($this->fetchResult($url), true);
 
+        if (empty($result)) {
+            return array();
+        } else {
+            return $result;
+        }
+    }
 }

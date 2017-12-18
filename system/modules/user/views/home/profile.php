@@ -4,27 +4,28 @@ use application\core\utils\Ibos;
 
 ?>
 <!-- Mainer -->
+<!--应微信要求这个先注释掉，套件上线后记得改回来呀-->
 <div class="mc mcf clearfix">
     <?php echo $this->getHeader($lang); ?>
     <div>
         <div>
-            <ul class="nav nav-tabs nav-tabs-large nav-justified nav-special">
-                <li>
-                    <a href="<?php echo $this->createUrl('home/index', array('uid' => $this->getUid())); ?>"><?php echo $lang['Home page']; ?></a>
-                </li>
-                <?php if ($this->getIsWeiboEnabled()): ?>
-                    <li><a
-                        href="<?php echo Ibos::app()->urlManager->createUrl('weibo/personal/index', array('uid' => $this->getUid())); ?>"><?php echo $lang['Weibo']; ?></a>
-                    </li><?php endif; ?>
-                <?php if ($this->getIsMe()): ?>
-                    <li>
-                        <a href="<?php echo $this->createUrl('home/credit', array('uid' => $this->getUid())); ?>"><?php echo $lang['Credit']; ?></a>
-                    </li>
-                <?php endif; ?>
-                <li class="active">
-                    <a href="<?php echo $this->createUrl('home/personal', array('uid' => $this->getUid())); ?>"><?php echo $lang['Profile']; ?></a>
-                </li>
-            </ul>
+<!--            <ul class="nav nav-tabs nav-tabs-large nav-justified nav-special">-->
+<!--                <li>-->
+<!--                    <a href="--><?php //echo $this->createUrl('home/index', array('uid' => $this->getUid())); ?><!--">--><?php //echo $lang['Home page']; ?><!--</a>-->
+<!--                </li>-->
+<!--                --><?php //if ($this->getIsWeiboEnabled()): ?>
+<!--                    <li><a-->
+<!--                        href="--><?php //echo Ibos::app()->urlManager->createUrl('weibo/personal/index', array('uid' => $this->getUid())); ?><!--">--><?php //echo $lang['Weibo']; ?><!--</a>-->
+<!--                    </li>--><?php //endif; ?>
+<!--                --><?php //if ($this->getIsMe()): ?>
+<!--                    <li>-->
+<!--                        <a href="--><?php //echo $this->createUrl('home/credit', array('uid' => $this->getUid())); ?><!--">--><?php //echo $lang['Credit']; ?><!--</a>-->
+<!--                    </li>-->
+<!--                --><?php //endif; ?>
+<!--                <li class="active">-->
+<!--                    <a href="--><?php //echo $this->createUrl('home/personal', array('uid' => $this->getUid())); ?><!--">--><?php //echo $lang['Profile']; ?><!--</a>-->
+<!--                </li>-->
+<!--            </ul>-->
         </div>
     </div>
 </div>
@@ -125,6 +126,12 @@ use application\core\utils\Ibos;
                         <label class="control-label">QQ</label>
                         <div class="controls">
                             <input type="text" value="<?php echo $user['qq']; ?>" name="qq" class="span7"/>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label"><?php echo $lang['WeChat']; ?></label>
+                        <div class="controls">
+                            <input type="text" value="<?php echo $user['weixin']; ?>" name="weixin" class="span7"/>
                         </div>
                     </div>
                     <div class="control-group">

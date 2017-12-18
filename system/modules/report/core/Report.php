@@ -16,9 +16,15 @@
 
 namespace application\modules\report\core;
 
+use application\core\model\Module;
 use application\core\utils\Convert;
+use application\core\utils\Ibos;
 use application\core\utils\StringUtil;
 use application\modules\dashboard\model\Stamp;
+use application\modules\message\model\Comment;
+use application\modules\report\model\ModuleReader;
+use application\modules\report\model\ReportStats;
+use application\modules\report\model\Template;
 use application\modules\user\model\User;
 use application\modules\user\utils\User as UserUtil;
 
@@ -122,6 +128,80 @@ class Report
         } else {
             return false;
         }
+    }
+
+    static $week = array(
+        '0' => '周日',
+        '1' => '周一',
+        '2' => '周二',
+        '3' => '周三',
+        '4' => '周四',
+        '5' => '周五',
+        '6' => '周六',
+    );
+
+    /**
+     * 处理汇报列表数据列表
+     * @param array $lists 汇报列表数据
+     * @return array
+     */
+    public static function handleData($lists, $type){
+        $return = array();
+        $uid = Ibos::app()->user->uid;
+        $module = Ibos::getCurrentModuleName();
+        foreach ($lists as $list){
+            $indexWeek = date('w', $list['addtime']);
+            $list['week'] = self::$week[$indexWeek];
+            $list['createtime'] = Convert::formatDate($list['addtime'], 'u');;
+            $reader = ModuleReader::model()->getReader($list['repid'], true);
+            $list['readcount'] = $reader['count'];
+            $commentCount = Comment::model()->count('`module` = :module AND `table` = :table AND `rowid` = :rowid AND `isdel` = :isdel', array(
+                ':module' => 'report',
+                ':table' => 'report',
+                ':rowid' => $list['repid'],
+                ':isdel' => 0,
+            ));
+            $list['commentcount'] = intval($commentCount);
+            $static= ReportStats::model()->find('repid = :repid', array(':repid' => $list['repid']));
+            if (empty($static)){
+                $list['stamp'] = '';
+                $list['bigstamp'] = '';
+            }else{
+                $stamp = Stamp::model()->fetchByPk($static['stamp']);
+                $list['stamp'] = $stamp['icon'];
+                $list['bigstamp'] = $stamp['stamp'];
+            }
+            $reader = ModuleReader::model()->fetchAll("`module` = :module AND `relateid` = :relateid AND `uid` = :uid",
+                array(
+                    ':module' => $module,
+                    ':relateid' => $list['repid'],
+                    ':uid' => $uid,
+                ));
+            $list['isreview'] = empty($reader) ? 0 : 1;
+            $icon = Template::model()->getIcon($list['tid']);
+            $list['icon'] = $icon;
+            $list['subject'] = html_entity_decode($list['subject']);
+            $list['remark'] = html_entity_decode($list['remark']);
+            if ($type == 'receive'){
+                $user = User::model()->fetchByUid($list['uid']);
+                $list['user'] = array(
+                    'realname' => $user['realname'],
+                    'uid' => $user['uid'],
+                    'avatar_small' => $user['avatar_small'],
+                    'space_url' => $user['space_url'],
+                );
+            }else{
+                $user = User::model()->fetchByUid(Ibos::app()->user->uid);
+                $list['user'] = array(
+                    'realname' => $user['realname'],
+                    'uid' => $user['uid'],
+                    'avatar_small' => $user['avatar_small'],
+                    'space_url' => $user['space_url'],
+                );
+            }
+            $return[] = $list;
+        }
+        return $return;
     }
 
 }

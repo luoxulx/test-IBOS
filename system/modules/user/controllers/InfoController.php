@@ -72,6 +72,7 @@ class InfoController extends Controller
             Ibos::app()->user->setState('avatar_big', $avatarArray['avatar_big']);
             Ibos::app()->user->setState('avatar_middle', $avatarArray['avatar_middle']);
             Ibos::app()->user->setState('avatar_small', $avatarArray['avatar_small']);
+            UserUtil::cleanCache($uid);
             return $this->success(Ibos::lang('Upload avatar succeed'), $this->createUrl('home/personal', array('op' => 'avatar')));
         }
     }

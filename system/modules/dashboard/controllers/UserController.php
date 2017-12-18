@@ -28,10 +28,14 @@ use application\core\utils\Org;
 use application\core\utils\OrgIO;
 use application\core\utils\PHPExcel;
 use application\core\utils\StringUtil;
+use application\core\utils\WebSite;
 use application\modules\dashboard\model\Cache;
+use application\modules\dashboard\utils\SyncWx;
 use application\modules\department\components\DepartmentCategory as ICDepartmentCategory;
 use application\modules\department\model\Department;
 use application\modules\department\model\DepartmentRelated;
+use application\modules\main\components\CommonAttach;
+use application\modules\main\model\Setting;
 use application\modules\main\utils\Main;
 use application\modules\position\model\Position;
 use application\modules\position\model\PositionRelated;
@@ -73,7 +77,64 @@ class UserController extends OrganizationbaseController
         $deptList = Department::model()->fetchAll('isbranch = 1');
         $deptArr = Convert::getSubByKey($deptList, 'deptid');
         $data['deptStr'] = implode(',', $deptArr);
+        $auth = SyncWx::getInstance()->checkBindingWxAndAuthContact();
+        if ($auth['isBindingWx'] == false){
+            $data['canwrite'] = 1;
+        }else{
+            if ($auth['isBindingWx'] && $auth['isContacntAuth']){
+                $data['canwrite'] = 1;
+            }else{
+                $data['canwrite'] = 0;
+            }
+        }
+        $data['contacturl'] = $this->getContactSuiteUrl();
         $this->render('index', $data);
+    }
+
+    /**
+     * 得到通讯录套件的url
+     * @return string
+     */
+    protected function getContactSuiteUrl()
+    {
+        $aeskey = Setting::model()->fetchSettingValueByKey('aeskey');
+        $url = 'Api/WxCorp/isBinding';
+        $res = WebSite::getInstance()->fetch($url, array('aeskey' => $aeskey));
+        if (!is_array($res)){
+            $result = \CJSON::decode($res, true);
+            switch ($result['type']){
+                case 1 :
+                    $unit = Ibos::app()->setting->get('setting/unit');
+                    $aeskey = Ibos::app()->setting->get('setting/aeskey');
+                    $contactUrl = WebSite::getInstance()->build('Wxapi/Api/toWx', array(
+                        'state' => base64_encode(json_encode(array(
+                            'domain' => $unit['systemurl'],
+                            'uid' => $result['uid'],
+                            'aeskey' => $aeskey,
+                            'version' => strtolower(implode(',', array(
+                                ENGINE,
+                                VERSION,
+                                VERSION_TYPE
+                            )))
+                        ))),
+                        'id' => 'tjdb492d2f4449b5d0'
+                    ));
+                    $returnUrl =  $contactUrl;
+                    break;
+                case 2:
+                    $returnUrl =  Ibos::app()->urlManager->createUrl('dashboard/wxsync/app');
+                    break;
+                case 3:
+                    $returnUrl =  Ibos::app()->urlManager->createUrl('dashboard/wxsync/app');
+                    break;
+                default:
+                    $returnUrl =  Ibos::app()->urlManager->createUrl('dashboard/wxsync/app');
+                    break;
+            }
+        }else{
+            $returnUrl =  Ibos::app()->urlManager->createUrl('dashboard/wxsync/app');
+        }
+        return $returnUrl;
     }
 
     /**
@@ -123,6 +184,7 @@ class UserController extends OrganizationbaseController
                 'rolename' => Role::model()->getRoleNameByRoleid($user['roleid']),
                 'mobile' => $user['mobile'],
                 'weixin' => $user['weixin'],
+                'status' => $user['status'],
                 'avatar_small' => Org::getDataStatic($user['uid'], 'avatar', 'small'),
             );
         }, User::model()->fetchAll(array(
@@ -149,69 +211,26 @@ class UserController extends OrganizationbaseController
     public function actionAdd()
     {
         if (Env::submitCheck('userSubmit')) {
-            $origPass = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_STRING);
-            $_POST['realname'] = CHtml::encode($_POST['realname']);
-            $_POST['weixin'] = CHtml::encode($_POST['weixin']);
-            $_POST['jobnumber'] = CHtml::encode($_POST['jobnumber']);
-            $_POST['salt'] = StringUtil::random(6);
-            $_POST['password'] = !empty($origPass) ? md5(md5($origPass) . $_POST['salt']) : '';
-            $_POST['createtime'] = TIMESTAMP;
-            $_POST['guid'] = StringUtil::createGuid();
-            $this->dealWithSpecialParams();
-            $data = User::model()->create();
-            User::model()->checkUnique($data);
-            $newId = User::model()->add($data, true);
-            if ($newId) {
-                UserCount::model()->add(array('uid' => $newId));
-                $ip = Ibos::app()->setting->get('clientip');
-                UserStatus::model()->add(
-                    array(
-                        'uid' => $newId,
-                        'regip' => $ip,
-                        'lastip' => $ip
-                    )
-                );
-                UserProfile::model()->add(array('uid' => $newId));
-                // 辅助部门
-                if (!empty($_POST['auxiliarydept'])) {
-                    $deptIds = StringUtil::getId($_POST['auxiliarydept']);
-                    $this->handleAuxiliaryDept($newId, $deptIds, $_POST['deptid']);
-                }
-                // 辅助岗位
-                if (!empty($_POST['auxiliarypos'])) {
-                    $posIds = StringUtil::getId($_POST['auxiliarypos']);
-                    $this->handleAuxiliaryPosition($newId, $posIds, $_POST['positionid']);
-                    for ($i = 0; $i < count($posIds); $i++) {
-                        $auNumber = Position::model()->getPositionUserNumById($posIds[$i]);//拿到修改之前的岗位人数
-                        $auNumber = $auNumber + 1;
-                        Position::model()->updatePositionNum($posIds[$i], $auNumber);//修改之前的岗位数
+            //暂且这样获取，后期细化到action 里面 写方法获取参数
+            $userData = $_POST;
+            $this->checkUserDataParamsLength($userData);
+            $origPass = isset($userData['password'])?$userData['password']:'';
+            $userData = UserUtil::handleUpdateParams($userData,true);
+            $userData['createtime'] = TIMESTAMP;
+            $newId = UserUtil::createUserByUserData($userData);
+            if ($newId){
+                // 上传头像
+                if( !empty($_FILES['avatar']['type']) && !empty($_FILES['avatar']['name']) ){
+                    if(!$this->uploadAvatar($newId)) {
+                        $this->error(Ibos::lang('Upload avatar failure'));
                     }
                 }
-                //岗位
-                if (isset($_POST['positionid'])) {
-                    $number = Position::model()->getPositionUserNumById($_POST['positionid']);
-                    $number = $number + 1;
-                    Position::model()->updatePositionNum($_POST['positionid'], $number);
-                }
-                // 辅助角色
-                if (!empty($_POST['auxiliaryrole'])) {
-                    $roleIds = StringUtil::getId(explode(',', $_POST['auxiliaryrole']));
-                    $this->handleAuxiliaryRole($newId, $roleIds, $_POST['roleid']);
-                }
-                // 直属下属
-                $subUids = StringUtil::getId($_POST['subordinate']);
-                User::model()->updateAll(array('upuid' => $newId), sprintf("FIND_IN_SET(`uid`,'%s')", implode(',', $subUids)));
                 // 重建缓存，给新加的用户生成缓存
-                UserUtil::wrapUserInfo($newId, false, true); //这个方法的第三个参数为true会强制更新缓存
-                if ($data['status'] != 2) {
-                    // 更新组织架构js调用接口
-                    Org::update();
-                    // 同步用户钩子
-                    Org::hookSyncUser($newId, $origPass, 1);
-                }
-                CacheUtil::update();
+                $status = isset($userData['status'])?$userData['status']:'';
+                UserUtil::rebuildUserCache($newId,$status,$origPass);
+                SyncWx::getInstance()->addWxUser($newId);
                 $this->success(Ibos::lang('Save succeed', 'message'), $this->createUrl('user/index'));
-            } else {
+            }else {
                 $this->error(Ibos::lang('Add user failed'), $this->createUrl('user/index'));
             }
         } else {
@@ -232,7 +251,9 @@ class UserController extends OrganizationbaseController
                 'manager' => $manager,
                 'passwordLength' => $account['minlength'],
                 'preg' => $preg,
-                'roles' => Role::model()->fetchAll()
+                'roles' => Role::model()->fetchAll(),
+                'lang' => Ibos::getLangSources(),
+                'assetUrl' => $this->getAssetUrl(),
             ));
         }
     }
@@ -263,62 +284,22 @@ class UserController extends OrganizationbaseController
         $op = Env::getRequest('op');
         if ($op && in_array($op, array('enabled', 'disabled', 'lock'))) {
             $ids = Env::getRequest('uid');
-            if ($op !== 'disabled') {
-            }
             return $this->setStatus($op, $ids);
-        } else {
         }
         $uid = Env::getRequest('uid');
         $user = User::model()->fetchByUid($uid);
         $positionid = $user['positionid'];//拿到修改之前的positionid
         if (Env::submitCheck('userSubmit')) {
-            $this->dealWithSpecialParams();
-            $_POST['realname'] = CHtml::encode($_POST['realname']);
-            $_POST['weixin'] = CHtml::encode($_POST['weixin']);
-            $_POST['jobnumber'] = CHtml::encode($_POST['jobnumber']);
-            // 为空不修改密码
-            if (empty($_POST['password'])) {
-                unset($_POST['password']);
-            } else {
-                $_POST['password'] = md5(md5($_POST['password']) . $user['salt']);
-                $_POST['lastchangepass'] = TIMESTAMP;
-            }
-            // 辅助部门
-            if (isset($_POST['auxiliarydept'])) {
-                $deptIds = StringUtil::getId($_POST['auxiliarydept']);
-                $this->handleAuxiliaryDept($uid, $deptIds, $_POST['deptid']);
-            }
-            // 辅助岗位
-            if (isset($_POST['auxiliarypos'])) {
-                $posIds = StringUtil::getId($_POST['auxiliarypos']);
-                $auxPos = PositionRelated::model()->fetchAllPositionIdByUid($uid);
-                $child = array_diff($posIds, $auxPos);
-                if (!empty($child)) {
-                    foreach ($child as $value) {
-                        $auNumber = Position::model()->getPositionUserNumById($value);
-                        $auNumber = $auNumber + 1;
-                        Position::model()->updatePositionNum($value, $auNumber);
-                    }
-                } else {
-                    $childPos = array_diff($auxPos, $posIds);
-                    foreach ($childPos as $value) {
-                        $auNumber = Position::model()->getPositionUserNumById($value);
-                        $auNumber = $auNumber - 1;
-                        if ($auNumber < 0) {
-                            $auNumber = 0;
-                        }
-                        Position::model()->updatePositionNum($value, $auNumber);
-                    }
+            // 上传头像
+            if( !empty($_FILES['avatar']['type']) && !empty($_FILES['avatar']['name']) ){
+                if(!$this->uploadAvatar($uid)) {
+                    return $this->error(Ibos::lang('Upload avatar failure'));
                 }
-                $this->handleAuxiliaryPosition($uid, $posIds, $_POST['positionid']);
             }
-
-            // 辅助角色
-            if (isset($_POST['auxiliaryrole'])) {
-                $roleIds = StringUtil::getId($_POST['auxiliaryrole']);
-                $this->handleAuxiliaryRole($uid, $roleIds, $_POST['roleid']);
-            }
-            $data = User::model()->create();
+            $requestData = $_POST;
+            $this->checkUserDataParamsLength($requestData);
+            $userData = UserUtil::handleUpdateParams($requestData);
+            $data = User::model()->create($userData);
             User::model()->checkUnique($data);
             if ($data['status'] != User::USER_STATUS_NORMAL) {
                 $canDisabled = User::model()->checkCanDisabled($uid);
@@ -326,39 +307,19 @@ class UserController extends OrganizationbaseController
                     return $this->error(Ibos::lang('make sure at least one admin'));
                 }
             }
-            User::model()->updateByUid($uid, $data);
-            //岗位的修改
-            if (!isset($_POST['positionid'])) {
-                $number = Position::model()->getPositionUserNumById($positionid);//拿到修改之前的岗位人数
-                $number = $number - 1;
-                if ($number <= 0) {
-                    $number = 0;
-                }
-                Position::model()->updatePositionNum($positionid, $number);//修改之前的岗位数
+            // 为空不修改密码
+            if (empty($data['password'])) {
+                unset($data['password']);
             } else {
-                if ($positionid != $_POST['positionid']) {
-                    $beforeNum = Position::model()->getPositionUserNumById($positionid);//拿到修改之前的岗位人数
-                    $beforeNum = $beforeNum - 1;
-                    if ($beforeNum <= 0) {
-                        $beforeNum = 0;
-                    }
-                    Position::model()->updatePositionNum($positionid, $beforeNum);//修改之前的岗位数减一
-
-                    $afterNum = Position::model()->getPositionUserNumById($_POST['positionid']);//通过post过来岗位ID来得到对应的人数
-                    $afterNum = $afterNum + 1;
-                    Position::model()->updatePositionNum($_POST['positionid'], $afterNum);//通过post过来岗位ID来得到对应的人数加一
-                }
+                $data['password'] = md5(md5($data['password']) . $user['salt']);
+                $data['lastchangepass'] = TIMESTAMP;
             }
-            // 直属下属
-            User::model()->updateAll(array('upuid' => 0), "`upuid`={$uid}"); // 先把旧的下属upuid清0
-            $subUids = StringUtil::getId($_POST['subordinate']);
-            User::model()->updateAll(array('upuid' => $uid), sprintf("FIND_IN_SET(`uid`,'%s')", implode(',', $subUids)));
-            UserUtil::wrapUserInfo($uid, false, true); //这个方法的第三个参数为true会强制更新缓存
-            if ($data['status'] != 2) {
-                // 更新组织架构js调用接口
-                Org::update();
-            }
-            CacheUtil::update();
+            User::model()->updateByUid($uid, $data);
+            //关联更新(辅助部门 辅助岗位 岗位 直属下属)
+            UserUtil::userOtherAssociationUp($userData,$positionid);
+            $status = isset($userData['status'])?$userData['status']:'';
+            UserUtil::rebuildUserCache($uid,$status);
+            SyncWx::getInstance()->updateWxUser($uid);
             $this->success(Ibos::lang('Save succeed', 'message'), $this->createUrl('user/index'));
         } else {
             if (empty($user)) {
@@ -497,6 +458,100 @@ class UserController extends OrganizationbaseController
         }
     }
 
+    /**
+     * 导入操作
+     */
+//  protected function import() {
+//      Cache::model()->deleteAll( "`cachekey` = 'userimportfail'" );
+//      set_time_limit( 0 ); //避免php脚本超时
+//      $attachId = intval( Env::getRequest( 'aid' ) );
+//      $attachs = Attach::getAttachData( $attachId, false );
+//      $attach = array_shift( $attachs ); // 附件
+//      $file = File::getAttachUrl() . '/' . $attach['attachment'];
+//      $reader = new Spreadsheet_Excel_Reader();
+//      $reader->setOutputEncoding( 'utf-8' );
+//      $reader->read( $file );
+//      $err = array();
+//      $successCount = 0;
+//      if ( isset( $reader->sheets[0]['cells'] ) && is_array( $reader->sheets[0]['cells'] ) ) {
+//          unset( $reader->sheets[0]['cells'][1] ); // 去掉excel头
+//          $count = count( $reader->sheets[0]['cells'] );
+//          $users = UserUtil::loadUser();
+//          $allUsers = User::model()->fetchAllSortByPk( 'uid' ); // 全部用户，包括锁定、禁用等
+//          $convert = array();
+//          foreach ( $allUsers as $user ) {
+//              $convert['username'][] = $user['username']; // 已存在的用户名
+//              $convert['mobile'][] = $user['mobile']; // 已存在的手机号
+//              $convert['email'][] = $user['email']; // 已存在的邮箱
+//              $convert['jobnumber'][] = $user['jobnumber']; // 已存在的工号
+//          }
+//          // 邮件格式
+//          $emailPreg = "/^[_.0-9a-z-a-z-]+@([0-9a-z][0-9a-z-]+.)+[a-z]{2,4}$/";
+//          $ip = Ibos::app()->setting->get( 'clientip' );
+//          foreach ( $reader->sheets[0]['cells'] as $k => $row ) {
+//              //以下数组下标跟导入表的每一列位置对应，如导入出现问题，请检查位置与格式！
+//              $salt = StringUtil::random( 6 );
+//              $origPass = isset( $row[2] ) ? $row[2] : '';
+//              $data = array(
+//                  'salt' => $salt,
+//                  'username' => isset( $row[1] ) ? trim( $row[1] ) : '', // 姓名
+//                  'password' => !empty( $origPass ) ? md5( md5( trim( $origPass ) ) . $salt ) : '', // 密码
+//                  'realname' => isset( $row[3] ) ? trim( $row[3] ) : '', // 真实姓名
+//                  'gender' => isset( $row[4] ) && trim( $row[4] ) == '女' ? 0 : 1, // 性别
+//                  'mobile' => isset( $row[5] ) ? trim( $row[5] ) : '', // 手机
+//                  'email' => isset( $row[6] ) ? trim( $row[6] ) : '', // 邮箱
+//                  'weixin' => isset( $row[7] ) ? trim( $row[7] ) : '', // 微信
+//                  'jobnumber' => isset( $row[8] ) ? trim( $row[8] ) : '', // 工号
+//              );
+//              if ( empty( $data['username'] ) || empty( $data['password'] ) || empty( $data['realname'] ) || empty( $data['mobile'] ) || empty( $data['email'] ) ) {
+//                  $err[$k] = array( 'reason' => '用户名、密码、真实姓名、手机、邮箱不能为空！' );
+//              } else if ( in_array( $data['username'], $convert['username'] ) ) {
+//                  $err[$k] = array( 'reason' => '用户名已存在！' );
+//              } else if ( in_array( $data['mobile'], $convert['mobile'] ) ) {
+//                  $err[$k] = array( 'reason' => '手机号码已存在！' );
+//              } else if ( in_array( $data['email'], $convert['email'] ) ) {
+//                  $err[$k] = array( 'reason' => '邮箱已存在！' );
+//              } else if ( !empty( $data['jobnumber'] ) && in_array( $data['jobnumber'], $convert['jobnumber'] ) ) {
+//                  $err[$k] = array( 'reason' => '工号已存在！' );
+//              } else if ( !preg_match( $emailPreg, $data['email'] ) ) {
+//                  $err[$k] = array( 'reason' => '邮件格式错误！' );
+//              }
+//              if ( isset( $err[$k]['reason'] ) ) {
+//                  $err[$k]['username'] = $data['username'];
+//                  $err[$k]['realname'] = $data['realname'];
+//              } else {
+//                  $newId = User::model()->add( $data, true );
+//                  UserCount::model()->add( array( 'uid' => $newId ) );
+//                  UserStatus::model()->add(
+//                          array(
+//                              'uid' => $newId,
+//                              'regip' => $ip,
+//                              'lastip' => $ip
+//                          )
+//                  );
+//                  UserProfile::model()->add( array( 'uid' => $newId ) );
+//                  $newUser = User::model()->fetchByPk( $newId );
+//                  $users[$newId] = UserUtil::wrapUserInfo( $newUser );
+//                  // 同步用户钩子
+//                  Org::hookSyncUser( $newId, $origPass, 1 );
+//                  $successCount++;
+//              }
+//          }
+//          if ( $successCount > 0 ) {
+//              User::model()->makeCache( $users );
+//              // 更新组织架构js调用接口
+//              Org::update();
+//              CacheUtil::update();
+//          }
+//          if ( !empty( $err ) ) {
+//              Cache::model()->add( array( 'cachekey' => 'userimportfail', 'cachevalue' => serialize( $err ) ) );
+//          }
+//          @unlink( $file ); // 删除文件
+//          $this->ajaxReturn( array( 'isSuccess' => true, 'successCount' => $successCount, 'errorCount' => count( $err ), 'url' => $this->createUrl( 'user/import', array( 'op' => 'downError' ) ) ) );
+//      } else {
+//          $this->ajaxReturn( array( 'isSuccess' => true, 'successCount' => 0, 'errorCount' => 0, 'url' => '' ) );
+//      }
+//  }
 
     protected function import()
     {
@@ -523,6 +578,8 @@ class UserController extends OrganizationbaseController
         );
         $ajaxReturn = OrgIO::import($data, $config);
         @unlink($file); // 删除文件
+        Org::update();
+        CacheUtil::update();
         $this->ajaxReturn($ajaxReturn);
     }
 
@@ -589,11 +646,15 @@ class UserController extends OrganizationbaseController
                 break;
             case 'disabled':
                 $attributes['status'] = 2;
+                SyncWx::getInstance()->batchDeleteWxUserByUids($uidArr);
                 Org::hookSyncUser($uids, '', 0);
                 break;
             case 'enabled':
             default:
                 $attributes['status'] = 0;
+                foreach ($uidArr as $uid){
+                    SyncWx::getInstance()->addWxUser($uid);
+                }
                 Org::hookSyncUser($uids, '', 2);
                 break;
         }
@@ -614,65 +675,6 @@ class UserController extends OrganizationbaseController
         CacheUtil::load(array('position'));
 
         return $this->ajaxReturn(array('isSuccess' => !!$return), 'json');
-    }
-
-    /**
-     * 辅助部门插入数据处理
-     * @param integer $uid 用户ID
-     * @param array $deptIds 辅助部门ID
-     * @param string $except 主部门id
-     */
-    protected function handleAuxiliaryDept($uid, $deptIds, $except = '')
-    {
-        DepartmentRelated::model()->deleteAll('`uid` = :uid', array(':uid' => $uid));
-        foreach ($deptIds as $deptId) {
-            if (strcmp($deptId, $except) !== 0) {
-                DepartmentRelated::model()->add(array('uid' => $uid, 'deptid' => $deptId));
-            }
-        }
-    }
-
-    /**
-     * 辅助岗位插入数据处理
-     * @param integer $uid 用户ID
-     * @param array $posIds
-     * @param string $except 主岗位ID
-     */
-    protected function handleAuxiliaryPosition($uid, $posIds, $except = '')
-    {
-        PositionRelated::model()->deleteAll('`uid` = :uid', array(':uid' => $uid));
-        foreach ($posIds as $posId) {
-            if (strcmp($posId, $except) !== 0) {
-                PositionRelated::model()->add(array('uid' => $uid, 'positionid' => $posId));
-            }
-        }
-    }
-
-    /**
-     * 辅助角色插入数据处理
-     * @param integer $uid 用户ID
-     * @param array $roleIds 副角色ids
-     * @param string $except 主角色ID
-     */
-    protected function handleAuxiliaryRole($uid, $roleIds, $except = '')
-    {
-        RoleRelated::model()->deleteAll('`uid` = :uid', array(':uid' => $uid));
-        foreach ($roleIds as $roleId) {
-            if (strcmp($roleId, $except) != 0 && !empty($roleId)) {
-                RoleRelated::model()->add(array('uid' => $uid, 'roleid' => $roleId));
-            }
-        }
-    }
-
-    /**
-     * 特别参数再处理
-     */
-    protected function dealWithSpecialParams()
-    {
-        $_POST['upuid'] = implode(',', StringUtil::getUid($_POST['upuid']));
-        $_POST['deptid'] = implode(',', StringUtil::getId($_POST['deptid']));
-        $_POST['positionid'] = implode(',', StringUtil::getId($_POST['positionid']));
-        $_POST['roleid'] = implode(',', StringUtil::getId($_POST['roleid']));
     }
 
     /**
@@ -735,4 +737,66 @@ class UserController extends OrganizationbaseController
         return $list;
     }
 
+    /**
+     * 后台上传头像
+     */
+    private function uploadAvatar($uid)
+    {
+        // 处理后缀名
+        $fileName = $_FILES['avatar']['name'];
+        $fileExt = StringUtil::getFileExt($fileName);
+        // 检查文件后缀
+        if (!in_array($fileExt, array('jpg', 'gif', 'png'))) {
+           return false;
+        }
+        // 判断上传文件大小
+        $fileSize = $_FILES["avatar"]["size"] / (1024 * 1024);
+        if($fileSize > 2) {
+            // 文件大小需要小于2兆
+            return false;
+        }
+
+        // 获取上传域并上传到临时目录
+        $upload = new CommonAttach('avatar');
+        $upload->upload();
+        if (!$upload->getIsUpoad()) {
+            return false;
+        } else {
+            $info = $upload->getUpload()->getAttach();
+            $file = File::getAttachUrl() . '/' . $info['type'] . '/' . $info['attachment'];
+            $fileUrl = File::imageName($file);
+            $tempSize = File::imageSize($fileUrl);
+            //判断宽和高是否符合头像要求
+            if ($tempSize[0] < 180 || $tempSize[1] < 180) {
+                return false;
+            }
+            $this->setAvatar($file, $uid);
+        }
+        return true;
+    }
+
+    private function setAvatar($src, $uid)
+    {
+        set_time_limit(120);
+        //图片裁剪数据
+        $avatarArray = Ibos::engine()->io()->file()->createAvatar($src, array('x'=>0,'y'=>0,'w'=>'180','h'=>'180','uid' => $uid));
+        UserProfile::model()->updateAll($avatarArray, "uid = {$uid}");
+        UserUtil::wrapUserInfo($uid, true, true, true);
+        Ibos::app()->user->setState('avatar_big', $avatarArray['avatar_big']);
+        Ibos::app()->user->setState('avatar_middle', $avatarArray['avatar_middle']);
+        Ibos::app()->user->setState('avatar_small', $avatarArray['avatar_small']);
+        UserUtil::cleanCache($uid);
+    }
+
+    /**
+     * 检测用户值的长度
+     * @param $userData
+     */
+    protected function checkUserDataParamsLength($userData)
+    {
+        $err = UserUtil::checkRequrestUserDataLength($userData);
+        if ($err){
+            $this->error(Ibos::lang('Beyond the length of the','',array('{name}' => $err)));
+        }
+    }
 }

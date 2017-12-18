@@ -441,7 +441,7 @@ var Ibos = Ibos || {};
 				file_types_description:                     uploadConf.attachexts.depict,
 				file_upload_limit:                          uploadConf.limit
 			};
-		return Ibos.fileUpload($.extend(true, {}, _settings, options, _force));
+		return Ibos.fileUpload($.extend(true, {}, _settings, _force, options));
 	}
 
 	// 单图片上传

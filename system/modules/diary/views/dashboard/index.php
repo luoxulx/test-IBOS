@@ -8,7 +8,7 @@ use application\modules\dashboard\model\Stamp;
       href="<?php echo util\Ibos::app()->assetManager->getAssetsUrl('diary'); ?>/css/dbdiary.css?<?php echo VERHASH; ?>">
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Work diary']; ?></h1>
+        <h1 class="mt">应用设置＞<?php echo $lang['Work diary']; ?></h1>
     </div>
     <div>
         <form action="<?php echo $this->createUrl('dashboard/update'); ?>" class="form-horizontal" method="post">
@@ -162,7 +162,7 @@ use application\modules\dashboard\model\Stamp;
                                                              data-node-type="stampItem"
                                                              data-stamp-id="<?php echo $stampId; ?>">
                                                             <img
-                                                                src="<?php echo util\File::imageName(Stamp::model()->fetchIconById($stampId)); ?>"
+                                                                src="<?php echo Stamp::model()->fetchIconById($stampId); ?>"
                                                                 alt="" width="60" height="24">
                                                         </div>
                                                     </div>
@@ -200,7 +200,7 @@ use application\modules\dashboard\model\Stamp;
                                                     <div class="stamp-item" data-node-type="stampItem"
                                                          data-stamp-id="<?php echo $diffStampId; ?>">
                                                         <img
-                                                            src="<?php echo util\File::imageName(Stamp::model()->fetchIconById($diffStampId)); ?>"
+                                                            src="<?php echo Stamp::model()->fetchIconById($diffStampId); ?>"
                                                             alt="" width="60" height="24">
                                                     </div>
                                                 <?php endforeach; ?>

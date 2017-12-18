@@ -237,6 +237,8 @@ class Import extends ImportParent implements ImportInterface
                 Ibos::app()->db->createCommand()
                     ->insert('{{position}}', array(
                         'posname' => $positionName,
+                        'goal' => '',
+                        'minrequirement' => '',
                     ));
                 $findpositionid = Ibos::app()->db->getLastInsertID();
                 $positionArray[$positionName] = $findpositionid;
@@ -296,12 +298,13 @@ class Import extends ImportParent implements ImportInterface
             $data['u.deptid'] = $data['d.deptid'];
         }
         if (!empty($data['p.positionid'])) {
-            $data['u.positionid'] = function ($data) {
+            $positionId = $data['p.positionid'];
+            $data['u.positionid'] = function () use ($positionId) {
                 //这里主要是更新岗位的人数
-                $auNumber = Position::model()->getPositionUserNumById($data['p.positionid']);//拿到修改之前的岗位人数
+                $auNumber = Position::model()->getPositionUserNumById($positionId);//拿到修改之前的岗位人数
                 $auNumber = $auNumber + 1;
-                Position::model()->updatePositionNum($data['p.positionid'], $auNumber);//修改之前的岗位数
-                return isset($data['p.positionid']) ? $data['p.positionid'] : 0;
+                Position::model()->updatePositionNum($positionId, $auNumber);//修改之前的岗位数
+                return $positionId;
             };
         }
         if (!empty($data['r.roleid'])) {
@@ -324,6 +327,10 @@ class Import extends ImportParent implements ImportInterface
             if (!empty($data['u.password'])) {
                 $data['u.password'] = function ($data, $row) {
                     return md5(md5($data['u.password']) . $row['u.salt']);
+                };
+            } else {
+                $data['u.password'] = function ($data, $row) {
+                    return md5(md5(substr($data['u.mobile'], -6)) . $row['u.salt']);
                 };
             }
 

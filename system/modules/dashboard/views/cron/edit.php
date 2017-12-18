@@ -1,6 +1,6 @@
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Edit scheduled task']; ?> - <?php echo $cron['name']; ?></h1>
+        <h1 class="mt">通用设置 > <?php echo $lang['Edit scheduled task']; ?> - <?php echo $cron['name']; ?></h1>
     </div>
     <div>
         <!-- 计划任务 start -->

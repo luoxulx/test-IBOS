@@ -4,7 +4,7 @@ defined('IN_MODULE_ACTION') or die('Access Denied');
 return array(
     'param' => array(
         'name' => '日程',
-        'category' => '个人办公',
+        'category' => '日程',
         'description' => '提供企业工作日程安排。',
         'author' => 'banyan @ IBOS Team Inc',
         'version' => '1.0',

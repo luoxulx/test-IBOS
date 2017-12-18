@@ -372,4 +372,24 @@ class Controller extends CController
         return true;
     }
 
+    /**
+     * 登录验证：如果用户未登录，则返回相应的提示。
+     *
+     * @return bool
+     */
+    protected function checkLogin()
+    {
+        if (Ibos::app()->user->getIsGuest()) {
+            $msg = Ibos::lang('Need login', 'default');
+
+            if (Ibos::app()->request->getIsAjaxRequest()) {
+                return $this->ajaxBaseReturn(false, array(), $msg);
+            } else {
+                return $this->error($msg);
+            }
+        }
+
+        return true;
+    }
+
 }

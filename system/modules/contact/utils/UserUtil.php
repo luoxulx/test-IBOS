@@ -205,13 +205,27 @@ EOF;
         if (!empty($positionModel)) {
             $positionName = $positionModel['posname'];
         }
-        
+
+        // 直属上司
+        $upuser = array();
+        if(!empty($user['upuid'])) {
+            $upuser = $this->fetchUserByPk($user['upuid']);
+        }
+        // 直属下属
+        $userlist = array();
+        $underuids =  User::model()->fetchSubUidByUid($user['uid']);
+        if(!empty($underuids)) {
+            foreach ($underuids as $val) {
+                $userlist[] = $this->fetchUserByPk($val);
+            }
+        }
+
         $retData = array(
             'uid' => $uid,
             'phone' => $phoneNum,
             'qq' => $user['qq'],
             'email' => $user['email'],
-            'birthday' => $user['birthday'],
+            'birthday' => is_numeric($user['birthday']) ? $user['birthday'] * 1000 : 0,
             'canviewmobile' => RoleUtil::getInstance()->canViewMobile($uid),
             'auxiliarydept' => DeptUtil::getInstance()->fetchAuxiliaryDept($uid),
             'auxiliaryposition' => PositionUtil::getInstance()->fetchAuxiliaryPosition($uid),
@@ -224,9 +238,13 @@ EOF;
             'deptname' => $user['deptname'],
             'positionid' => $user['positionid'],
             'positionname' => $positionName,
+            'weixin'  => $user['weixin'],
             'bgbig' => $user['bg_big'],
             'bgmiddle' => $user['bg_middle'],
             'bgsmall' => $user['bg_small'],
+            'upuid'  => $user['upuid'],
+            'upuser'  => $upuser,
+            'underlist' => $userlist,
         );
         
         return $retData;

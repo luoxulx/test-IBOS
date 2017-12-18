@@ -4,7 +4,7 @@ defined('IN_MODULE_ACTION') or die('Access Denied');
 return array(
     'param' => array(
         'name' => '文件柜',
-        'category' => '个人办公',
+        'category' => '文件柜',
         'description' => '提供企业文件存储',
         'author' => 'gzhzh @ IBOS Team Inc',
         'version' => '1.0',

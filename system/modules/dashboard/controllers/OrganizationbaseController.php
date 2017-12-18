@@ -23,7 +23,7 @@ class OrganizationbaseController extends BaseController
     // 用户管理权限
     const NO_PERMISSION = 0; // 无权限
     const ONLY_SELF = 1; //本人
-    const CONTAIN_SUB = 2; //本人及下属
+    const CONTAIN_SUB = 2; //本部门及下属部门
     const SELF_BRANCH = 4; // 当前分支机构
     const All_PERMISSION = 8; // 全部
 

@@ -65,7 +65,7 @@ class QueryBuilder extends QueryBuilderHandler
      * @param string $columnName
      * @return bool
      */
-    protected function isColumnExists($columnName)
+    public function isColumnExists($columnName)
     {
         $sql = <<<EOF
 SELECT
@@ -170,4 +170,21 @@ EOF;
         return $this->query($sql);
     }
 
+    /*
+     * 返回表前缀
+     */
+    public function getPrefix()
+    {
+        return $this->tablePrefix;
+    }
+
+    public function isExistTable($tableName)
+    {
+        $tableName = $this->getPrefix(). $tableName;
+        $isExitTable = $this->query("SHOW TABLES LIKE '{$tableName}'")->get();
+        if ($isExitTable != null) {
+            return true;
+        }
+        return false;
+    }
 }

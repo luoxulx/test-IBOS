@@ -3,6 +3,7 @@
 namespace application\modules\message\model;
 
 use application\core\model\Model;
+use application\core\model\Module;
 use application\core\utils\Cache;
 use application\core\utils\Ibos;
 use application\core\utils\StringUtil;
@@ -165,7 +166,9 @@ class UserData extends Model
      */
     public function getUnreadCount($uid)
     {
-        $this->getAssignRemind($uid);
+        if (Module::model()->isModuleEnable('assignment')) {
+            $this->getAssignRemind($uid);
+        }
         $userData = $this->getUserData($uid);
         // 指定用户的提醒通知统计数目
         $count = NotifyMessage::model()->count(" uid = {$uid} and isread = 0 ");
@@ -232,15 +235,10 @@ class UserData extends Model
      */
     public function getNotifyCount($uid)
     {
-        $notifyMessageList = NotifyMessage::model()->fetchAll(" uid = {$uid} and isread = 0 ");
+        $notifyMessageList = NotifyMessage::model()->getNotifyCountByUid($uid);
         $return = array();
-        foreach ($notifyMessageList as $notifyMessage) {
-            if (in_array($notifyMessage['module'], $notifyMessage)) {
-                $return[$notifyMessage['module']][] = count($notifyMessage['module']);
-            }
-        }
-        foreach ($return as $key => $value) {
-            $return[$key] = count($value);
+        foreach ($notifyMessageList as $value) {
+            $return[$value['module']] = $value['count(`id`)'];
         }
         return $return;
     }

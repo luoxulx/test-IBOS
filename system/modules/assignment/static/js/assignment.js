@@ -524,7 +524,19 @@ $(function(){
 
 		// 打开提醒设置对话框
 		"openRemindDialog": function(param){
-			Assignment.showRemindDialog(param.id);
+			// Assignment.showRemindDialog(param.id);
+			var id = param.id,
+	        title = param.title,
+	        options = $.extend(
+	            { paramData: { assignmentId: id } }, 
+	            { getListParam: { 'module': 'assignment', 
+	                'node': 'assignment_task', 
+	                'eventId': id, 
+	                'title': title }
+	            }
+	        ),
+	        remindDialog = new Ibos.remindDialog('#remind_mainer', options);
+	    remindDialog.init();
 		},
 
 		// 打开编辑任务对话框

@@ -894,7 +894,9 @@ class StringUtil
         //链接替换
         $html = str_replace('[SITE_URL]', Ibos::app()->setting->get('siteurl'), $html);
         // 外网链接地址处理
-        $html = preg_replace_callback('/((?:https?|ftp):\/\/(?:www\.)?(?:[a-zA-Z0-9][a-zA-Z0-9\-]*\.)?[a-zA-Z0-9][a-zA-Z0-9\-]*(?:\.[a-zA-Z0-9]+)+(?:\:[0-9]*)?(?:\/[^\x{2e80}-\x{9fff}\s<\'\"“”‘’,，。]*)?)/u', 'self::parseUrl', $html);
+        if (!self::hadFormattedUrl($html)) {
+            $html = preg_replace_callback('/((?:https?|ftp):\/\/(?:www\.)?(?:[a-zA-Z0-9][a-zA-Z0-9\-]*\.)?[a-zA-Z0-9][a-zA-Z0-9\-]*(?:\.[a-zA-Z0-9]+)+(?:\:[0-9]*)?(?:\/[^\x{2e80}-\x{9fff}\s<\'\"“”‘’,，。]*)?)/u', 'self::parseUrl', $html);
+        }
         //表情处理
         $html = preg_replace_callback("/(\[.+?\])/is", 'self::parseExpression', $html);
         //话题处理
@@ -976,6 +978,16 @@ class StringUtil
         } else {
             return $data[0];
         }
+    }
+
+    /**
+     * 检查是否有已格式化的URL，有返回true，否则false
+     * @param $html
+     * @return boolean
+     */
+    private static function hadFormattedUrl($html)
+    {
+        return strpos($html, 'o-url') !== false;
     }
 
     /**
@@ -1303,6 +1315,7 @@ class StringUtil
 
     /**
      * 将字符串转换为 JSON 格式
+     *
      * @todo Yii 内置的 CJSON::encode 兼容性更好，而 PHP 内置的 json_encode 性能更好；
      *
      * @see http://www.yiichina.com/question/990
@@ -1314,13 +1327,14 @@ class StringUtil
         $strType = gettype($text);
 
         if ($strType == 'object') {
-            return \CJSON::encode($text);
+            $jsonData = \CJSON::encode($text);
+        } else {
+            $jsonData = json_encode($text);
         }
 
-        return json_encode($text);
+        return $jsonData;
     }
-
-
+    
     /**
      * 生成 where in 条件
      *

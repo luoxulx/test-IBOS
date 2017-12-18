@@ -4,7 +4,7 @@ defined('IN_MODULE_ACTION') or die('Access Denied');
 return array(
     'param' => array(
         'name' => '邮件',
-        'category' => '个人办公',
+        'category' => '邮件',
         'description' => '提供企业内外邮件沟通。',
         'author' => 'banyan @ IBOS Team Inc',
         'version' => '1.0',

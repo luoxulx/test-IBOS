@@ -157,5 +157,18 @@ class Request extends CHttpRequest
         return parent::getHostInfo($schema);
     }
 
+    public function getSystemUrl()
+    {
+        $unit = Ibos::app()->setting->get('setting/unit');
+        return $unit['systemurl'];
+    }
 
+    /**
+     * 重写获得Url方法，预防xss
+     * @return string
+     */
+    public function getUrl()
+    {
+        return \CHtml::encode(urldecode($this->getRequestUri()));
+    }
 }

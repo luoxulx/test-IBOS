@@ -4,7 +4,7 @@ defined('IN_MODULE_ACTION') or die('Access Denied');
 return array(
     'param' => array(
         'name' => '日志',
-        'category' => '个人办公',
+        'category' => '日志',
         'description' => '提供企业工作日志发布',
         'author' => 'banyanCheung @ IBOS Team Inc',
         'version' => '1.0',

@@ -32,6 +32,8 @@
 namespace application\modules\dashboard\controllers;
 
 use application\core\model\Log;
+use application\core\utils\Api;
+use application\core\utils\ArrayUtil;
 use application\core\utils\Cache;
 use application\core\utils\Convert;
 use application\core\utils\Env;
@@ -40,9 +42,11 @@ use application\core\utils\Org;
 use application\core\utils\StringUtil;
 use application\core\utils\WebSite;
 use application\modules\dashboard\utils\Wx;
+use application\modules\message\core\co\CoApi;
 use application\modules\message\core\wx\Code;
 use application\modules\message\core\wx\WxApi;
 use application\modules\user\model\User;
+use application\modules\user\model\UserBinding;
 use application\modules\user\utils\User as UserUtil;
 use CJSON;
 use Exception;
@@ -165,7 +169,7 @@ class WxsyncController extends WxController
             } else {
                 return $this->ajaxReturn(array(
                     'isSuccess' => false,
-                    'msg' => '请授权至少一个部门的权限'
+                    'msg' => '同步操作需要到下方的【企业号应用中心】安装【通讯录套件】'
                 ));
             }
         }
@@ -400,6 +404,11 @@ class WxsyncController extends WxController
                 $transaction = $connection->beginTransaction();
                 try {
                     foreach ($bindArray as $uid => $bindValue) {
+                        $connection->createCommand()
+                            ->delete(UserBinding::model()->tableName(), 'app = :app AND uid = :uid', array(
+                                ':app' => 'wxqy',
+                                ':uid' => $uid,
+                            ));
                         $connection->schema->commandBuilder
                             ->createInsertCommand('{{user_binding}}', array(
                                 'app' => 'wxqy',
@@ -686,8 +695,12 @@ class WxsyncController extends WxController
                             ->where(" `uid` = '{$uid}' ")
                             ->queryRow();
                         if (empty($row)) {
+                            Ibos::app()->db->createCommand()->delete(UserBinding::model()->tableName(), 'uid = :uid',
+                                array(
+                                    ':uid' => $uid,
+                                ));
                             Ibos::app()->db->createCommand()
-                                ->insert('{{user_binding}}', array(
+                                ->insert(UserBinding::model()->tableName(), array(
                                     'uid' => $uid,
                                     'bindvalue' => $user['userid'],
                                     'app' => 'wxqy',
@@ -896,6 +909,10 @@ class WxsyncController extends WxController
         $lists = CJSON::decode($res);
         $unit = Ibos::app()->setting->get('setting/unit');
         $aeskey = Ibos::app()->setting->get('setting/aeskey');
+        $url = WebSite::getInstance()->build('Wxapi/Api/getapp', array('aeskey' => $aeskey));
+        $result = Api::getInstance()->fetchResult($url);
+        $resultArray = CJSON::decode($result);
+        $bindApps = $resultArray['data'];
         $app = array();
         $existApp = array();
         foreach ($this->wxqyInfo['app'] as $row) {
@@ -927,7 +944,8 @@ class WxsyncController extends WxController
                             'img' => 'http://www.ibos.com.cn/Wxapi/image/' . $value['appid'] . '/' . $suiteid,
                             'name' => $value['name'],
                             'desc' => $value['description'],
-                            'exist' => in_array($value['appid'], $existApp),
+                            'exist' => isset($bindApps[$suiteid]) ? ((array_search($value['appid'], $bindApps[$suiteid]) !== false) ? true : false) : false,
+                           // 'exist' => in_array($value['appid'], $existApp),
                         );
                     }
                 }
@@ -937,6 +955,40 @@ class WxsyncController extends WxController
             'list' => $app,
         );
         return $this->render('applist', $param);
+    }
+    
+    public function actionGetAuth()
+    {
+        $wxPermission = CoApi::getInstance()->getWxPermission();
+
+        $canWrite = ArrayUtil::getValue($wxPermission, 'data.canWrite', false);
+        $canRead = ArrayUtil::getValue($wxPermission, 'data.canRead', false);
+
+        $contactSuiteId = 'tjdb492d2f4449b5d0';
+        $contactAuthUrl = '';
+        $isBindingWx = isset($this->wxqyInfo['uid']);
+        if ($isBindingWx) {
+            $contactAuthUrl = WebSite::getInstance()->build('Wxapi/Api/toWx', array(
+                'state' => base64_encode(json_encode(array(
+                    'domain' => Ibos::app()->request->getSystemUrl(),
+                    'uid' => $this->wxqyInfo['uid'],
+                    'aeskey' => Ibos::app()->setting->get('setting/aeskey'),
+                    'version' => strtolower(implode(',', array(
+                        ENGINE,
+                        VERSION,
+                        VERSION_TYPE
+                    )))
+                ))),
+                'id' => $contactSuiteId
+            ));
+        }
+
+        return Ibos::app()->response->ajaxBaseReturn(true, array(
+            'isBindingWx' => $isBindingWx,
+            'haveContactAuth' => $canWrite,
+            'haveOtherAuth' => $canRead,
+            'contactAuthUrl' => $contactAuthUrl,
+        ));
     }
 
     private function deptid_not_in_binding()

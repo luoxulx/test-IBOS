@@ -16,7 +16,12 @@
 
 namespace application\modules\report\utils;
 
+use application\core\utils\ArrayUtil;
 use application\core\utils\Ibos;
+use application\core\utils\StringUtil;
+use application\modules\dashboard\model\Stamp;
+use application\modules\report\model\ModuleReader;
+use application\modules\user\model\User;
 
 class Report
 {
@@ -217,18 +222,19 @@ class Report
 
     /**
      * 根据图章id获取后台设置的分值
-     * @param integer $stamp 图章id
+     * @param integer $stampId 图章id
      * @return int 返回分数
      */
-    public static function getScoreByStamp($stamp)
+    public static function getScoreByStamp($stampId)
     {
         $stamps = self::getEnableStamp();
-        if (isset($stamps[$stamp])) {
-            return $stamps[$stamp];
-        } else {
-            return 0;
+        foreach ($stamps as $stamp){
+            if ($stamp['stampid'] == $stampId){
+                return $stamp['score'];
+            }
         }
     }
+
 
     /**
      * 取得后台设置的所有图章
@@ -246,7 +252,15 @@ class Report
                 foreach ($stampidArr as $stampidStr) {
                     list($stampId, $score) = explode(':', $stampidStr);
                     if ($stampId != 0) {
-                        $stamps[$stampId] = intval($score);
+                        $stamp = Stamp::model()->fetchByPk($stampId);
+                        $stamps[] = array(
+                            'stampid' => $stampId,
+                            'code' => $stamp['code'],
+                            'stamp' => $stamp['stamp'],
+                            'icon' => $stamp['icon'],
+                            'score' => intval($score),
+                        );
+                        //$stamps[$stampId] = intval($score);
                     }
                 }
             }
@@ -254,4 +268,49 @@ class Report
         return $stamps;
     }
 
+    public static function getListCondition($type = "receive", $uid, $keyword = array())
+    {
+        $condition = '(';
+        if ($type == "receive"){
+            $subUid = User::model()->getAllSubByUid($uid);
+            $subUidArr = ArrayUtil::getColumn($subUid, 'uid');
+            $subUidStr = '"' . implode('","', $subUidArr) . '"';
+            if (!empty($subUid)){
+                $condition .= "((uid IN ({$subUidStr}) AND uid != {$uid}) OR FIND_IN_SET('{$uid}',`toid`)) AND `isdel` = 0 AND `status` = 1 ";
+            }else{
+                $condition .= "FIND_IN_SET('{$uid}',`toid`) AND `isdel` = 0 AND `status` = 1 ";
+            }
+        }elseif($type == "send"){
+            $condition .= "uid = {$uid} AND `isdel` = 0 ";
+        }elseif ($type == "unread"){
+            $repids = ModuleReader::model()->fetchRelateidsByUid($uid);
+            $condition .= "FIND_IN_SET('{$uid}', `toid`) AND `isdel` = 0 AND `status` = 1 ";
+            if (!empty($repids)){
+                $repid = "\"". implode('","', $repids). "\"";
+                $condition .= "AND `repid` NOT IN ({$repid}) ";
+            }
+        }
+        if (!empty($keyword['subject'])){
+            $condition .= "AND `subject` LIKE '%{$keyword['subject']}%' ";
+        }
+        if (!empty($keyword['starttime'])){
+            $starttime = strtotime($keyword['starttime']);
+            $condition .= "AND `addtime` > {$starttime} ";
+        }
+        if (!empty($keyword['endtime'])){
+            $endtime = strtotime($keyword['endtime']);
+            $condition .= "AND `addtime` < {$endtime} ";
+        }
+        if (!empty($keyword['author'])){
+            $publish = StringUtil::handleSelectBoxData($keyword['author']);
+            $author = explode(',', $publish['uid']);
+            $author = "\"". implode('","', $author). "\"";
+            $condition .= "AND `uid` IN ({$author}) ";
+        }
+        if (!empty($keyword['tname'])){
+            $condition .= "AND `subject` LIKE '%{$keyword['tname']}%' ";
+        }
+        $condition .= ")";
+        return $condition;
+    }
 }

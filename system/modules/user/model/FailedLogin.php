@@ -41,10 +41,10 @@ class FailedLogin extends Model
         );
         return $this->deleteAll($criteria);
     }
-
+    
     /**
-     *
      * @param string $username
+     * @return int
      */
     public function updateFailed($username)
     {

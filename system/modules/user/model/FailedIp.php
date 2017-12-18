@@ -16,10 +16,10 @@ class FailedIp extends Model
     {
         return '{{failedip}}';
     }
-
+    
     /**
-     *
      * @param string $ip
+     * @return int
      */
     public function insertIp($ip)
     {

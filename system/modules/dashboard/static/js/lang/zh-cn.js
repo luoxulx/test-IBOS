@@ -47,24 +47,34 @@ $.extend(true, L, {
         "POSITION_NAME_CANNOT_BE_EMPTY": "岗位名称不能为空",
         "POWERLESS": "无权限",
         "ME": "本人",
-        "AND_SUBORDINATE": "本人及下属",
+        "AND_SUBORDINATE": "本部门及下属部门",
         "CURRENT_BRANCH": "当前分支机构",
         "ALL": "全部",
         "ADD_LIMIT": "添加权限",
         "EDIT_LIMIT": "编辑权限",
         "DELET_LIMIT": "确定删除该权限?",
-        "SELLECT_ROLE": "请选择角色"
+        "SELLECT_ROLE": "请选择角色",
+
+        "STARTTIME_EMPTY": "起始时间不能为空",
+        "ENDTIME_EMPTY": "结束时间不能为空",
+        // 权限设置
+        "AUTH_LEVEL_0": 							"无权限",
+        "AUTH_LEVEL_1":  							"本人",
+        "AUTH_LEVEL_2":  							"本部门及下属部门",
+        "AUTH_LEVEL_4":  							"当前分支机构",
+        "AUTH_LEVEL_8":  							"全体部门"
     },
     // 用户模块
     ORG: {
         "POSITION_NAME_CANNOT_BE_EMPTY": "岗位名称不能为空",
         "DEPARTMENT_NAME_CANNOT_BE_EMPTY": "部门名称不能为空",
+        "DEPARTMENT_PID_CANNOT_BE_EMPTY": "上级部门不能为空",
         "ROLE_NAME_CANNOT_BE_EMPTY": "角色名称不能为空",
         "POWERLESS": "无权限",
         "ME": "本人",
-        "AND_SUBORDINATE": "本人及下属",
+        "AND_SUBORDINATE": "本部门及下属部门",
         "CURRENT_BRANCH": "当前分支机构",
-        "ALL": "全部",
+        "ALL": "全体",
 
         // 部门管理
         "WRONG_PARENT_DEPARTMENT": "当前部门不能与上级部门相同",
@@ -83,6 +93,10 @@ $.extend(true, L, {
         "EDIT_DEPARTMENT_INFO": "编辑部门信息",
         "DELETE_DEPARTMENT_TIP": "删除部门",
         "SURE_DELETE_DEPARTMENT": "确定删除<%= name %>吗？",
+        "PLEASE_SELECT_UPDATE_USERS": "请先勾选需要修改信息的用户",
+        "UPDATE_USER_POSITION_OR_DEPARTMENT_INFO": "修改用户信息",
+        "UPDATE_DEPARTMENT_SUCCESS": "部门设置成功",
+        "UPDATE_POSTION_SUCCESS": "岗位设置成功",
 
         // 岗位管理
         "DELETE_POSITIONS_CONFIRM": "确认删除选中岗位吗?该操作无法恢复",
@@ -99,7 +113,7 @@ $.extend(true, L, {
         // 角色权限管理
         "SURE_DELETE_ITEM": "确定删除该项?",
 
-        INTRO: {
+        'INTRO': {
             "BRANCH": "总部下可创建多个分支机构，分支机构可以再创建分支机构，部门不允许创建分支机构。分支机构与部门的图标不一样哦！",
             "SUPERVISOR": "设置该职员的直属领导后，直属领导在各个模块的下属栏目中可直接查阅职员的工作日志、日程总结计划等模块数据。",
             "AUXILIARY_DEPT": "如果职员兼任多个部门工作，可在此设置辅助部门。",
@@ -124,6 +138,11 @@ $.extend(true, L, {
         "SURE_UNBINDING_AND_LINK_NEW_ADRESS": "“<%= corpname %>”已绑定过IBOS地址“<%= systemurl %>”。</br>确定要解绑并绑定到当前地址吗？",
         "SURE_EXIT_COMPANY": "确定退出“ <%= corpname %> ”吗？",
         "CREATE_AND_BINDING_COMPANY": "创建酷办公并绑定"
+    },
+    // 绑定企业号
+    WX: {
+        "INPUT_CORRECT_SYSTEM_URL": "请输入正确的系统URL链接验证",
+        "WX_BIND_CHECK_SUCCESS": "验证成功",
     },
     // 审批流程
     APPROVE: {

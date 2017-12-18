@@ -26,6 +26,7 @@ class ApiController extends Controller
      */
     public function actionLoadModule()
     {
+        $this->checkLogin();
         $moduleStr = Env::getRequest('module');
         $moduleStr = urldecode($moduleStr);
         $moduleArr = explode(',', $moduleStr);
@@ -39,6 +40,7 @@ class ApiController extends Controller
      */
     public function actionLoadNew()
     {
+        $this->checkLogin();
         $moduleStr = Env::getRequest('module');
         $moduleStr = urldecode($moduleStr);
         $moduleArr = explode(',', $moduleStr);
@@ -80,7 +82,7 @@ class ApiController extends Controller
 
     public function actionOrgRelatedDept()
     {
-        $ids = Env::getRequest('deptids');
+        $ids = \CHtml::encode(Env::getRequest('deptids'));
         $idArray = explode(',', $ids);
         $return = array();
         foreach ($idArray as $id) {
@@ -98,7 +100,7 @@ class ApiController extends Controller
 
     public function actionOrgRelatedRole()
     {
-        $ids = Env::getRequest('roleids');
+        $ids = \CHtml::encode(Env::getRequest('roleids'));
         $idArray = explode(',', $ids);
         $return = array();
         foreach ($idArray as $id) {
@@ -116,7 +118,7 @@ class ApiController extends Controller
 
     public function actionOrgRelatedPosition()
     {
-        $ids = Env::getRequest('positionids');
+        $ids = \CHtml::encode(Env::getRequest('positionids'));
         $idArray = explode(',', $ids);
         $return = array();
         foreach ($idArray as $id) {

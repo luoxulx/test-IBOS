@@ -1,11 +1,10 @@
 
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Online upgrade']; ?></h1>
+        <h1 class="mt"><?php echo $lang['Common Setting']?> > <?php echo $lang['Online upgrade']; ?></h1>
     </div>
     <div>
         <div class="ctb">
-            <h2 class="st"><?php echo $lang['Online upgrade']; ?></h2>
             <div id="upgrade_info">
 
             </div>

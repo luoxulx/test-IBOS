@@ -84,6 +84,30 @@
         </div>
     </div>
 </div>
+<script type="text/template" id="contact_auth_tpl">
+    <div class='fill-nn xac xcm xwb'>
+        <span class="fsl">立即授权安装通讯录套件，获取成员同步权限！</span>
+    </div>
+    <div class='auth-step-tip'>
+        <p class="mbm">
+            <i class='o-auth-step-one'></i>
+            <span class='fsm mls xcm'>授权安装通讯录应用套件，点击“下一步”</span>
+        </p>
+        <p class='mb'>
+            <i class='o-step-one-tip'></i>
+        </p>
+        <p class='mbm'>
+            <i class='o-auth-step-two'></i>
+            <span class="fsm mls xcm">设置应用使用范围后，授权通讯录管理，完成授权安装</span>
+        </p>
+        <p>
+            <i class='o-step-two-tip'></i>
+        </p>
+    </div>
+    <div class='fill-nn xac'>
+        <a href='<%= url %>' class='btn btn-primary btn-large' target='_blank'>授权安装通讯录套件</a>
+    </div>
+</script>
 <!--同步进程-->
 <script type="text/template" id="result_syncing_tpl">
     <div class="row pt">
@@ -143,5 +167,6 @@
         </p>
     </div>
 </script>
+
 
 <script type="text/javascript" src="<?php echo $this->getAssetUrl(); ?>/js/syncdata.js"></script>

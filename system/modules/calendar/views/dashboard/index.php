@@ -1,6 +1,6 @@
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Calendar module']; ?></h1>
+        <h1 class="mt">应用设置＞<?php echo $lang['Calendar module']; ?></h1>
     </div>
     <div>
         <form action="<?php echo $this->createUrl('dashboard/update'); ?>" method="post" class="form-horizontal">

@@ -34,6 +34,49 @@ $(function(){
 				checked = $.attr(this, "data-checked") === "1";
 			Organization.auth.selectCate(id,  !checked);
 			$.attr(this, "data-checked", checked ? "0" : "1");
+		},
+		// 分类切换显示/隐藏
+		"click [data-node='toggle']": function(){
+			var $this = $(this),
+				$body = $this.closest(".org-limit-header").siblings(".org-limit-body"),
+				$selectBtn = $this.siblings(".btn");
+			$this.toggleClass("active");
+			$selectBtn.fadeToggle();
+			$body.slideToggle();
+		},
+		// CRM权限列表表头垂直批量操作
+		"click [data-node='batchVtc']": function(){
+			var $this = $(this),
+				index = $this.closest("th").index(),
+				$limiteTable = $this.closest('table'),
+				$limiteTr = $limiteTable.find("tbody tr");
+			$limiteTr.each(function(i, el) {
+				var $limiteTd = $(el).children("td").eq(index),
+				    $level = $limiteTd.children(".privilege-level"),
+				    insTooltip = $level.data("tooltip");
+
+				if(insTooltip){
+					$level.trigger("click.level");
+					var level = $level.siblings("[data-toggle='privilegeLevel']").val();
+					insTooltip.options.title = Ibos.l("DB.AUTH_LEVEL_" + level);
+				}
+			});
+		},
+		// CRM权限列表横向批量操作
+		"click [data-node='batchHoz']": function(){
+			var $this = $(this),
+				$limiteTd = $this.closest("tr").children("td");
+			$limiteTd.each(function(index, el) {
+				var $level = $(el).children(".privilege-level"),
+					insTooltip = $level.data("tooltip");
+
+				if(insTooltip){
+					$level.trigger("click.level");
+					var level = $level.siblings("[data-toggle='privilegeLevel']").val();
+			 		insTooltip.options.title = Ibos.l("DB.AUTH_LEVEL_" + level);
+				}
+	
+			});
 		}
 	});
 

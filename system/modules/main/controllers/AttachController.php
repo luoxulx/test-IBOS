@@ -10,6 +10,7 @@
 namespace application\modules\main\controllers;
 
 use application\core\controllers\Controller;
+use application\core\engines\saas\SaasFile2;
 use application\core\utils as util;
 use application\core\utils\File;
 use application\modules\main\model\AttachmentN;
@@ -120,4 +121,24 @@ class AttachController extends Controller
         }
     }
 
+    /**
+     * 上传base64的图片
+     */
+    public function actionUploadBase()
+    {
+        $imgObject = util\Env::getRequest('img');
+        if (preg_match('/^(data:\s*image\/(\w+);base64,)/', $imgObject, $result)){
+            $fileName = 'data/attachment/'. util\Ibos::getCurrentModuleName(). '/'. md5(time()). 'jpg';
+            $fileContent = base64_decode(str_replace($result[1], '', $imgObject));
+            File::createFile($fileName, $fileContent);
+            $uploadUrl = File::fileName($fileName);
+        }else{
+            $uploadUrl = '';
+        }
+        $this->ajaxReturn(array(
+            'isSuccess' => empty($uploadUrl) ? false : true,
+            'msg' => empty($uploadUrl) ? '上传失败' : '上传成功',
+            'data' => $uploadUrl
+        ));
+    }
 }

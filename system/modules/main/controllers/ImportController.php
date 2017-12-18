@@ -350,8 +350,10 @@ class ImportController extends Controller
         $file = $tplPath . '/' . $tplConfig['filename'];
         $fileName = iconv('utf-8', 'gbk', $name . '.' . pathinfo($file, PATHINFO_EXTENSION));
         if (is_file($file)) {
+            @ob_end_clean();
             header("Content-Type: application/force-download");
             header("Content-Disposition: attachment; filename=" . $fileName);
+            header("Content-Length: ".filesize($file));
             readfile($file);
             exit;
         } else {

@@ -49,4 +49,10 @@ class Menu extends Model
         return $result;
     }
 
+    public function filterWeiboModule()
+    {
+        $condition = "pid = 0 AND disabled = 0 AND m != 'weibo'";
+        $result = $this->fetchAll($condition);
+        return $result;
+    }
 }

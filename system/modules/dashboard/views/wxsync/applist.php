@@ -6,10 +6,6 @@
     </div>
     <div>
         <div class="ps-type-title">
-            <a href="<?php echo $this->createUrl('wxbinding/index'); ?>" class="db wx-back-btn mb">
-                <i class="o-back-arrow"></i>
-                <span class="wx-back-tip">返回企业号绑定</span>
-            </a>
             <!-- 同步start -->
             <?php foreach ($list as $suite) : ?>
                 <div class="box-shadow bind-info-wrap">

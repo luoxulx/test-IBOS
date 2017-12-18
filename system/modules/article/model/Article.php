@@ -512,8 +512,8 @@ class Article extends Model
                             '{sender}' => $sender,
                             '{subject}' => $art['subject'],
                             '{category}' => $category['name'],
-                            '{url}' => Ibos::app()->controller->createUrl('index/show', array('articleid' => $art['articleid'])),
-                            '{content}' => Ibos::app()->controller->renderPartial('remindcontent', array(
+                            '{url}' => Ibos::app()->urlManager->createUrl('article/default/show', array('articleid' => $art['articleid'])),
+                            '{content}' => Ibos::app()->controller->renderPartial('application.modules.article.views.verify.remindcontent', array(
                                 'article' => $art,
                                 'author' => $sender,
                             ), true),
@@ -586,7 +586,7 @@ class Article extends Model
                 ), true),
                 '{orgContent}' => StringUtil::filterCleanHtml($article['content']),
                 '{category}' => $category['name'],
-                '{url}' => Ibos::app()->urlManager->createUrl('article/index/show',
+                '{url}' => Ibos::app()->urlManager->createUrl('article/default/show',
                     array('articleid' => $article['articleid'])),
                 'id' => $artId,
             );
@@ -642,7 +642,7 @@ class Article extends Model
                 '{subject}' => $art['subject'],
                 '{category}' => $categoryName,
                 '{content}' => $reason,
-                '{url}' => Ibos::app()->urlManager->createUrl('article/index/show', array('articleid' => $artId)),
+                '{url}' => Ibos::app()->urlManager->createUrl('article/default/show', array('articleid' => $artId)),
             );
             Notify::model()->sendNotify($art['author'], 'article_back_message', $config, $uid);
             self::updateAllStatusAndApproverByPks($artId, $uid, 0);//把新闻的状态修改退回状态
@@ -760,7 +760,7 @@ class Article extends Model
                     if (true === $isApi) {
                         return Ibos::app()->controller->ajaxReturn(array("isSuccess" => false, "msg" => $msg), Mobile::dataType());
                     }
-                    Ibos::app()->controller->error($msg, Ibos::app()->urlManager->createUrl('/article/index/add'));
+                    Ibos::app()->controller->error($msg, Ibos::app()->urlManager->createUrl('/article/default/add'));
                 } else {
 
                 }
@@ -770,7 +770,7 @@ class Article extends Model
                     if (true === $isApi) {
                         return Ibos::app()->controller->ajaxReturn(array("isSuccess" => false, "msg" => $msg), Mobile::dataType());
                     }
-                    Ibos::app()->controller->error($msg, Ibos::app()->urlManager->createUrl('/article/index/add'));
+                    Ibos::app()->controller->error($msg, Ibos::app()->urlManager->createUrl('/article/default/add'));
                 }
             } elseif ($postData['type'] == Base::ARTICLE_TYPE_LINK) {
                 if (empty($postData['url'])) {
@@ -778,7 +778,7 @@ class Article extends Model
                     if (true === $isApi) {
                         return Ibos::app()->controller->ajaxReturn(array("isSuccess" => false, "msg" => $msg), Mobile::dataType());
                     }
-                    Ibos::app()->controller->error($msg, Ibos::app()->urlManager->createUrl('/article/index/add'));
+                    Ibos::app()->controller->error($msg, Ibos::app()->urlManager->createUrl('/article/default/add'));
                 }
             }
         }
@@ -966,7 +966,7 @@ class Article extends Model
                 '{subject}' => $article['subject'],
                 '{content}' => $content,
                 '{orgContent}' => StringUtil::filterCleanHtml($article['content']),
-                '{url}' => Ibos::app()->urlManager->createUrl('article/index/show', array('articleid' => $articleId)),
+                '{url}' => Ibos::app()->urlManager->createUrl('article/default/show', array('articleid' => $articleId)),
                 'id' => $articleId,
             );
             if (count($uidArr) > 0) {
@@ -984,7 +984,7 @@ class Article extends Model
                 $data = array(
                     'title' => Ibos::lang('Feed title', '', array(
                         '{subject}' => $article['subject'],
-                        '{url}' => Ibos::app()->urlManager->createUrl('article/index/show', array('articleid' => $articleId))
+                        '{url}' => Ibos::app()->urlManager->createUrl('article/default/show', array('articleid' => $articleId))
                     )),
                     'body' => $article['subject'],
                     'actdesc' => Ibos::lang('Post news'),
@@ -1029,7 +1029,7 @@ class Article extends Model
                     '{sender}' => $sender,
                     '{subject}' => $article['subject'],
                     '{category}' => $category['name'],
-                    '{url}' => Ibos::app()->controller->createUrl('index/show', array('articleid' => $article['articleid'])),
+                    '{url}' => Ibos::app()->controller->createUrl('article/default/show', array('articleid' => $article['articleid'])),
                     '{content}' => Ibos::app()->controller->renderPartial('application.modules.article.views.verify.remindcontent', array(
                         'article' => $article,
                         'author' => $sender,
@@ -1101,7 +1101,7 @@ class Article extends Model
                     'article' => $article,
                     'author' => $user['realname'],
                 ), true),
-                '{url}' => Ibos::app()->urlManager->createUrl('article/index/show', array('articleid' => $article['articleid'])),
+                '{url}' => Ibos::app()->urlManager->createUrl('article/default/show', array('articleid' => $article['articleid'])),
                 'id' => $article['articleid'],
             );
             if (count($uidArr) > 0) {

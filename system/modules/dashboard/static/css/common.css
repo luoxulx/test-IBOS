@@ -1,10 +1,10 @@
 /**
  *  @module dashboard
  *  @submodule common
- *  @Ibos v2.0 
+ *  @Ibos v2.0
  *	@author ink
  *	@version $Id: common.css 8697 2016-10-22 04:05:09Z gzcsh $
- *	@modified 2013-03-22  
+ *	@modified 2013-03-22
  */
 
 
@@ -14,8 +14,8 @@ body{
 }
 /* Container */
 .ct{
-	padding-left: 20px;
-	padding-top: 10px;
+	padding-left: 50px;
+	padding-top: 15px;
 }
 .b{ margin-bottom: 20px;}
 .b-m{ margin-bottom: 40px;}
@@ -57,7 +57,8 @@ body{
 	background-repeat: no-repeat;
 }
 .upload-ctrl{
-	border-radius: 4px;
+	-moz-border-radius: 4px;
+	     border-radius: 4px;
 	display: block;
 	width: 144px;
 	height: 144px;
@@ -84,10 +85,10 @@ body{
 .label-link { line-height: 30px; }
 
 /* radius */
-.radius-tl{ border-top-left-radius: 4px;}
-.radius-tr{ border-top-right-radius: 4px;}
-.radius-bl{ border-bottom-left-radius: 4px;}
-.radius-br{ border-bottom-right-radius: 4px;}
+.radius-tl{ -moz-border-radius-topleft: 4px; border-top-left-radius: 4px;}
+.radius-tr{ -moz-border-radius-topright: 4px; border-top-right-radius: 4px;}
+.radius-bl{ -moz-border-radius-bottomleft: 4px; border-bottom-left-radius: 4px;}
+.radius-br{ -moz-border-radius-bottomright: 4px; border-bottom-right-radius: 4px;}
 
 /* Icon */
 
@@ -156,6 +157,7 @@ body{
 	*zoom: 1;
 }
 .trick-tip-content strong{ color: #E26F50;}
+.trick-tip-content ul { padding-top: 8px; }
 .trick-tip-content ul li{
 	font-size: 12px;
 	line-height: 24px;
@@ -164,10 +166,10 @@ body{
 .trick-tip-pre strong{ color: #c09853; }
 
 .trick-tip{ position: relative; }
-.trick-tip-overflow{ 
-	padding-bottom: 30px; 
+.trick-tip-overflow{
+	padding-bottom: 30px;
 	-webkit-transition: all .2s;
-	-o-transition: all .2s;
+	-moz-transition: all .2s;
 	transition: all .2s;
 }
 .trick-tip-collapse{ height: 100px; }
@@ -179,8 +181,7 @@ body{
 	height: 25px;
 	background: -webkit-linear-gradient(top, transparent, #FCF8E3);
 	background: -moz-linear-gradient(top, transparent, #FCF8E3);
-	background: -ms-linear-gradient(top, transparent, #FCF8E3);
-	background: -o-linear-gradient(top, transparent, #FCF8E3);
+	background: -webkit-gradient(linear, left top, left bottom, from(transparent), to(#FCF8E3));
 	background: linear-gradient(top, transparent, #FCF8E3);
 }
 .trick-tip-switch{
@@ -207,22 +208,30 @@ body{
 .st{
 	margin: 0;
 }
+
 /* mainer-title*/
 .mt{
 	font-size: 20px;
 	float: left;
-	margin-bottom: 20px;
+	border-left: 8px solid #3497db;
+	padding-left: 8px;
+	margin: 5px 0;
+  font-weight: bold;
+  line-height: 35px;
 }
+
 /* sub-title */
 .st{
 	font-size: 16px;
 }
+
 /** Box **/
 /*  content-box */
 .ctb{
 	position: relative;
 	margin-top: 20px;
-	padding: 30px 30px 30px 0;
+	padding: 30px;
+	padding-left: 0;
 	border-top: 1px solid #E5E9EE;
 }
 .ctbw{
@@ -259,7 +268,8 @@ body{
 }
 .mn span{
 	background-color: #3497DB;
-	border-radius: 15px;
+	-moz-border-radius: 15px;
+	     border-radius: 15px;
 	color: #FFF;
 }
 .mn li{
@@ -321,7 +331,8 @@ body{
 	background-position: 0 -100px;
 }
 .card-radius{
-	border-radius: 4px;
+	-moz-border-radius: 4px;
+	     border-radius: 4px;
 	width: 80px;
 	border: 2px solid #E7EDF5;
 	background-color: #FFF;
@@ -364,6 +375,11 @@ body{
 	transform: rotate3d(0, 1, 0, 0);
 }
 
+.form__submit-btn{
+	padding-top: 20px;
+	border-top: 1px #ebeff6 solid;
+}
+
 /*----------------------------------------------------- index */
 .system-info-wrap{
 	position: relative;
@@ -371,8 +387,10 @@ body{
 .system-info-wrap .card-circle{
 	-webkit-transition: -webkit-transform linear .5s;
 	-moz-transition: -moz-transform linear .5s;
-	-o-transition: -o-transform linear .5s;
+	transition: -webkit-transform linear .5s;
+	-moz-transition: transform linear .5s, -moz-transform linear .5s;
 	transition: transform linear .5s;
+	transition: transform linear .5s, -webkit-transform linear .5s, -moz-transform linear .5s;
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -430,7 +448,6 @@ body{
 	margin-right: 5px;
 }
 .date-tally .tally-item{
-	-webkit-border-radius: 2px;
 	-moz-border-radius: 2px;
 	border-radius: 2px;
 	-webkit-box-shadow: 0 2px 0 #3497DB;
@@ -452,13 +469,19 @@ body{
 
 /*-----------------------------------------------------global*/
 /* 单位管理 */
-.enterprise-info-form{}
+.enterprise-info-form .control-group > .control-label{
+	text-align: left;
+	width: 140px;
+}
 .enterprise-info-form .control-group > .controls{
+	margin-left: 140px;
 	width: 300px;
 }
 .custom-logo{
-	width: 120px;
+  display: inline-block;
+  padding: 5px;
 	height: 40px;
+	border: 2px solid #E5E9EE;
 }
 /* 积分设置 */
 .point-table{
@@ -478,7 +501,9 @@ body{
 	border: 1px solid #EBEDEE;
 }
 .ptcs{
-	box-shadow: 0 1px 2px rgba(0, 0, 0, .1), inset 0 1px 1px rgba(0, 0, 0, .1);
+	-webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, .1), inset 0 1px 1px rgba(0, 0, 0, .1);
+	   -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, .1), inset 0 1px 1px rgba(0, 0, 0, .1);
+	        box-shadow: 0 1px 2px rgba(0, 0, 0, .1), inset 0 1px 1px rgba(0, 0, 0, .1);
 	padding: 3px 10px;
 	background-color: #FFF;
 	text-align: right;
@@ -486,7 +511,6 @@ body{
 	_height: 34px;
 }
 .ptcs span{
-	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
 	border-radius: 4px;
 	display: inline-block;
@@ -521,7 +545,8 @@ body{
 }
 .ptctl a,
 .ptckl a{
-	border-radius: 3px;
+	-moz-border-radius: 3px;
+	     border-radius: 3px;
 	display: block;
 	padding: 5px 15px;
 	height: 20px;
@@ -569,11 +594,11 @@ body{
 	cursor: default;
 }
 
-.ptckl .ptckl-back{ 
+.ptckl .ptckl-back{
 	background-position: -22px -34px;
 }
 .ptckl .ptckl-clear{
-	background-position: 12px -34px;	
+	background-position: 12px -34px;
 }
 .ptckl .ptckl-clear:hover{
 	background-color: #E26F50;
@@ -581,7 +606,8 @@ body{
 
 /* 上传设置 */
 .watermark{
-	border-radius: 4px;
+	-moz-border-radius: 4px;
+	     border-radius: 4px;
 	width: 120px;
 	height: 120px;
 	background-color: #fff;
@@ -594,7 +620,7 @@ body{
 	margin: 1px 1px 0 0;
 	background-color: #000;
 	opacity: .3;
-	filter: Alpha(opacity=30); 
+	filter: Alpha(opacity=30);
 }
 .watermark label:hover,
 .watermark .active{
@@ -770,15 +796,19 @@ body{
 	border-top: 1px solid #eaeced;
 	border-right: 1px solid #eaeced;
 	background-color: #f9fbff;
-	border-top-left-radius: 4px;
-	border-top-right-radius: 4px;
+	-moz-border-radius-topleft: 4px;
+	     border-top-left-radius: 4px;
+	-moz-border-radius-topright: 4px;
+	     border-top-right-radius: 4px;
 }
 .sys-nav-area{
 	border-left: 1px solid #eaeced;
 	border-bottom: 1px solid #eaeced;
 	border-right: 1px solid #eaeced;
-	border-bottom-left-radius: 4px;
-	border-bottom-right-radius: 4px;
+	-moz-border-radius-bottomleft: 4px;
+	     border-bottom-left-radius: 4px;
+	-moz-border-radius-bottomright: 4px;
+	     border-bottom-right-radius: 4px;
 }
 .sys-nav-content{
 	padding-bottom: 10px;
@@ -813,12 +843,12 @@ body{
 	left: 0;
 	content: "";
 	background-color: #ee8c0c;
-	border-color: transparent #ee8c0c transparent transparent;  
-    border-style: solid;  
-    border-width: 6px 6px 6px 0px;  
-    padding: 0;  
-    width: 0;  
-    height: 0;  
+	border-color: transparent #ee8c0c transparent transparent;
+    border-style: solid;
+    border-width: 6px 6px 6px 0px;
+    padding: 0;
+    width: 0;
+    height: 0;
 }
 .child-nav-placeholder{
 	position: relative;
@@ -831,11 +861,11 @@ body{
 	left: 0;
 	content: "";
 	background-color: #3497db;
-	border-color: transparent #3497db transparent transparent;  
-    border-style: solid;  
-    border-width: 6px 6px 6px 0px;  
-    padding: 0;  
-    width: 0;  
+	border-color: transparent #3497db transparent transparent;
+    border-style: solid;
+    border-width: 6px 6px 6px 0px;
+    padding: 0;
+    width: 0;
     height: 0;
 }
 .single-page{
@@ -848,7 +878,8 @@ body{
 	-webkit-box-shadow: 0px 1px 2px rgba(0, 0, 0, .1);
 	-moz-box-shadow: 0px 1px 2px rgba(0, 0, 0, .1);
 	box-shadow: 0px 1px 2px rgba(0, 0, 0, .1);
-	border-radius: 4px;
+	-moz-border-radius: 4px;
+	     border-radius: 4px;
 }
 @media screen and (max-width: 1280px){
 	.nav-w35{
@@ -857,7 +888,7 @@ body{
 	.child-nav-item .span6{
 		padding-left: 10px;
 	}
-	.child-nav-item .drap-icon, 
+	.child-nav-item .drap-icon,
 	.nav-child-list .main-nav-item .drap-icon{
 		margin-right: 20px;
 	}
@@ -879,7 +910,7 @@ body{
 	height: 44px;
 	background-position: 0 -80px;
 }
-.o-img-default-large{	
+.o-img-default-large{
 	width: 96px;
 	height: 72px;
 }
@@ -894,9 +925,9 @@ body{
 }
 .upload-add-icon{
 	display: inline-block;
-	width: 96px;
-	height: 96px;
-	background: url(../image/stamp_add.png) no-repeat;
+	width: 60px;
+	height: 60px;
+	background: url("../image/stamp_add.png") no-repeat;
 }
 .upload-add-desc{
 	color: #82939E;
@@ -907,11 +938,12 @@ body{
 	margin-left: -40px;
 }
 .grid-list li{
-	border-radius: 4px;
+	-moz-border-radius: 4px;
+	     border-radius: 4px;
 	position: relative;
 	margin-left: 40px;
 	margin-bottom: 20px;
-	width: 340px;
+	width: 380px;
 }
 
 .grid-list li:hover .upload-add{
@@ -919,32 +951,37 @@ body{
 	cursor: pointer;
 }
 .grid-list li:hover .upload-add-icon{
-	background-position: -96px 0;
+	background-position: -60px 0;
 }
 .grid-list li:hover .upload-add-desc{
 	color: #3497DB;
 }
 
-.pic-list li{	
+.pic-list li{
 	position: relative;
 	height: 240px;
 	/*background: #fff url(../image/img_default.png) no-repeat center 60px;*/
 	background-color: #FFF;
 }
 .pic-list li img{
-	border-radius: 4px;
-	width: 340px;
+	-moz-border-radius-topleft: 4px;
+	     border-top-left-radius: 4px;
+	-moz-border-radius-topright: 4px;
+	     border-top-right-radius: 4px;
+	width: 380px;
 	height: 180px;
 }
 
 .pic-item-operate{
-	border-bottom-left-radius: 4px;
-	border-bottom-right-radius: 4px;
+	-moz-border-radius-bottomleft: 4px;
+	     border-bottom-left-radius: 4px;
+	-moz-border-radius-bottomright: 4px;
+	     border-bottom-right-radius: 4px;
 	position: absolute;
 	left: 0;
 	bottom: 0;
 	padding: 10px;
-	width: 320px;
+	width: 360px;
 	height: 40px;
 	line-height: 40px;
 	background-color: #FFF;
@@ -956,13 +993,15 @@ body{
 	margin-top: 10px;
 }
 .pic-upload-bg{
-	border-top-left-radius: 4px;
-	border-top-right-radius: 4px;
+	-moz-border-radius-topleft: 4px;
+	     border-top-left-radius: 4px;
+	-moz-border-radius-topright: 4px;
+	     border-top-right-radius: 4px;
 	display: none;
 	position: absolute;
 	top: 0;
 	left: 0;
-	width: 340px;
+	width: 380px;
 	height: 180px;
 	background-color: #000;
 	opacity: .6;
@@ -972,16 +1011,14 @@ body{
 .pic-upload-btn{
 	position: absolute;
 	top: 30px;
-	left: 100px;
+	left: 125px;
 }
 .pic-upload-btn{
 	display: none;
-	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
 	border-radius: 4px;
 	width: 140px;
 	height: 120px;
-	background-color: #FFF;
 	text-align: center;
 }
 
@@ -1004,7 +1041,7 @@ body{
 }
 .pic-item-new .pic-upload-btn{
 	display: block;
-	width: 320px;
+	width: 360px;
 	height: 170px;
 	background-color: #EBEDF0;
 }
@@ -1021,7 +1058,7 @@ body{
 	display: none;
 }
 .pic-item-add .upload-add{
-	padding: 50px 0;
+	padding: 71px 0;
 }
 .pic-list .pic-item-add{
 	-webkit-box-shadow: none;
@@ -1029,7 +1066,7 @@ body{
 	box-shadow: none;
 	text-align: center;
 	border: 2px dashed #EBEDF0;
-	width: 336px;
+	width: 376px;
 	height: 236px;
 }
 .pic-list .pic-item-add:hover{
@@ -1053,17 +1090,20 @@ body{
 	line-height: 40px;
 }
 .stamp-item-hd{
-	border-top-left-radius: 4px;
-	border-top-right-radius: 4px;
+	-moz-border-radius-topleft: 4px;
+	     border-top-left-radius: 4px;
+	-moz-border-radius-topright: 4px;
+	     border-top-right-radius: 4px;
 }
 .stamp-item-ft{
-	border-bottom-left-radius: 4px;
-	border-bottom-right-radius: 4px;
+	-moz-border-radius-bottomleft: 4px;
+	     border-bottom-left-radius: 4px;
+	-moz-border-radius-bottomright: 4px;
+	     border-bottom-right-radius: 4px;
 }
 
 .stamp-img,
 .stamp-icon{
-	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
 	border-radius: 4px;
 	position: relative;
@@ -1170,7 +1210,7 @@ body{
 }
 
 .stamp-list .upload-add{
-	padding: 60px 0;
+	padding: 97px 0;
 }
 
 
@@ -1199,8 +1239,8 @@ body{
 .express-temp-list li{
 	position: relative;
 	width: 150px;
-	height: 150px; 
-	line-height: 110px; 
+	height: 150px;
+	line-height: 110px;
 	background-color: #FFF;
 }
 .express-temp-list li img{
@@ -1387,8 +1427,11 @@ a.progressCancel:hover {
 .imi-input{
 	-webkit-transition: border linear .2s, box-shadow linear .2s;
 	-moz-transition: border linear .2s, box-shadow linear .2s;
-	-o-transition: border linear .2s, box-shadow linear .2s;
+	-webkit-transition: border linear .2s, -webkit-box-shadow linear .2s;
+	transition: border linear .2s, -webkit-box-shadow linear .2s;
+	-moz-transition: border linear .2s, box-shadow linear .2s, -moz-box-shadow linear .2s;
 	transition: border linear .2s, box-shadow linear .2s;
+	transition: border linear .2s, box-shadow linear .2s, -webkit-box-shadow linear .2s, -moz-box-shadow linear .2s;
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
@@ -1403,7 +1446,8 @@ a.progressCancel:hover {
 	vertical-align: middle;
 	background-color: #ffffff;
 	border: 1px solid #dadfe6;
-	border-radius: 4px;
+	-moz-border-radius: 4px;
+	     border-radius: 4px;
 }
 .imi-input:focus{
 	border-color: #3497DB;
@@ -1463,7 +1507,8 @@ a.progressCancel:hover {
 	-webkit-box-shadow: 0 1px 10px rgba(0, 0, 0, .1);
 	-moz-box-shadow: 0 1px 10px rgba(0, 0, 0, .1);
 	box-shadow: 0 1px 10px rgba(0, 0, 0, .1);
-	border-radius: 4px;
+	-moz-border-radius: 4px;
+	     border-radius: 4px;
 	position: absolute;
 	z-index: 6000;
 	display: none;
@@ -1475,7 +1520,7 @@ a.progressCancel:hover {
 	word-break: break-all;
 }
 .uic-banner{ position:relative; overflow:hidden; }
-.uic-lv { position:absolute; top:0px; left:0px; padding:5px 10px; background-color:#000; background-color:rgba(0,0,0,0.3); filter:alpha(opacity=70); border-radius:0 0 4px 0; }
+.uic-lv { position:absolute; top:0px; left:0px; padding:5px 10px; background-color:#000; background-color:rgba(0,0,0,0.3); filter:alpha(opacity=70); -moz-border-radius:0 0 4px 0; border-radius:0 0 4px 0; }
 .uic-lv i{ position:relative;}
 .uic-lv strong{ color:#FFF; padding-left:5px; font-size:12px;}
 .uic-operate{ position:absolute; right:20px; top:20px; }
@@ -1485,8 +1530,8 @@ a.progressCancel:hover {
 .uic-ava{  position:absolute; z-index:5;left:10px; top:50px; width: 100px; text-align: center;}
 .uic-ava .avatar-circle,
 .uic-ava .avatar-circle img{ width: 80px; height: 80px; }
-.uic-ava .avatar-circle{ border-radius: 43px; }
-.uic-ava .avatar-circle img{ border-radius: 40px; }
+.uic-ava .avatar-circle{ -moz-border-radius: 43px; border-radius: 43px; }
+.uic-ava .avatar-circle img{ -moz-border-radius: 40px; border-radius: 40px; }
 .uic-btn { padding-top:10px; text-align: center; }
 .uic-btn .btn{ width: 80px; padding-left: 5px; padding-right: 5px; }
 .uic-fans{ padding: 10px 0px 5px 110px;}
@@ -1495,14 +1540,16 @@ a.progressCancel:hover {
 .uic-info{padding-left:115px; padding-bottom:20px;}
 .uic-info li{ font-size:12px; list-style: none;}
 
-.bdrt, 
+.bdrt,
 .rdt{
 	-webkit-border-top-left-radius: 4px;
 	-webkit-border-top-right-radius: 4px;
 	-moz-border-top-left-radius: 4px;
 	-moz-border-top-right-radius: 4px;
-	border-top-left-radius: 4px;
-	border-top-right-radius: 4px;
+	-moz-border-radius-topleft: 4px;
+	     border-top-left-radius: 4px;
+	-moz-border-radius-topright: 4px;
+	     border-top-right-radius: 4px;
 }
 
 /* Level Icon */
@@ -1547,12 +1594,12 @@ a.progressCancel:hover {
 
 .om-male,
 .om-female{
-	display: inline-block;  
-	width: 16px; 
+	display: inline-block;
+	width: 16px;
 	height: 16px;
-	vertical-align: middle; 
-	background-image: url(../image/global.png); 
-	background-repeat: no-repeat; 
+	vertical-align: middle;
+	background-image: url(../image/global.png);
+	background-repeat: no-repeat;
 }
 .om-male{ background-position: -160px -180px; }
 .om-female{ background-position: -180px -180px; }
@@ -1586,7 +1633,7 @@ a.progressCancel:hover {
 .attl-item,
 .attl li{
 	position: relative;
-	margin-top: -1px; 
+	margin-top: -1px;
 	/*padding: 14px 10px;*/
 	padding: 14px 20px;
 	border-top: 1px solid #EBEFF6;
@@ -1654,7 +1701,8 @@ a.progressCancel:hover {
 	left: 0;
 	width: 100px;
 	height: 100px;
-	border-radius: 50%;
+	-moz-border-radius: 50%;
+	     border-radius: 50%;
 }
 .admin-list .admin-item-body{
 	position: relative;
@@ -1673,19 +1721,25 @@ a.progressCancel:hover {
 	position: ;
 	top: 2px;
 }
-.rolesuper-add:hover .upload-add-icon{
+.rolesuper-add-icon{
+	display: inline-block;
+  width: 96px;
+  height: 96px;
+  background: url("../image/admin_add.png") no-repeat;
+}
+.rolesuper-add:hover .rolesuper-add-icon{
 	background-position: -96px 0;
 }
 
 
-.o-tip-success, 
+.o-tip-success,
 .o-tip-danger{
-	display: inline-block; 
-	width: 20px; 
-	height: 20px; 
-	vertical-align: middle; 
-	background-image: url(../image/global.png); 
-	background-repeat: no-repeat; 
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	vertical-align: middle;
+	background-image: url(../image/global.png);
+	background-repeat: no-repeat;
 }
 .o-tip-danger {
     background-position: -140px 0;
@@ -1750,7 +1804,8 @@ a.progressCancel:hover {
 	right: 0;
 	bottom: 0;
 	border: 1px solid #F9FBFF;
-	border-radius: 50%;
+	-moz-border-radius: 50%;
+	     border-radius: 50%;
 }
 .o-binding-ibos{
 	background-position: -484px -192px;
@@ -1831,7 +1886,10 @@ a.progressCancel:hover {
 	height: 22px;
 	background-position: -481px -449px;
     vertical-align: middle;
-    transform: translateY(-2px);
+    -webkit-transform: translateY(-2px);
+       -moz-transform: translateY(-2px);
+        -ms-transform: translateY(-2px);
+            transform: translateY(-2px);
 }
 .ml12{
 	margin-left: 12px;
@@ -1840,8 +1898,10 @@ a.progressCancel:hover {
 	padding: 0;
 }
 .binding-install-wrap .co-banding-wrap{
-	border-top-left-radius: 0;
-	border-top-right-radius: 0;
+	-moz-border-radius-topleft: 0;
+	     border-top-left-radius: 0;
+	-moz-border-radius-topright: 0;
+	     border-top-right-radius: 0;
 	width: 798px;
 	min-height: 350px;
 }
@@ -1974,17 +2034,22 @@ a.progressCancel:hover {
 	width: 320px;
 	height: 120px;
 	padding: 30px 0;
-	border-radius: 4px;
+	-moz-border-radius: 4px;
+	     border-radius: 4px;
 }
 .co-info-ibos{
 	border: 1px solid #FFECD1;
 	background-color: #FFFBF4;
-	box-shadow: 0 1px 2px #FFECD1;
+	-webkit-box-shadow: 0 1px 2px #FFECD1;
+	   -moz-box-shadow: 0 1px 2px #FFECD1;
+	        box-shadow: 0 1px 2px #FFECD1;
 }
 .co-info-co{
 	border: 1px solid #DEECF5;
 	background-color: #F9FBFF;
-	box-shadow: 0 1px 2px #DEECF5;
+	-webkit-box-shadow: 0 1px 2px #DEECF5;
+	   -moz-box-shadow: 0 1px 2px #DEECF5;
+	        box-shadow: 0 1px 2px #DEECF5;
 }
 .co-binding-logo{
 	position: relative;
@@ -2113,7 +2178,7 @@ a.progressCancel:hover {
 }
 .co-sync-auto{
 	padding: 15px 40px;
-	margin-top: 60px; 
+	margin-top: 60px;
 	background: #FBFBFB;
 	border: 1px solid #EBEFF6;
 }
@@ -2142,7 +2207,6 @@ a.progressCancel:hover {
 	-webkit-box-shadow: 0 0 1px rgba(0, 0, 0, .1);
     -moz-box-shadow: 0 0 1px rgba(0, 0, 0, .1);
     box-shadow: 0 0 1px rgba(0, 0, 0, .1);
-    -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
     border-radius: 4px;
     float: left;
@@ -2167,7 +2231,8 @@ a.progressCancel:hover {
 .ibosco-avatar-circle img{
 	width: 54px;
     height: 54px;
-    border-radius: 50%;
+    -moz-border-radius: 50%;
+         border-radius: 50%;
 }
 .ibosco-member-item-body{
 	display: inline-block;
@@ -2177,6 +2242,8 @@ a.progressCancel:hover {
     vertical-align: top;
 }
 .progress-striped .progress-bar{
+	-webkit-transition: width .6s;
+	-moz-transition: width .6s;
 	transition: width .6s;
 }
 
@@ -2199,6 +2266,14 @@ a.progressCancel:hover {
 }
 .dept-ztree, .pos-ztree {
 	width: 300px;
+}
+.user-dialog-form.form-horizontal .control-label{
+	width: 100px;
+	text-align: left;
+    color: #B2C0D1;
+}
+.user-dialog-form.form-horizontal .controls{
+	margin-left: 100px;
 }
 
 /* 全局信息导入样式 */
@@ -2272,7 +2347,9 @@ a.progressCancel:hover {
 .import-btn:active{
 	color: #fff;
 	text-decoration: none;
-	box-shadow: 0 0 5px #75b8e7;
+	-webkit-box-shadow: 0 0 5px #75b8e7;
+	   -moz-box-shadow: 0 0 5px #75b8e7;
+	        box-shadow: 0 0 5px #75b8e7;
 }
 .import-btn-tip{
 	position: relative;
@@ -2283,7 +2360,7 @@ a.progressCancel:hover {
 	display: block;
 	width: 100%;
 	*zoom: 1;
-	border-bottom: 1px solid #ebeff6; 
+	border-bottom: 1px solid #ebeff6;
 }
 .aui_import .import-item:before,
 .aui_import .import-item:after{
@@ -2338,4 +2415,12 @@ a.progressCancel:hover {
 	margin: 5px 0;
 	list-style: none;
 	color: #c1cdda;
+}
+/**禁止文本被选择*/
+.unselectable {
+	-moz-user-select: -moz-none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }

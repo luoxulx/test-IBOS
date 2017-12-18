@@ -165,7 +165,7 @@ use application\modules\assignment\utils\Assignment as AssignmentUtil;
                                                 <?php if ($charge['status'] == 0 || $charge['status'] == 1): ?>
                                                     <a href="javascript:;" class="co-clock"
                                                        data-action="openRemindDialog"
-                                                       data-param='{"id": <?php echo $charge['assignmentid']; ?> }'
+                                                       data-param='{"id": <?php echo $charge['assignmentid']; ?>, "title": "<?php echo $charge['subject']; ?>"}'
                                                        title="<?php echo $lang['Remind'] ?>"></a>
                                                 <?php endif; ?>
                                                 <?php if ($charge['designeeuid'] == $charge['chargeuid']): ?>
@@ -253,7 +253,7 @@ use application\modules\assignment\utils\Assignment as AssignmentUtil;
                                                 <?php if ($designee['status'] == 0 || $designee['status'] == 1): ?>
                                                     <a href="javascript:;" class="co-clock"
                                                        data-action="openRemindDialog"
-                                                       data-param='{"id": <?php echo $designee['assignmentid']; ?> }'
+                                                       data-param='{"id": <?php echo $designee['assignmentid']; ?>, "title": "<?php echo $designee['subject']; ?>"}'
                                                        title="<?php echo $lang['Remind']; ?>"></a>
                                                 <?php endif; ?>
                                                 <!-- 取消任务后不能再编辑 -->
@@ -375,7 +375,7 @@ use application\modules\assignment\utils\Assignment as AssignmentUtil;
     <%= U.lang('ASM.UNREAD') %>
     </span>
             <div class="am-item-op">
-                <a href="javascript:;" class="co-clock" data-action="openRemindDialog" data-param='{"id": <%= id %> }'
+                <a href="javascript:;" class="co-clock" data-action="openRemindDialog" data-param='{"id": "<%= id %>", "title": "<%= subject %>" }'
                    title="<?php echo $lang['Remind'] ?>"></a>
                 <% if(typeof chargeself === 'undefined') { %>
                 <a href="javascript:;" class="o-edit mlm" data-action="openTaskEditDialog"
@@ -391,6 +391,7 @@ use application\modules\assignment\utils\Assignment as AssignmentUtil;
 <script src="<?php echo STATICURL; ?>/js/lib/SWFUpload/swfupload.packaged.js?<?php echo VERHASH; ?>"></script>
 <script src="<?php echo STATICURL; ?>/js/lib/SWFUpload/handlers.js?<?php echo VERHASH; ?>"></script>
 <script src="<?php echo STATICURL; ?>/js/app/ibos.charCount.js?<?php echo VERHASH; ?>"></script>
+<script src="<?php echo STATICURL; ?>/js/app/remind/remind.js?<?php echo VERHASH; ?>"></script>
 <script src="<?php echo $assetUrl; ?>/js/lang/zh-cn.js?<?php echo VERHASH; ?>"></script>
 <script src="<?php echo $assetUrl; ?>/js/assignment.js?<?php echo VERHASH; ?>"></script>
 <script src="<?php echo $assetUrl; ?>/js/assignment_unfinished_list.js?<?php echo VERHASH; ?>"></script>

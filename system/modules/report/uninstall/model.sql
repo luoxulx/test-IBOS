@@ -3,6 +3,11 @@ DROP TABLE IF EXISTS `{{report_record}}`;
 DROP TABLE IF EXISTS `{{report_type}}`;
 DROP TABLE IF EXISTS `{{report_statistics}}`;
 DROP TABLE IF EXISTS `{{calendar_rep_record}}`;
+DROP TABLE IF EXISTS `{{template}}`;
+DROP TABLE IF EXISTS `{{template_category}}`;
+DROP TABLE IF EXISTS `{{template_add}}`;
+DROP TABLE IF EXISTS `{{template_field}}`;
+DROP TABLE IF EXISTS `{{tempalte_sort}}`;
 
 DELETE FROM `{{setting}}` WHERE `skey` = 'reportconfig';
 DELETE FROM `{{nav}}` WHERE `module` = 'report';

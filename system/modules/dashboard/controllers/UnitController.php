@@ -2,6 +2,7 @@
 
 namespace application\modules\dashboard\controllers;
 
+use application\core\utils\Api;
 use application\core\utils\Cache;
 use application\core\utils\Env;
 use application\core\utils\File;
@@ -83,6 +84,29 @@ class UnitController extends BaseController
             $license = Setting::model()->fetchSettingValueByKey('license');
             $data = array('unit' => $unit, 'license' => $license);
             $this->render('index', $data);
+        }
+    }
+
+    public function actionCancel()
+    {
+        $unit = Setting::model()->fetchSettingValueByKey('unit');
+        $unitArray = StringUtil::utf8Unserialize($unit);
+        $systemUrl = explode('.', str_replace('http://', '', $unitArray['systemurl']));
+        if (isset($systemUrl[0])){
+            $url = 'http://api.ibos.cn/v3/corp/cancel';
+            $res = Api::getInstance()->fetchResult($url, array('corpcode' => $systemUrl[0]), 'post');
+            if (is_array($res)){
+                $this->ajaxReturn(array('isSuccess' => false, 'msg' => Ibos::lang('Cancel corp fail')));
+            }else{
+                $result = json_decode($res, true);
+                if ($result['code'] != 0){
+                    $this->ajaxReturn(array('isSuccess' => false, 'msg' => $result['message']));
+                }else{
+                    $this->ajaxReturn(array('isSuccess' => true, 'msg' => Ibos::lang('Cancel corp Success')));
+                }
+            }
+        }else{
+            $this->ajaxReturn(array('isSuccess' => false, 'msg' => Ibos::lang('Cancel corp fail')));
         }
     }
 

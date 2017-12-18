@@ -30,6 +30,7 @@ use application\modules\workflow\utils\Form;
 use application\modules\workflow\utils\Handle;
 use application\modules\workflow\widgets\Base;
 use CJSON;
+use application\modules\workflow\model\FlowType;
 
 class FreeNext extends Base
 {
@@ -250,6 +251,9 @@ class FreeNext extends Base
         }
         //--- 流程监控的硬性跳转，要模拟接收办理过程 ---
 
+        // 自由流程通知关注者
+        $turnUsername = User::model()->fetchRealnameByUid(Ibos::app()->user->uid);
+        Common::sendNotifyToFocusUser($var['runid'], 'Free turn next to focususer', $turnUsername, '','', $userNameStr);
 //		if ( $op == "manage" ) {
 //			$prcsFirst = $var['processid'] - 1;
 //			$prcsNext = $var['processid'] - 2;

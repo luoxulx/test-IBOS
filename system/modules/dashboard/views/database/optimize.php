@@ -6,7 +6,7 @@ use application\core\utils\Convert;
 
 <div class="ct">
     <div class="clearfix">
-        <h1 class="mt"><?php echo $lang['Database']; ?></h1>
+        <h1 class="mt">通用设置 > <?php echo $lang['Database']; ?></h1>
         <ul class="mn">
             <li>
                 <a href="<?php echo $this->createUrl('database/backup'); ?>"><?php echo $lang['Backup']; ?></a>
@@ -23,7 +23,7 @@ use application\core\utils\Convert;
         <form action="<?php echo $this->createUrl('database/optimize'); ?>" method="post" class="form-horizontal">
             <!-- 待优化数据表列表 start -->
             <div class="ctb">
-                <h2 class="st"><?php echo $lang['Optimize table list']; ?></h2>
+                <!-- <h2 class="st"><?php echo $lang['Optimize table list']; ?></h2> -->
                 <div class="alert trick-tip">
                     <div class="trick-tip-title">
                         <i></i>

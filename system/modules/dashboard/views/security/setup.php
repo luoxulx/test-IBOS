@@ -6,9 +6,15 @@
             <li>
                 <span><?php echo $lang['Account security setup']; ?></span>
             </li>
+            <?php 
+            if(ENGINE != 'SAAS' ):
+            ?>
             <li>
                 <a href="<?php echo $this->createUrl('security/log'); ?>"><?php echo $lang['Run log']; ?></a>
             </li>
+            <?php 
+            endif;
+            ?>
             <li>
                 <a href="<?php echo $this->createUrl('security/ip'); ?>"><?php echo $lang['Disabled ip']; ?></a>
             </li>

@@ -29,14 +29,20 @@ abstract class AttachCore
      */
     protected $upload;
     protected $isUpload = true;
+    protected $errmsg = '';
 
     /**
      * 初始化上传域
      * @param string $fileArea
      */
-    public function __construct($fileArea = 'Filedata', $module = 'temp')
+    public function __construct($fileArea = 'Filedata', $module = 'temp', $batchFile = array())
     {
-        $file = $_FILES[$fileArea];
+        if (empty($batchFile)){
+            $file = $_FILES[$fileArea];
+        }else{
+            $file = $batchFile;
+        }
+
         if ($file['error']) {
             throw new CException(Ibos::lang('File is too big', 'error'));
         } else {

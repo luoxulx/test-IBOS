@@ -16,6 +16,7 @@
 
 namespace application\modules\message\controllers;
 
+use application\core\model\Module;
 use application\core\utils\Ibos;
 use application\core\utils\Env;
 use application\core\utils\Page;
@@ -32,22 +33,24 @@ class NotifyController extends BaseController
     public function actionIndex()
     {
         $uid = Ibos::app()->user->uid;
-        $pageCount = NotifyMessage::model()->fetchPageCountByUid($uid);
+        $module = Env::getRequest('module');
+        $isread = Env::getRequest('isread');
+        $search = Env::getRequest('search');
+        $unreadCount = NotifyMessage::model()->fetchPageCountByUidAndModuleAndIsreadAndSearch($uid, $module, 0, $search);
+        $readCount = NotifyMessage::model()->fetchPageCountByUidAndModuleAndIsreadAndSearch($uid, $module, 1, $search);
+        $pageCount = $isread == 0 ? $unreadCount : $readCount;
         $pages = Page::create($pageCount);
-        $list = NotifyMessage::model()->fetchAllNotifyListByUid($uid, 'ctime DESC', $pages->getLimit(), $pages->getOffset());
-        $unreadCount = 0;
-        if (!empty($list)) {
-            foreach ($list as $data) {
-                if (array_key_exists('newlist', $data)) {
-                    $unreadCount += count($data['newlist']);
-                }
-            }
-        }
+        $list = NotifyMessage::model()->fetchAllNotifyListByUidAndModule($uid, 'ctime DESC', $pages->getLimit(), $pages->getOffset(), $module, $isread, $search);
         $data = array(
             'list' => $list,
             'pages' => $pages,
             'unreadCount' => $unreadCount,
-            'modules' => Ibos::app()->getEnabledModule()
+            'readCount' => $readCount,
+            'modulelist' => $this->getModuleList('notify'),
+            'isread' => $isread,
+            'module' => $module,
+            'search' => $search,
+            'allmodule'=> Module::model()->fetchAllEnabledModule(),
         );
         $this->setPageTitle(Ibos::lang('Notify'));
         $this->setPageState('breadCrumbs', array(
@@ -55,36 +58,6 @@ class NotifyController extends BaseController
             array('name' => Ibos::lang('Notify'))
         ));
         $this->render('index', $data);
-    }
-
-    /**
-     * 详细页
-     * @return void
-     */
-    public function actionDetail()
-    {
-        $uid = Ibos::app()->user->uid;
-        $module = Env::getRequest('module');
-        $pageCount = Ibos::app()->db->createCommand()
-            ->select('count(id)')
-            ->from('{{notify_message}}')
-            ->where("uid={$uid} AND module = '{$module}'")
-            ->group('module')
-            ->queryScalar();
-        $pages = Page::create($pageCount);
-        $list = NotifyMessage::model()->fetchAllDetailByTimeLine($uid, $module, $pages->getLimit(), $pages->getOffset());
-        $data = array(
-            'list' => $list,
-            'pages' => $pages,
-        );
-        NotifyMessage::model()->setReadByModule($uid, $module);
-        $this->setPageTitle(Ibos::lang('Detail notify'));
-        $this->setPageState('breadCrumbs', array(
-            array('name' => Ibos::lang('Message center'), 'url' => $this->createUrl('mention/index')),
-            array('name' => Ibos::lang('Notify'), 'url' => $this->createUrl('notify/index')),
-            array('name' => Ibos::lang('Detail notify'))
-        ));
-        $this->render('detail', $data);
     }
 
     /**
@@ -120,8 +93,8 @@ class NotifyController extends BaseController
      */
     public function actionSetIsRead()
     {
-        $module = StringUtil::filterCleanHtml(Env::getRequest('module'));
-        $res = NotifyMessage::model()->setReadByModule(Ibos::app()->user->uid, $module);
+        $ids = StringUtil::filterCleanHtml(Env::getRequest('id'));
+        $res = NotifyMessage::model()->setReadByIdx(Ibos::app()->user->uid, $ids);
         $this->ajaxReturn(array('IsSuccess' => !!$res));
     }
 
@@ -145,9 +118,14 @@ class NotifyController extends BaseController
      */
     public function actionJump()
     {
-        $url = Env::getRequest('url');
+        $url = $this->createUrl('notify/index');
         $id = intval(Env::getRequest('id'));
-        NotifyMessage::model()->updateAll(array('isread' => 1), "id = :id", array(':id' => $id));
+        $uid = Ibos::app()->user->uid;
+        $messageData = NotifyMessage::model()->fetchByPk($id);
+        if (!empty($messageData) && $uid == $messageData['uid']){
+            NotifyMessage::model()->updateAll(array('isread' => 1), "id = :id", array(':id' => $id));
+            $url = $messageData['url'];
+        }
         $this->redirect($url);
     }
 

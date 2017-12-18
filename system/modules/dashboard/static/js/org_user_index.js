@@ -82,7 +82,7 @@ $(document).ready(function() {
             window.location.href = Ibos.app.url('dashboard/user/export', { uid: encodeURI(uid) });
         },
         "batchImport": function(param, elem) {
-            var dialog = new importData({ lock: true, tpl: 'user', module: 'user', per: 1000 });
+            var dialog = new importData({ lock: false, tpl: 'user', module: 'user', per: 1000 });
 
             $(document).on('closed.dialog', function(e) {
                 setTimeout(function() {
@@ -165,6 +165,8 @@ $(document).ready(function() {
                 });
         },
         "updateUserInfo": function(param, elem) {
+            deptAndposOrg.init();
+
             var uid = U.getCheckedValue("user"),
                 deptTree = $.fn.zTree.getZTreeObj('dept_tree'),
                 posTree = $.fn.zTree.getZTreeObj('pos_tree'),
@@ -174,7 +176,7 @@ $(document).ready(function() {
                 };
 
             if (!uid) {
-                Ui.tip('请先勾选需要修改信息的用户', 'warning');
+                Ui.tip(Ibos.l("ORG.PLEASE_SELECT_UPDATE_USERS"), 'warning');
                 return false;
             }
 
@@ -182,7 +184,7 @@ $(document).ready(function() {
             $.each([deptTree, posTree], function(idx, tree) {
                 $.each(tree.getCheckedNodes(), function(i, v) {
                     tree.checkNode(v, false);
-                })
+                });
             });
 
             uid = uid.split(",").map(function(val) {
@@ -190,10 +192,11 @@ $(document).ready(function() {
             });
 
             var dialog = Ui.dialog({
-                title: "修改用户信息",
+                title: Ibos.l("ORG.UPDATE_USER_POSITION_OR_DEPARTMENT_INFO"),
                 id: "update_dialog",
                 padding: 0,
                 margin: 0,
+                width: 350,
                 lock: false,
                 content: document.getElementById("update_userinfo_dialog"),
                 ok: function() {
@@ -202,7 +205,7 @@ $(document).ready(function() {
 
                     deptid && $.post(URL.dept, { member: uid, id: deptid }, function(res) {
                         if (res.isSuccess) {
-                            Ui.tip("部门设置成功");
+                            Ui.tip(Ibos.l("ORG.UPDATE_DEPARTMENT_SUCCESS"));
                             userTable.draw();
                         } else {
                             Ui.tip(res.msg, "warning");
@@ -211,7 +214,7 @@ $(document).ready(function() {
 
                     posid && $.post(URL.pos, { member: uid, id: posid }, function(res) {
                         if (res.isSuccess) {
-                            Ui.tip("岗位设置成功");
+                            Ui.tip(Ibos.l("ORG.UPDATE_POSTION_SUCCESS"));
                             userTable.draw();
                         } else {
                             Ui.tip(res.msg, "warning");
@@ -223,18 +226,22 @@ $(document).ready(function() {
         "getStatusList": function(param, elem) {
             var $elem = $(elem),
                 $parent = $elem.parent(),
-                type = $elem.data('type');
+                $currStatusbtn = $elem.closest('.btn-group').find('.btn'),
+                type = $elem.data('type'),
+                currStatusText = $elem.text();
 
             $parent.children().removeClass('active');
             $elem.addClass('active');
+            $currStatusbtn.html(currStatusText + '<i class="caret"></i>')
 
             userTable.user.type = type;
             userTable.user.search();
         }
     });
 
+    var canwrite = Ibos.app.g('canwrite', 1);
 
-    var ztreeOpt = {
+    var ztreeOpt = (canwrite == 0) ? {} : {
         "addDiyDom": function(treeId, treeNode) {
             var aObj = $("#" + treeNode.tId + "_a");
             var optBtn = "<span class='utree-opt-wrap'>" +
@@ -397,6 +404,14 @@ $(document).ready(function() {
                         return text;
                     }
                 },
+                 //微信号
+                {
+                    "data": "status",
+                    "orderable": false,
+                    "render": function(data, type, row) {
+                        return '<span class="fss">' + (row.status == 0 ? '在职' : (row.status == 1 ? '锁定' : '禁用')) + '</span>';
+                    }
+                },
                 //手机
                 {
                     "data": "mobile",
@@ -405,20 +420,12 @@ $(document).ready(function() {
                         return '<span class="fss">' + (row.mobile) ? row.mobile : ' ' + '</span>';
                     }
                 },
-                //微信号
-                {
-                    "data": "weixin",
-                    "orderable": false,
-                    "render": function(data, type, row) {
-                        return '<span class="fss">' + (row.weixin) ? row.weixin : ' ' + '</span>';
-                    }
-                },
                 //操作
                 {
                     "data": "",
                     "orderable": false,
                     "render": function(data, type, row) {
-                        return '<a href="' + Ibos.app.url('dashboard/user/edit', { uid: row.uid }) + '" class="cbtn o-edit"></a>';
+                        return (canwrite == 1) ? '<a href="' + Ibos.app.url('dashboard/user/edit', { uid: row.uid }) + '" class="cbtn o-edit"></a>' : '';
                     }
                 }
             ]
@@ -495,7 +502,7 @@ $(document).ready(function() {
     $.fn.zTree.init($tree, settings, Ibos.data.converToArray(Ibos.data.get('department', function(data) {
         return data.id !== 'c_0';
     })));
-    ztreeOpt.selectAuxiliaryNode(Ibos.app.g("auxiliaryId"));
+    ztreeOpt.selectAuxiliaryNode && ztreeOpt.selectAuxiliaryNode(Ibos.app.g("auxiliaryId"));
     $tree.waiting(false);
     /**
      *  批量更新用户部门和岗位信息
@@ -509,11 +516,12 @@ $(document).ready(function() {
         var treeCheckBefore, treeCheck, init;
 
         treeCheckBefore = function(treeId, node) {
-            var checkeds = $.fn.zTree.getZTreeObj(treeId).getCheckedNodes();
+            var $ztree = $.fn.zTree.getZTreeObj(treeId),
+                checkeds = $ztree.getCheckedNodes();
 
             if (!node.checked && checkeds.length > 0) {
-                Ui.tip('已超过选择限制最大值，若要选择请先取消原有勾选', 'warning');
-                return false;
+                checkeds[0].checked = false;
+                $ztree.updateNode(checkeds[0]);
             }
         };
 
@@ -562,8 +570,6 @@ $(document).ready(function() {
             $dept_box.waiting(false);
         };
 
-        return { init: init }
+        return { init: init };
     })();
-
-    deptAndposOrg.init();
 });

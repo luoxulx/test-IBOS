@@ -14,11 +14,30 @@ class ApiController extends BaseController
 {
 
     /**
+     * 该控制器的action
+     * @return array
+     */
+    public function actions()
+    {
+        $actions = array(
+            'alarmadd' => 'application\modules\message\actions\api\AlarmAdd', // 添加
+            'alarmedit' => 'application\modules\message\actions\api\AlarmEdit',// 修改
+            'alarmdel' => 'application\modules\message\actions\api\AlarmDel', // 删除
+            'alarmlist' => 'application\modules\message\actions\api\AlarmList', // 多个条件组合查询列表
+            'alarmdetail' => 'application\modules\message\actions\api\AlarmDetail', // 单条详情
+            'alarmeventtime' => 'application\modules\message\actions\api\AlarmEventTime', // 获取关联事件时间
+            'alarmsetlist' => 'application\modules\message\actions\api\AlarmSetList', // 设置提醒下拉列表
+        );
+        return $actions;
+    }
+
+    /**
      * 轮询查询未读提醒
      * @return void
      */
     public function actionGetUnreadCount()
     {
+        $this->checkLogin();
         $count = UserData::model()->getUnreadCount(Ibos::app()->user->uid);
         $data['status'] = 1;
         $data['data'] = $count;

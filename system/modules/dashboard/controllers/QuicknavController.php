@@ -132,7 +132,7 @@ class QuicknavController extends BaseController
         if (Env::getRequest('formhash')) {
             $id = intval(Env::getRequest('id'));
             $name = StringUtil::filterStr(Env::getRequest('name'));
-            $url = StringUtil::filterStr(Env::getRequest('url'));
+            $url = StringUtil::filterStr(\Chtml::encode(Env::getRequest('url')));
             $icon = StringUtil::filterStr(Env::getRequest('quicknavimg'));
             if (!empty($icon)) {
                 File::copyToDir($icon, $this->_iconPath);

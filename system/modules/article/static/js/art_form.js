@@ -158,9 +158,10 @@
 
                 Article.ajaxApi.submitForm(data).done(function(res) {
                     if (res.isSuccess) {
-                        Ui.tip('保存成功');
+                        var msg = data.status == DRAFT ? '保存成功' : '提交成功';
+                        Ui.tip(msg);
                         win.sessionStorage.setItem('view.article',
-                            data.status == DRAFT ? 'draft' : res.data.status == APPROVAL ? 'approval' : 'publish');
+                            data.status == DRAFT ? 'draft' : data.status == APPROVAL ? 'approval' : 'publish');
                         win.location.href = Ibos.app.url('article/publish/index');
                     } else {
                         Ui.tip(res.msg, 'warning');
@@ -354,8 +355,8 @@
                     checked = $('input[name="tohighlight"]').prop('checked');
                     time = $('input[name="highlightEndTime"]').val();
                     hlstyle = [
-                        $('input[name="highlight_bold"]').val(),
                         $('input[name="highlight_color"]').val(),
+                        $('input[name="highlight_bold"]').val(),
                         $('input[name="highlight_italic"]').val(),
                         $('input[name="highlight_underline"]').val()
                     ].join();

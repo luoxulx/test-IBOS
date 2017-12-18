@@ -354,9 +354,9 @@ class ImportParent
     {
         $check = $this->import->check;
         $i = $this->import->i;
-        //如果选择的是“新建记录”的选项，并且在重复性检查时有发现重复的值
+        //如果选择的是“不做处理”的选项，并且在重复性检查时有发现重复的值
         //设置错误状态，并且返回失败
-        if (isset($this->import->update[$i]) && 'new' === $check) {
+        if (isset($this->import->update[$i]) && 'ignore' === $check) {
             $this->error[$i]['status'] = false;
             return false;
         }

@@ -477,8 +477,8 @@
                 $.error("(SelectBox): 缺少zTree组件");
             }
 
-            var treeClick, treeCheck, beforeExpand, beforeCheck;
-            var $tree, treeSetting, treeid, _lastNodeId,
+            var treeClick, treeCheck, beforeExpand, beforeCheck, beforeClick;
+            var $tree, treeSetting, treeid,
                 self = this;
 
             treeClick = function(evt, treeid, node) {
@@ -492,7 +492,7 @@
                 if (!node.nocheck) {
                     if (node.checked) {
                         // 记录最后一次勾选id
-                        _lastNodeId = node.id;
+                        self._lastNodeId = node.id;
                         self.addValue(node.id);
                     } else {
                         self.removeValue(node.id);
@@ -510,7 +510,7 @@
                         self.options.maximumSelectionSize &&
                         self.options.maximumSelectionSize < self.values.length + 1) {
                         // 取消上一次的勾选
-                        self._checkNode(_lastNodeId, false);
+                        self._checkNode(self._lastNodeId, false);
                     }
 
                     // 在勾选之前先对子集进行锁定或解锁
@@ -521,6 +521,15 @@
                     }
 
                     return true;
+                }
+            };
+
+            beforeClick = function(treeId, treeNode){
+                // 检查是否为父节点
+                if(treeNode.isParent){
+                    var ztreeObj = $.fn.zTree.getZTreeObj(treeId);
+                    // 展开对应子节点
+                    ztreeObj.expandNode(treeNode, null, null, null, true);
                 }
             };
 
@@ -579,7 +588,8 @@
                     onClick: treeClick,
                     onCheck: treeCheck,
                     beforeExpand: beforeExpand,
-                    beforeCheck: beforeCheck
+                    beforeCheck: beforeCheck,
+                    beforeClick: beforeClick
                 },
                 view: {
                     showLine: false,
@@ -1299,12 +1309,13 @@
                     this.setValue(data.added, true, true);
                     this.setValue(data.removed, false, true);
                     this.select.val(_fixEmptyArr(this.values));
+                    this.$el.trigger('change', data);
                     break;
                 case 'select2':
                     data.added = (data.added && [data.added.id]) || [];
                     data.removed = (data.removed && [data.removed.id]) || [];
                     checkid = data.added.length > 0 ? data.added : data.removed;
-                    this.setValue(checkid, !!data.added.length, true) && this.selectBox.setValue(checkid, !!data.added.length).saveValue();
+                    this.setValue(checkid, !!data.added.length, true) && this.selectBox && this.selectBox.setValue(checkid, !!data.added.length).saveValue();
                     break;
                 default:
                     checkid = data.added || data.removed;
@@ -1312,6 +1323,7 @@
                     this.selectBox ? this.selectBox.setValue(checkid, !!data.added).saveValue() : setTimeout(function() {
                         self.selectBox.setValue(checkid, !!data.added).saveValue();
                     }, 600);
+                    this.$el.trigger('change', data);
                     break;
             }
 

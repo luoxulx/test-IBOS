@@ -57,6 +57,9 @@ class MailController extends BaseController
         }
         $where = $lastid ? $condition . " and e.emailid < {$lastid}" : $condition;
         $group = isset($param['group']) ? $param['group'] : '';
+        if ($type == 'send'){
+            $group = 'eb.bodyid';
+        }
         $list = Ibos::app()->db->createCommand()
             ->select("*")
             ->from("{{email}} e")
@@ -68,6 +71,7 @@ class MailController extends BaseController
             ->queryAll();
         $ids = array();
         foreach ($list as &$value) {
+            $value['subject'] = html_entity_decode($value['subject']);
             $ids[] = $value['emailid'];
             if (!empty($value['fromid'])) {
                 $value['fromuser'] = User::model()->fetchRealnameByUid($value['fromid']);
@@ -197,6 +201,7 @@ class MailController extends BaseController
                 $email["attach"] = Attach::getAttach($email["attachmentid"], true, false, false, false, true);
                 $attachmentArr = explode(",", $email['attachmentid']);
             }
+            $email['subject'] = html_entity_decode($email['subject']);
         }
         Email::model()->setRead($id, Ibos::app()->user->uid);
 

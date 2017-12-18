@@ -3,6 +3,7 @@
 namespace application\core\utils;
 
 use application\modules\dashboard\model\Cache as CacheModel;
+use application\modules\dashboard\utils\SyncWx;
 use application\modules\department\model\Department;
 use application\modules\department\model\DepartmentRelated;
 use application\modules\main\utils\Main;
@@ -172,7 +173,6 @@ class OrgIO
         $newUser = array();
         if (!empty($data) && is_array($data)) {
             $count = count($data);
-            Main::checkLicenseLimit(false, $count); //检查授权人数
             $currentDeptA = self::findDeptAWithFormat(); //取出所有的部门
 
             $allUsers = User::model()->fetchAllSortByPk('uid'); // 取出全部用户，包括锁定、禁用等, 等下做判定, 避免放在循环中影响效率, 注意,为了能匹配实时插入的数据,要在循环中增加新插入的用户
@@ -230,6 +230,7 @@ class OrgIO
                 // 同步用户钩子
                 foreach ($newUser as $newId => $origPass) {
                     Org::hookSyncUser($newId, $origPass, 1);
+                    SyncWx::getInstance()->addWxUser($newId);
                 }
                 // 更新组织架构js调用接口
                 Org::update();
@@ -289,6 +290,7 @@ class OrgIO
                     'deptname' => $dept,
                     'pid' => $pid,
                 ), true);
+                SyncWx::getInstance()->addWxDept($deptid);
                 if (isset($currentDeptA[$pid])) {
                     $currentDeptA[$pid] = array_merge(
                         $currentDeptA[$pid], array(

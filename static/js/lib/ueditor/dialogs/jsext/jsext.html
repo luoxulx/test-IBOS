@@ -34,7 +34,7 @@
 				var loadCode = function() {
 					var url = Ibos.app.url('workflow/api/getText', {formid: editor.formid, field: 'script'});
 					// @Debug
-					cm.setValue(localStorage.getItem("jscode") || "");
+					cm.setValue(localStorage.getItem("jscode" + editor.formid) || "");
 					cm.focus();
 					 ajax.request(url, {
 					 	timeout:60000, 
@@ -61,6 +61,7 @@
 					 		try {
 					 			if( xhr.responseText > 0 ){
 					 				alert('保存成功');
+                                    dialog.close();
 					 				return true;
 					 			}
 					 		} catch (e) {
@@ -73,7 +74,7 @@
 					 	}
 					 });
 					// @Debug:
-					localStorage.setItem("jscode", cm.getValue());
+					localStorage.setItem("jscode" + editor.formid, cm.getValue());
 				};
 
 				dialog.onok = function() {

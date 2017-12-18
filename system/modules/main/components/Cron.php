@@ -10,6 +10,7 @@
 
 namespace application\modules\main\components;
 
+use application\core\model\Module;
 use application\core\utils\Ibos;
 use application\modules\dashboard\model\Syscache;
 use application\modules\main\model\Cron as CronModel;
@@ -42,7 +43,7 @@ class Cron extends CApplicationComponent
             return false;
         }
         // 处理当前任务
-        if ($cron) {
+        if ($cron && Module::model()->isModuleEnable($cron['module'])) {
             $cron['filename'] = str_replace(array('..', '/', '\\'), '', $cron['filename']);
             $cron['minute'] = explode("\t", $cron['minute']);
             $this->setNextTime($cron);
